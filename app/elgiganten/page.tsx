@@ -391,7 +391,7 @@ export default function Home() {
               <div className="text-xs md:text-sm text-gray-500 mb-4">När du gör ett köp kan vi tjäna en provision.</div>
               <div className="space-y-3 md:space-y-4">
                 {topPromoCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} onUseDiscount={() => handleCouponSelect(coupon)} />
+                  <CouponCard key={coupon.id} coupon={coupon} onSelectCoupon={() => handleCouponSelect(coupon)} />
                 ))}
               </div>
             </section>
@@ -463,7 +463,7 @@ export default function Home() {
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Utgångna rabattkoder</h2>
               <div className="space-y-3 md:space-y-4">
                 {expiredCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} onUseDiscount={() => handleCouponSelect(coupon)} />
+                  <CouponCard key={coupon.id} coupon={coupon} onSelectCoupon={() => handleCouponSelect(coupon)} />
                 ))}
               </div>
             </section>
@@ -495,4 +495,5 @@ export default function Home() {
       />
     </div>
   )
+
 }
