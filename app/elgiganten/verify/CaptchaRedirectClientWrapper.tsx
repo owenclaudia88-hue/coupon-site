@@ -44,18 +44,10 @@ export default function CaptchaRedirectClientWrapper() {
 
   return (
     <div className="flex justify-center items-center min-h-[150px]">
-      {!verified ? (
-        <SecurityCaptcha onVerify={() => setVerified(true)} />
-      ) : redirectUrl ? (
-        <p className="text-center text-lg font-medium text-gray-700">
-          Verifierad! Omdirigerar dig nu...<br />
-          <a href={redirectUrl} className="text-blue-600 underline">
-            Klicka här om du inte omdirigeras automatiskt
-          </a>
-        </p>
-      ) : (
-        <p className="text-gray-600">Hämtar erbjudande...</p>
-      )}
+      useEffect(() => {
+  setVerified(true) // Force verification immediately
+}, [])
+
     </div>
   )
 }
