@@ -13,8 +13,12 @@ export default function CaptchaRedirectClientWrapper() {
   const [error, setError] = useState<string | null>(null)
 
 useEffect(() => {
+  console.log('Verified state changed:', verified)
+  console.log('Offer ID is:', offerId)
+
   if (verified && offerId) {
-    console.log("Triggering fetch for ID:", offerId); // ✅ Add this line
+    console.log('Making request to /api/get-offer-url...')
+
     fetch('/api/get-offer-url', {
       method: 'POST',
       headers: {
@@ -27,7 +31,7 @@ useEffect(() => {
         return res.json()
       })
       .then((data) => {
-        console.log("Redirecting to:", data.url); // ✅ Add this line
+        console.log('Received redirect URL:', data.url)
         setRedirectUrl(data.url)
         setTimeout(() => {
           window.location.href = data.url
@@ -39,6 +43,7 @@ useEffect(() => {
       })
   }
 }, [verified, offerId])
+
 
 
   if (error) {
@@ -54,4 +59,5 @@ useEffect(() => {
     </div>
   )
 }
+
 
