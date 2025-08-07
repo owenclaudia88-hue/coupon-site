@@ -1,29 +1,41 @@
-import { NextRequest, NextResponse } from "next/server"
-import { offerRedirects } from "@/app/elgiganten/offerRedirects"
+import { NextResponse } from 'next/server'
 
-export async function POST(req: NextRequest) {
+const offerUrls: { [key: string]: string } = {
+  'iphone-16-pro-max': 'https://www.elgiganten.se/product/id-iphone-16-pro-max',
+  'elg-001': 'https://www.elgiganten.se/all-products-sale',
+  'elg-002': 'https://www.elgiganten.se/super-sale',
+  'elg-003': 'https://www.elgiganten.se/student-discount',
+  'elg-004': 'https:www.elgiganten.se/free-shipping',
+  'elg-005': 'https://www.elgiganten.se/tv-discount',
+  'elg-006': 'https:/www.elgiganten.se/home-appliances-sale',
+  'elg-007': 'https://www.elgiganten.se/computers-discount',
+  'elg-008': 'https://www.elgiganten.se/gaming-accessories-sale',
+  'elg-009': 'https://www.elgiganten.se/extra-discount-clearance',
+  'elg-010': 'https://www.elgiganten.se/smartphones-sale',
+  'elg-011': 'https://www.elgiganten.se/free-installation-appliances',
+  'elg-012': 'https://www.elgiganten.se/new-customer-discount',
+  'elg-exp-001': 'https://www.elgiganten.se/expired/black-friday-tv',
+  'elg-exp-002': 'https://www.elgiganten.se/expired/christmas-shipping',
+  'elg-exp-003': 'https://www.elgiganten.se/expired/summer-ac-sale',
+  'elg-exp-004': 'https://www.elgiganten.se/expired/cyber-monday-gaming',
+  'elg-exp-005': 'https://www.elgiganten.se/expired/easter-kitchen-sale',
+  'elg-exp-006': 'https://www.elgiganten.se/expired/newyear-audio-sale',
+  'elg-exp-007': 'https://www.elgiganten.se/expired/midsummer-delivery'
+  // Add other ID-URL pairs here
+}
+
+export async function POST(request: Request) {
   try {
-    const contentType = req.headers.get("content-type") || ""
-    if (!contentType.includes("application/json")) {
-      return new NextResponse("Invalid content type", { status: 400 })
-    }
-
-    const body = await req.json()
+    const body = await request.json()
     const { id } = body
 
-    if (!id || typeof id !== "string") {
-      return new NextResponse("Missing or invalid 'id'", { status: 400 })
+    if (!id || !offerUrls[id]) {
+      return NextResponse.json({ error: 'Offer not found' }, { status: 404 })
     }
 
-    const destination = offerRedirects[id]
-
-    if (!destination) {
-      return new NextResponse("Offer not found", { status: 404 })
-    }
-
-    return NextResponse.json({ url: destination })
+    return NextResponse.json({ url: offerUrls[id] })
   } catch (error) {
-    console.error("Error in API:", error)
-    return new NextResponse("Internal Server Error", { status: 500 })
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 }
+
