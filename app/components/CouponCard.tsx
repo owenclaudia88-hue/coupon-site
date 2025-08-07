@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 
 interface Coupon {
   id: string
@@ -18,17 +17,11 @@ interface Coupon {
 
 interface CouponCardProps {
   coupon: Coupon
+  onSelectCoupon?: (coupon: Coupon) => void
 }
 
-export default function CouponCard({ coupon }: CouponCardProps) {
+export default function CouponCard({ coupon, onSelectCoupon }: CouponCardProps) {
   const [showMoreInfo, setShowMoreInfo] = useState(false)
-  const router = useRouter()
-
-  const handleRedirect = () => {
-    if (!coupon.offerUrl) return
-    const encodedUrl = encodeURIComponent(coupon.offerUrl)
-    router.push(`/elgiganten/verify?url=${encodedUrl}`)
-  }
 
   const getDiscountBadgeColor = (type: string) => {
     switch (type) {
@@ -49,6 +42,12 @@ export default function CouponCard({ coupon }: CouponCardProps) {
     return discount
   }
 
+  const handleClick = () => {
+    if (!coupon.expired && onSelectCoupon) {
+      onSelectCoupon(coupon)
+    }
+  }
+
   return (
     <div
       className={`bg-white border border-gray-200 rounded-lg p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow ${
@@ -66,7 +65,7 @@ export default function CouponCard({ coupon }: CouponCardProps) {
             {getDiscountText(coupon.discount, coupon.type)}
           </div>
           <button
-            onClick={handleRedirect}
+            onClick={handleClick}
             className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
               coupon.expired
                 ? "bg-gray-300 text-gray-600 hover:bg-gray-400"
@@ -119,7 +118,7 @@ export default function CouponCard({ coupon }: CouponCardProps) {
           </div>
         </div>
         <button
-          onClick={handleRedirect}
+          onClick={handleClick}
           className={`px-6 py-2 rounded-lg font-semibold transition-colors ml-4 ${
             coupon.expired
               ? "bg-gray-300 text-gray-600 hover:bg-gray-400"
