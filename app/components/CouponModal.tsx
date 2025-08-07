@@ -250,7 +250,7 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
     "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=300&fit=crop",
     "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500&h=300&fit=crop",
     "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=500&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1501594907352-04cda3a7fe05?w=500&h=300&fit=crop",
+    "https://picsum.photos/500/300?random=1",
     "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=500&h=300&fit=crop",
     "https://images.unsplash.com/photo-1472214103451-b2761acb3c5d?w=500&h=300&fit=crop",
     "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=500&h=300&fit=crop",
