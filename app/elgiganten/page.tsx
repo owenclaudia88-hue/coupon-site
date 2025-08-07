@@ -37,7 +37,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "70%",
     uses: 1247,
     type: "percentage",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=iphone-16-pro-max",
     expirationDate: "15/9/2025",
     moreInfo:
       "Begränsat erbjudande på iPhone 16 Pro Max. Få upp till 70% rabatt på den senaste iPhone-modellen med alla nya funktioner. Ingen kod behövs - rabatten tillämpas automatiskt vid köp.",
@@ -49,7 +49,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "40%",
     uses: 163,
     type: "percentage",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-001",
     expirationDate: "31/8/2025",
     moreInfo:
       "Denna rabatt gäller på hela sortimentet hos Elgiganten. Perfekt tillfälle att köpa den elektronik du längtat efter till ett fantastiskt pris. Rabatten gäller på TV-apparater, datorer, hushållsapparater och mycket mer.",
@@ -61,7 +61,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "SUPER",
     uses: 89,
     type: "super",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-002",
     expirationDate: "15/9/2025",
     moreInfo:
       "Superrea hos Elgiganten med upp till 60% rabatt på utvalda produkter. Begränsat antal produkter och begränsad tid. Passa på att fynda elektronik, vitvaror och teknikprodukter till oslagbara priser.",
@@ -73,7 +73,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "20%",
     uses: 234,
     type: "percentage",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-003",
     expirationDate: "31/12/2025",
     moreInfo:
       "Studentrabatt hos Elgiganten! Som student får du 20% rabatt på hela sortimentet. Verifiera din studentstatus och börja spara pengar på all elektronik och teknik du behöver för studierna.",
@@ -85,7 +85,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "GRATIS",
     uses: 1247,
     type: "free",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-004",
     expirationDate: "31/12/2025",
     moreInfo:
       "Fri frakt på alla beställningar över 500 kr hos Elgiganten. Handla för minst 500 kr så slipper du fraktkostnaden. Gäller på alla produkter och levereras direkt hem till dig.",
@@ -97,7 +97,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "3000 kr",
     uses: 78,
     type: "amount",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-005",
     expirationDate: "30/9/2025",
     moreInfo:
       "Få 3000 kr rabatt på TV-apparater över 15000 kr. Gäller alla märken inklusive Samsung QLED, LG OLED och Sony Bravia. Perfekt tillfälle att uppgradera till en större och bättre TV.",
@@ -109,7 +109,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "25%",
     uses: 156,
     type: "percentage",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-006",
     expirationDate: "15/10/2025",
     moreInfo:
       "25% rabatt på alla hushållsapparater. Gäller kylskåp, tvättmaskiner, diskmaskiner, mikrovågsugnar och mycket mer. Uppgradera ditt hem med nya vitvaror till fantastiska priser.",
@@ -121,7 +121,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "2000 kr",
     uses: 92,
     type: "amount",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-007",
     expirationDate: "31/10/2025",
     moreInfo:
       "Spara 2000 kr på datorer och laptops från alla stora märken som HP, Dell, Lenovo och ASUS. Perfekt för studier, arbete eller gaming. Gäller både Windows och Mac-datorer.",
@@ -133,7 +133,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "30%",
     uses: 203,
     type: "percentage",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-008",
     expirationDate: "20/9/2025",
     moreInfo:
       "30% rabatt på alla gaming-tillbehör. Gäller produkter från Razer, Logitech, SteelSeries och andra populära gaming-märken. Uppgradera din gaming-setup till ett bättre pris.",
@@ -145,7 +145,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "15%",
     uses: 445,
     type: "percentage",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-009",
     expirationDate: "31/8/2025",
     moreInfo:
       "Få 15% extra rabatt på redan nedsatta varor. Kombinera denna rabatt med befintliga erbjudanden för att maximera dina besparingar på elektronik och teknik.",
@@ -157,7 +157,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "1500 kr",
     uses: 67,
     type: "amount",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-010",
     expirationDate: "30/11/2025",
     moreInfo:
       "1500 kr rabatt på smartphones över 8000 kr. Gäller iPhone 15, Samsung Galaxy S24, Google Pixel och andra premium-telefoner. Uppgradera till senaste tekniken för mindre pengar.",
@@ -169,7 +169,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "GRATIS",
     uses: 134,
     type: "free",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-011",
     expirationDate: "31/12/2025",
     moreInfo:
       "Fri installation på vitvaror över 10000 kr. Vi installerar och ansluter dina nya vitvaror utan extra kostnad. Gäller kylskåp, tvättmaskiner, diskmaskiner och andra stora hushållsapparater.",
@@ -181,7 +181,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "10%",
     uses: 892,
     type: "percentage",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-012",
     expirationDate: "31/12/2025",
     moreInfo:
       "10% välkomstrabatt för nya kunder. Registrera dig som ny kund och få rabatt på ditt första köp. Gäller på hela sortimentet och kan kombineras med andra erbjudanden.",
@@ -197,7 +197,7 @@ const expiredCoupons: Coupon[] = [
     uses: 2156,
     type: "percentage",
     expired: true,
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-exp-001",
     expirationDate: "30/11/2024",
     moreInfo:
       "Denna fantastiska Black Friday-rabatt på 50% för TV-apparater har tyvärr gått ut. Håll utkik efter liknande erbjudanden under kommande kampanjperioder.",
@@ -210,7 +210,7 @@ const expiredCoupons: Coupon[] = [
     uses: 3421,
     type: "free",
     expired: true,
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-exp-002",
     expirationDate: "31/12/2024",
     moreInfo:
       "Julkampanjen med fri frakt på alla beställningar har avslutats. Under kampanjen kunde kunder få fri frakt oavsett orderbelopp.",
@@ -223,7 +223,7 @@ const expiredCoupons: Coupon[] = [
     uses: 567,
     type: "percentage",
     expired: true,
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-exp-003",
     expirationDate: "31/7/2024",
     moreInfo:
       "Sommarens hetaste erbjudande på luftkonditionering och fläktar har gått ut. Kampanjen erbjöd 35% rabatt på alla kylprodukter under de varmaste månaderna.",
@@ -236,7 +236,7 @@ const expiredCoupons: Coupon[] = [
     uses: 234,
     type: "amount",
     expired: true,
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-exp-004",
     expirationDate: "27/11/2024",
     moreInfo:
       "Cyber Monday-erbjudandet med 4000 kr rabatt på gaming-datorer har avslutats. Detta var ett av årets bästa erbjudanden för gamers som ville uppgradera sin setup.",
@@ -249,7 +249,7 @@ const expiredCoupons: Coupon[] = [
     uses: 789,
     type: "percentage",
     expired: true,
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-exp-005",
     expirationDate: "31/3/2024",
     moreInfo:
       "Påskens specialerbjudande på köksmaskiner har gått ut. Kampanjen erbjöd 20% rabatt på allt från kaffemaskiner till köksassistenter och blenders.",
@@ -262,7 +262,7 @@ const expiredCoupons: Coupon[] = [
     uses: 445,
     type: "percentage",
     expired: true,
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-exp-006",
     expirationDate: "15/1/2024",
     moreInfo:
       "Nyårets ljudkampanj med 45% rabatt på högtalare, soundbars och stereosystem har avslutats. Detta var ett populärt erbjudande för att förbättra hemmaunderhållningen.",
@@ -275,7 +275,7 @@ const expiredCoupons: Coupon[] = [
     uses: 678,
     type: "free",
     expired: true,
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=elg-exp-007",
     expirationDate: "30/6/2024",
     moreInfo:
       "Midsommarkampanjen med fri leverans på stora vitvaror som kylskåp och frysar har gått ut. Detta var ett populärt erbjudande inför sommarsemestern.",
@@ -325,7 +325,7 @@ export default function Home() {
     title: "Få upp till 70% rabatt på iPhone 16 Pro Max",
     discount: "70%",
     description: "Spara stort på den senaste iPhone 16 Pro Max hos Elgiganten",
-    offerUrl: "/elgiganten/verify",
+    offerUrl: "/elgiganten/verify?id=iphone-16-pro-max",
   }
 
   return (
@@ -367,7 +367,7 @@ export default function Home() {
                       discount: "70%",
                       uses: 1247,
                       type: "percentage" as const,
-                      offerUrl: "/elgiganten/verify",
+                      offerUrl: "/elgiganten/verify?id=iphone-16-pro-max",
                     }
                     handleCouponSelect(iphoneCoupon)
                   }}
