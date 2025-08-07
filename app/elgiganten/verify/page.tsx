@@ -1,13 +1,22 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import CaptchaRedirectClientWrapper from "./CaptchaRedirectClient";
 
-export default function Page() {
+export default function VerifyPage() {
   return (
     <>
       <Header />
-      <CaptchaRedirectClientWrapper />
+      <main className="flex flex-col items-center justify-center min-h-screen py-8 px-4">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-md p-6">
+          <h1 className="text-xl font-semibold text-center mb-4">
+            Verifiera att du inte är en bot
+          </h1>
+          <CaptchaRedirectClientWrapper />
+        </div>
+      </main>
       <Footer />
     </>
   );
 }
+
+
