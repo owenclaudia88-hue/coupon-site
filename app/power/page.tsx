@@ -7,6 +7,7 @@ import Header from "../components/Header"
 import CouponCard from "../components/CouponCard"
 import Footer from "../components/Footer"
 import CouponModal from "../components/CouponModal"
+import OfferPopup from "../components/OfferPopup"
 
 interface Coupon {
   id: string
@@ -196,10 +197,20 @@ export default function PowerPage() {
   const [email, setEmail] = useState("")
   const [subscriptionStatus, setSubscriptionStatus] = useState<"idle" | "success" | "already_subscribed">("idle")
   const [subscribedEmails, setSubscribedEmails] = useState<Set<string>>(new Set())
+  const [showOfferPopup, setShowOfferPopup] = useState(false)
 
   // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0)
+  }, [])
+
+  // Show offer popup after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowOfferPopup(true)
+    }, 3000)
+
+    return () => clearTimeout(timer)
   }, [])
 
   const handleCouponSelect = (coupon: Coupon) => {
@@ -238,6 +249,14 @@ export default function PowerPage() {
     setTimeout(() => {
       setSubscriptionStatus("idle")
     }, 3000)
+  }
+
+  // Top offer for the popup (50% off selected products)
+  const topOffer = {
+    title: "Få upp till 50% rabatt på utvalda produkter",
+    discount: "50%",
+    description: "Spara stort på elektronik, vitvaror och teknikprodukter hos Power",
+    offerUrl: "https://www.power.se",
   }
 
   return (
@@ -485,6 +504,7 @@ export default function PowerPage() {
       </main>
       <Footer />
       {selectedCoupon && <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Power" />}
+      <OfferPopup isOpen={showOfferPopup} onClose={() => setShowOfferPopup(false)} storeName="Power" offer={topOffer} />
     </div>
   )
 }
