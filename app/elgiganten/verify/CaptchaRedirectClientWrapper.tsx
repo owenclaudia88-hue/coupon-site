@@ -10,10 +10,8 @@ export default function CaptchaRedirectClientWrapper() {
   const [verified, setVerified] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Automatically verify (bypass captcha for testing)
-    setVerified(true)
-  }, [])
+<SecurityCaptcha onSuccess={() => setVerified(true)} />
+
 
   useEffect(() => {
     if (verified && offerId) {
@@ -53,6 +51,7 @@ export default function CaptchaRedirectClientWrapper() {
     </div>
   )
 }
+
 
 
 
