@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import SecurityCaptcha from '@/components/SecurityCaptcha'
 
 export default function CaptchaRedirectClientWrapper() {
   const searchParams = useSearchParams()
@@ -9,9 +10,6 @@ export default function CaptchaRedirectClientWrapper() {
 
   const [verified, setVerified] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-<SecurityCaptcha onSuccess={() => setVerified(true)} />
-
 
   useEffect(() => {
     if (verified && offerId) {
@@ -47,10 +45,15 @@ export default function CaptchaRedirectClientWrapper() {
 
   return (
     <div className="flex justify-center items-center min-h-[150px]">
-      <p>Kontrollerar erbjudandet...</p>
+      {!verified ? (
+        <SecurityCaptcha onSuccess={() => setVerified(true)} />
+      ) : (
+        <p>Kontrollerar erbjudandet...</p>
+      )}
     </div>
   )
 }
+
 
 
 
