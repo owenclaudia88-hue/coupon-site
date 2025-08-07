@@ -1,20 +1,14 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import SecurityCaptcha from '@/components/SecurityCaptcha'
+import { useEffect } from 'react'
 
 export default function CaptchaRedirectClientWrapper() {
   const searchParams = useSearchParams()
   const offerId = searchParams.get('id')
 
-  const [verified, setVerified] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   useEffect(() => {
-    if (verified && offerId) {
-      console.log('Making request to /api/get-offer-url...')
-
+    if (offerId) {
       fetch('/api/get-offer-url', {
         method: 'POST',
         headers: {
@@ -27,32 +21,18 @@ export default function CaptchaRedirectClientWrapper() {
           return res.json()
         })
         .then((data) => {
-          console.log('Received redirect URL:', data.url)
-          setTimeout(() => {
-            window.location.href = data.url
-          }, 300)
+          window.location.href = data.url
         })
-        .catch((err) => {
-          console.error(err)
-          setError('Kunde inte ladda erbjudandet.')
+        .catch(() => {
+          // Fail silently to keep the page blank
         })
     }
-  }, [verified, offerId])
+  }, [offerId])
 
-  if (error) {
-    return <p className="text-red-500 text-center">{error}</p>
-  }
-
-  return (
-    <div className="flex justify-center items-center min-h-[150px]">
-      {!verified ? (
-        <SecurityCaptcha onSuccess={() => setVerified(true)} />
-      ) : (
-        <p>Kontrollerar erbjudandet...</p>
-      )}
-    </div>
-  )
+  return null // completely blank page
 }
+
+
 
 
 
