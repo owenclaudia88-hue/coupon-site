@@ -1,51 +1,61 @@
-"use client";
+'use client'
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import SecurityCaptcha from '@/components/SecurityCaptcha'
 
-export default function CaptchaRedirectClientWrapper({ offerId }: { offerId: string }) {
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [error, setError] = useState("");
+export default function CaptchaRedirectClientWrapper() {
+  const searchParams = useSearchParams()
+  const offerId = searchParams.get('id') // example: iphone-16-pro-max
 
-  const handleCaptchaSuccess = async () => {
-    setIsVerifying(true);
-    setError("");
+  const [verified, setVerified] = useState(false)
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-    try {
-      const res = await fetch(`/api/offer-redirect?id=${offerId}`);
-      if (!res.ok) throw new Error("Kunde inte hämta omdirigeringslänken");
-
-      const data = await res.json();
-
-      if (data?.redirectUrl) {
-        window.location.href = data.redirectUrl;
-      } else {
-        throw new Error("Ingen omdirigeringslänk hittades");
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError("Något gick fel. Försök igen.");
-    } finally {
-      setIsVerifying(false);
+  useEffect(() => {
+    if (verified && offerId) {
+      fetch('/api/get-offer-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: offerId }),
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Offer not found')
+          return res.json()
+        })
+        .then(data => {
+          setRedirectUrl(data.url)
+          setTimeout(() => {
+            window.location.href = data.url
+          }, 300)
+        })
+        .catch(err => {
+          console.error(err)
+          setError('Kunde inte ladda erbjudandet.')
+        })
     }
-  };
+  }, [verified, offerId])
+
+  if (error) {
+    return <p className="text-red-500 text-center">{error}</p>
+  }
 
   return (
-    <div>
-      <p className="text-sm text-gray-700 mb-4">
-        Vänligen slutför verifieringen nedan för att fortsätta till erbjudandet.
-      </p>
-
-      {/* Your slider or CAPTCHA component here */}
-      <button
-        onClick={handleCaptchaSuccess}
-        disabled={isVerifying}
-        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition-colors"
-      >
-        {isVerifying ? "Verifierar..." : "Jag är inte en robot"}
-      </button>
-
-      {error && <p className="text-red-500 mt-3 text-sm text-center">{error}</p>}
+    <div className="flex justify-center items-center min-h-[150px]">
+      {!verified ? (
+        <SecurityCaptcha onVerify={() => setVerified(true)} />
+      ) : redirectUrl ? (
+        <p className="text-center text-lg font-medium text-gray-700">
+          Verifierad! Omdirigerar dig nu...<br />
+          <a href={redirectUrl} className="text-blue-600 underline">
+            Klicka här om du inte omdirigeras automatiskt
+          </a>
+        </p>
+      ) : (
+        <p className="text-gray-600">Hämtar erbjudande...</p>
+      )}
     </div>
-  );
+  )
 }
