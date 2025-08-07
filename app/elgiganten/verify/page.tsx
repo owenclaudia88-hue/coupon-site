@@ -1,6 +1,6 @@
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import CaptchaRedirectClientWrapper from "./CaptchaRedirectClient";
+import CaptchaRedirectClientWrapper from "./CaptchaRedirectClientWrapper";
 
 export default function VerifyPage() {
   return (
@@ -18,5 +18,6 @@ export default function VerifyPage() {
     </>
   );
 }
+
 
 
