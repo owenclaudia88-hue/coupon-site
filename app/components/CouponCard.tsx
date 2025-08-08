@@ -42,11 +42,13 @@ export default function CouponCard({ coupon, onSelectCoupon }: CouponCardProps) 
     return discount
   }
 
- const handleClick = () => {
+const handleClick = () => {
+  console.log("Coupon clicked:", coupon)
   if (onSelectCoupon) {
     onSelectCoupon(coupon)
   }
 }
+
 
   return (
     <div
@@ -131,4 +133,5 @@ export default function CouponCard({ coupon, onSelectCoupon }: CouponCardProps) 
     </div>
   )
 }
+
 
