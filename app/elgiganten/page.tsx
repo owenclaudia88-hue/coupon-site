@@ -301,12 +301,12 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [])
 
-  const handleCouponSelect = (coupon: Coupon) => {
-    // Update URL when modal opens
-    const newUrl = `/elgiganten/offer/${coupon.id}#td-offer${coupon.id}`
-    window.history.pushState({ offerId: coupon.id }, "", newUrl)
-    setSelectedCoupon(coupon)
-  }
+const handleCouponSelect = (coupon: Coupon) => {
+  console.log("Coupon selected:", coupon) // See if this logs on click
+  const newUrl = `/elgiganten/offer/${coupon.id}#td-offer${coupon.id}`
+  window.history.pushState({ offerId: coupon.id }, "", newUrl)
+  setSelectedCoupon(coupon)
+}
 
   const handleModalClose = () => {
     // Reset URL when modal closes
@@ -497,4 +497,5 @@ export default function Home() {
   )
 
 }
+
 
