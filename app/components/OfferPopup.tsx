@@ -40,7 +40,7 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
     "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=500&h=300&fit=crop",
     "https://picsum.photos/500/300?random=12",
     "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=500&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1472214103451-b2761acb3c5d?w=500&h=300&fit=crop",
+    "https://picsum.photos/500/300?random=9",
   ]
 
 const redirectToOffer = () => {
