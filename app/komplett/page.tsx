@@ -129,17 +129,21 @@ const komplettCoupons: Coupon[] = [
 
 export default function KomplettPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
+  const [showPuzzleModal, setShowPuzzleModal] = useState(false)
+
 
   // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
-  const handleCouponSelect = (coupon: Coupon) => {
-    const newUrl = `/komplett/offer/${coupon.id}#td-offer${coupon.id}`
-    window.history.pushState({ offerId: coupon.id }, "", newUrl)
-    setSelectedCoupon(coupon)
-  }
+const handleCouponSelect = (coupon: Coupon) => {
+  const newUrl = `/komplett/offer/${coupon.id}#td-offer${coupon.id}`
+  window.history.pushState({ offerId: coupon.id }, "", newUrl)
+  setSelectedCoupon(coupon)
+  setShowPuzzleModal(true)
+}
+
 
   const handleModalClose = () => {
     window.history.pushState({}, "", "/komplett")
@@ -214,7 +218,16 @@ export default function KomplettPage() {
         </div>
       </main>
       <Footer />
-      {selectedCoupon && <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Komplett" />}
+     {selectedCoupon && (<CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Komplett" />
+)}
+
+<SliderPuzzleModal
+  isOpen={showPuzzleModal}
+  onClose={() => setShowPuzzleModal(false)}
+  destinationUrl={selectedCoupon?.offerUrl}
+/>
+
+
     </div>
   )
 }
