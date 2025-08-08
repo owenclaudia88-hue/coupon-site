@@ -8,6 +8,7 @@ import { X, RotateCcw } from "lucide-react"
 interface SliderPuzzleModalProps {
   isOpen: boolean
   onClose: () => void
+  destinationUrl?: string  // 👈 add this line
 }
 
 const puzzleImages = [
@@ -82,9 +83,9 @@ export default function SliderPuzzleModal({ isOpen, onClose }: SliderPuzzleModal
         // Redirect after success animation
         setTimeout(() => {
           // Hidden redirect URL - only revealed after successful verification
-          const redirectUrl = "https://www.elgiganten.se"
-          window.open(redirectUrl, "_blank")
-          onClose()
+          const redirectUrl = destinationUrl || "https://www.elgiganten.se"
+window.location.href = redirectUrl
+
         }, 2000)
       }, 1500)
     }
