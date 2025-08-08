@@ -83,9 +83,10 @@ const redirectToOffer = () => {
     navigator.clipboard.writeText(couponCode)
   }
 
-  const handleVisitStore = () => {
-    window.open(coupon.offerUrl, "_blank")
-  }
+const handleVisitStore = () => {
+  window.location.href = coupon.offerUrl
+}
+
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault()
