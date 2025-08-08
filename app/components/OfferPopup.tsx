@@ -43,13 +43,14 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
     "https://images.unsplash.com/photo-1472214103451-b2761acb3c5d?w=500&h=300&fit=crop",
   ]
 
-  const redirectToOffer = () => {
-    window.open(offer.offerUrl, "_blank")
-    setTimeout(() => {
-      setShowPuzzle(false)
-      onClose()
-    }, 1000)
-  }
+const redirectToOffer = () => {
+  setShowPuzzle(false)
+  onClose()
+  setTimeout(() => {
+    window.location.href = offer.offerUrl
+  }, 300) // slightly delayed to allow modal to close
+}
+
 
   useEffect(() => {
     if (showPuzzle) {
