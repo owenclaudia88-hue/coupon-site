@@ -46,15 +46,11 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
   // Target position (where the piece should go) - 60% from left, 50% from top
   const targetPosition = { x: 60, y: 50 }
 
-  const redirectToOffer = () => {
-    const redirectUrl = coupon.offerUrl || "https://www.elgiganten.se"
-    window.open(redirectUrl, "_blank")
+const redirectToOffer = () => {
+  const redirectUrl = coupon.offerUrl || "https://www.elgiganten.se"
+  window.location.href = redirectUrl
+}
 
-    setTimeout(() => {
-      setShowPuzzle(false)
-      setShowFeedback(true)
-    }, 1000)
-  }
 
   useEffect(() => {
     if (showPuzzle) {
