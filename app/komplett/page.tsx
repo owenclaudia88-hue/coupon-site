@@ -10,6 +10,8 @@ import KomplettMoreInformation from "../components/KomplettMoreInformation"
 import KomplettSelectedProducts from "../components/KomplettSelectedProducts"
 import KomplettFAQ from "../components/KomplettFAQ"
 import KomplettSidebar from "../components/KomplettSidebar"
+import SliderPuzzleModal from "../components/SliderPuzzleModal"
+
 
 interface Coupon {
   id: string
