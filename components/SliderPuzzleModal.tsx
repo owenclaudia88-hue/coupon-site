@@ -137,9 +137,9 @@ window.location.href = redirectUrl
         setShowSuccess(true)
 
         setTimeout(() => {
-          const redirectUrl = "https://www.elgiganten.se"
-          window.open(redirectUrl, "_blank")
-          onClose()
+         const redirectUrl = destinationUrl || "https://www.elgiganten.se"
+window.location.href = redirectUrl
+
         }, 2000)
       }, 1500)
     }
