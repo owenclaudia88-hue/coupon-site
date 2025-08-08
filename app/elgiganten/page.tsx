@@ -79,13 +79,13 @@ const topPromoCoupons: Coupon[] = [
       "Studentrabatt hos Elgiganten! Som student får du 20% rabatt på hela sortimentet. Verifiera din studentstatus och börja spara pengar på all elektronik och teknik du behöver för studierna.",
   },
   {
-    id: "elg-004",
+    id: "free-shipping",
     title: "Fri frakt på beställningar över 500 kr",
     description: "Få gratis standardfrakt på alla beställningar över 500 kr",
     discount: "GRATIS",
     uses: 1247,
     type: "free",
-    offerUrl: "/elgiganten/verify?id=elg-004",
+    offerUrl: "/elgiganten/verify?id=free-shipping",
     expirationDate: "31/12/2025",
     moreInfo:
       "Fri frakt på alla beställningar över 500 kr hos Elgiganten. Handla för minst 500 kr så slipper du fraktkostnaden. Gäller på alla produkter och levereras direkt hem till dig.",
@@ -497,3 +497,4 @@ export default function Home() {
   )
 
 }
+
