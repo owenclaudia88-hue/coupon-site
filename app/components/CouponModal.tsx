@@ -48,8 +48,13 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
 
 const redirectToOffer = () => {
   const redirectUrl = coupon.offerUrl || "https://www.elgiganten.se"
-  window.location.href = redirectUrl
+
+  // Wait 300ms before redirecting to allow modal to close
+  setTimeout(() => {
+    window.location.href = redirectUrl
+  }, 300)
 }
+
 
 
   useEffect(() => {
