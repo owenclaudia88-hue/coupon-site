@@ -486,7 +486,12 @@ const handleCouponSelect = (coupon: Coupon) => {
       </main>
       <Footer />
       {selectedCoupon && <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Elgiganten" />}
-      <SliderPuzzleModal isOpen={showPuzzleModal} onClose={() => setShowPuzzleModal(false)} />
+      <SliderPuzzleModal
+  isOpen={showPuzzleModal}
+  onClose={() => setShowPuzzleModal(false)}
+  destinationUrl={selectedCoupon?.offerUrl}
+/>
+
       <OfferPopup
         isOpen={showOfferPopup}
         onClose={() => setShowOfferPopup(false)}
@@ -497,6 +502,7 @@ const handleCouponSelect = (coupon: Coupon) => {
   )
 
 }
+
 
 
 
