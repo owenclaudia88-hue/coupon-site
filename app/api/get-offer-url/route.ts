@@ -5,9 +5,9 @@ const offerUrls: { [key: string]: string } = {
   'elg-001': 'https://www.elgiganten.se/all-products-sale',
   'elg-002': 'https://www.elgiganten.se/super-sale',
   'elg-003': 'https://www.elgiganten.se/student-discount',
-  'free-shipping': 'https:www.elgiganten.se/free-shipping',
+  'free-shipping': 'https//:www.elgiganten.se/free-shipping',
   'elg-005': 'https://www.elgiganten.se/tv-discount',
-  'elg-006': 'https:/www.elgiganten.se/home-appliances-sale',
+  'elg-006': 'https://www.elgiganten.se/home-appliances-sale',
   'elg-007': 'https://www.elgiganten.se/computers-discount',
   'elg-008': 'https://www.elgiganten.se/gaming-accessories-sale',
   'elg-009': 'https://www.elgiganten.se/extra-discount-clearance',
@@ -38,6 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 }
+
 
 
 
