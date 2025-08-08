@@ -42,11 +42,11 @@ export default function CouponCard({ coupon, onSelectCoupon }: CouponCardProps) 
     return discount
   }
 
-  const handleClick = () => {
-    if (!coupon.expired && onSelectCoupon) {
-      onSelectCoupon(coupon)
-    }
+ const handleClick = () => {
+  if (onSelectCoupon) {
+    onSelectCoupon(coupon)
   }
+}
 
   return (
     <div
@@ -131,3 +131,4 @@ export default function CouponCard({ coupon, onSelectCoupon }: CouponCardProps) 
     </div>
   )
 }
+
