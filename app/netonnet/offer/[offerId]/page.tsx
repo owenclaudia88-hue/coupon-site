@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 
 export default function OfferPage() {
   const params = useParams();
@@ -9,7 +9,7 @@ export default function OfferPage() {
   const offerId = params.offerId as string;
 
   useEffect(() => {
-    const t = setTimeout(() => router.push("/netonnet"), 2000);
+    const t = setTimeout(() => router.push('/netonnet'), 2000);
     return () => clearTimeout(t);
   }, [router]);
 
