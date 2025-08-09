@@ -10,6 +10,7 @@ import KomplettMoreInformation from "../components/KomplettMoreInformation"
 import KomplettSelectedProducts from "../components/KomplettSelectedProducts"
 import KomplettFAQ from "../components/KomplettFAQ"
 import KomplettSidebar from "../components/KomplettSidebar"
+import SecurityCaptcha from "../../components/SecurityCaptcha" // ← same modal as Elgiganten
 
 interface Coupon {
   id: string
@@ -129,16 +130,18 @@ const komplettCoupons: Coupon[] = [
 
 export default function KomplettPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
+  const [showCaptcha, setShowCaptcha] = useState(false)
 
-  // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
   const handleCouponSelect = (coupon: Coupon) => {
+    // mirror Elgiganten: update URL + open coupon modal + show captcha overlay
     const newUrl = `/komplett/offer/${coupon.id}#td-offer${coupon.id}`
     window.history.pushState({ offerId: coupon.id }, "", newUrl)
     setSelectedCoupon(coupon)
+    setShowCaptcha(true)
   }
 
   const handleModalClose = () => {
@@ -150,7 +153,7 @@ export default function KomplettPage() {
     <div className="min-h-screen bg-white">
       <Header />
       <main className="container mx-auto px-4 py-4 md:py-6">
-        {/* Page header */}
+        {/* page header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6 md:mb-8">
           <div className="w-20 h-12 sm:w-24 sm:h-16 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 p-2 flex-shrink-0">
             <img src="/images/komplett-logo.svg" alt="Komplett Logo" className="w-full h-full object-contain" />
@@ -179,6 +182,7 @@ export default function KomplettPage() {
                   <CouponCard
                     key={coupon.id}
                     coupon={coupon}
+                    // CouponCard in your repo expects onUseDiscount
                     onUseDiscount={() => handleCouponSelect(coupon)}
                   />
                 ))}
@@ -200,10 +204,17 @@ export default function KomplettPage() {
 
       <Footer />
 
+      {/* Coupon details modal */}
       {selectedCoupon && (
         <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Komplett" />
       )}
+
+      {/* Security captcha overlay (same visuals as Elgiganten) */}
+      <SecurityCaptcha
+        isOpen={showCaptcha}
+        onClose={() => setShowCaptcha(false)}
+        redirectUrl={selectedCoupon?.offerUrl || "/komplett"}
+      />
     </div>
   )
 }
-
