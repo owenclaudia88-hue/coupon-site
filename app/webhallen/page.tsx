@@ -11,7 +11,6 @@ import WebhallenMoreInformation from "../components/WebhallenMoreInformation"
 import WebhallenFAQ from "../components/WebhallenFAQ"
 import WebhallenSelectedProducts from "../components/WebhallenSelectedProducts"
 import WebhallenSidebar from "../components/WebhallenSidebar"
-import SliderPuzzleModal from "../../components/SliderPuzzleModal"
 
 interface Coupon {
   id: string
@@ -35,7 +34,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "35%",
     uses: 789,
     type: "percentage",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=gaming-computer-special",
     expirationDate: "15/9/2025",
     moreInfo:
       "Begränsat erbjudande på gaming-datorer. Få upp till 35% rabatt på färdigbyggda gaming-riggar med RTX 4070, RTX 4080 och RTX 4090. Perfekt för gaming och streaming. Ingen kod behövs - rabatten tillämpas automatiskt vid köp.",
@@ -47,7 +46,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "30%",
     uses: 456,
     type: "percentage",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-001",
     expirationDate: "30/9/2025",
     moreInfo:
       "30% rabatt på gaming-laptops från ASUS ROG, MSI Gaming, Razer Blade och andra premium gaming-märken. Perfekt för gaming på sprung eller för studenter som behöver kraftfull prestanda.",
@@ -59,7 +58,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "SUPER",
     uses: 234,
     type: "super",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-002",
     expirationDate: "12/9/2025",
     moreInfo:
       "Superrea på gaming-tillbehör med upp till 50% rabatt. Gäller produkter från Razer, Logitech G, SteelSeries, HyperX och Corsair. Uppgradera din gaming-setup till oslagbara priser.",
@@ -71,7 +70,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "15%",
     uses: 567,
     type: "percentage",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-003",
     expirationDate: "31/12/2025",
     moreInfo:
       "Studentrabatt hos Webhallen! Som student får du 15% rabatt på hela sortimentet. Verifiera din studentstatus och börja spara på gaming-datorer, komponenter och tillbehör.",
@@ -83,7 +82,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "GRATIS",
     uses: 1123,
     type: "free",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-004",
     expirationDate: "31/12/2025",
     moreInfo:
       "Fri frakt på alla beställningar över 500 kr hos Webhallen. Handla gaming-produkter för minst 500 kr så slipper du fraktkostnaden. Snabb leverans direkt hem till dig.",
@@ -95,7 +94,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "2200 kr",
     uses: 89,
     type: "amount",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-005",
     expirationDate: "31/10/2025",
     moreInfo:
       "Få 2200 kr rabatt på grafikkort över 8000 kr. Gäller NVIDIA RTX 4070, RTX 4080, RTX 4090 och AMD RX 7800 XT, RX 7900 XTX. Perfekt för att uppgradera din gaming-rigg.",
@@ -107,7 +106,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "25%",
     uses: 178,
     type: "percentage",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-006",
     expirationDate: "25/9/2025",
     moreInfo:
       "25% rabatt på alla VR-headsets. Gäller Meta Quest 3, PICO 4, HTC Vive och andra VR-system. Upplev virtual reality till ett fantastiskt pris.",
@@ -119,7 +118,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "1800 kr",
     uses: 123,
     type: "amount",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-007",
     expirationDate: "15/10/2025",
     moreInfo:
       "Spara 1800 kr på streaming-utrustning. Gäller Elgato Stream Deck, Logitech streamlabs-kameror, Blue Yeti-mikrofoner och professionell ljussättning för streamers.",
@@ -131,7 +130,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "30%",
     uses: 267,
     type: "percentage",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-008",
     expirationDate: "20/9/2025",
     moreInfo:
       "30% rabatt på gaming-stolar. Gäller Secretlab Titan Evo, DXRacer Formula Series och andra ergonomiska gaming-stolar. Spela bekvämt i timmar.",
@@ -143,7 +142,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "20%",
     uses: 345,
     type: "percentage",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-009",
     expirationDate: "15/10/2025",
     moreInfo:
       "20% rabatt på gaming-monitorer. Gäller ASUS ROG, MSI Gaming, AOC Gaming och andra gaming-skärmar med hög refresh rate och låg input lag.",
@@ -155,7 +154,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "1500 kr",
     uses: 234,
     type: "amount",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-010",
     expirationDate: "30/11/2025",
     moreInfo:
       "1500 kr rabatt på spelkonsoler. Gäller PlayStation 5, Xbox Series X|S, Nintendo Switch OLED och Steam Deck. Börja spela de senaste spelen för mindre pengar.",
@@ -167,7 +166,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "GRATIS",
     uses: 67,
     type: "free",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-011",
     expirationDate: "31/12/2025",
     moreInfo:
       "Fri bygghjälp när du köper komponenter för över 15000 kr. Våra experter bygger din gaming-dator åt dig utan extra kostnad. Inkluderar installation av Windows och grundläggande konfiguration.",
@@ -179,7 +178,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "10%",
     uses: 678,
     type: "percentage",
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-012",
     expirationDate: "31/12/2025",
     moreInfo:
       "10% välkomstrabatt för nya kunder. Registrera dig som ny kund och få rabatt på ditt första köp. Gäller på hela gaming-sortimentet och kan kombineras med andra erbjudanden.",
@@ -195,7 +194,7 @@ const expiredCoupons: Coupon[] = [
     uses: 2340,
     type: "percentage",
     expired: true,
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-exp-001",
     expirationDate: "27/11/2024",
     moreInfo:
       "Denna fantastiska Black Friday-rabatt på 60% för gaming-tillbehör har tyvärr gått ut. Håll utkik efter liknande erbjudanden under kommande kampanjperioder.",
@@ -208,7 +207,7 @@ const expiredCoupons: Coupon[] = [
     uses: 89,
     type: "amount",
     expired: true,
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-exp-002",
     expirationDate: "28/11/2024",
     moreInfo:
       "Cyber Monday-erbjudandet med 4000 kr rabatt på RTX 4090 grafikkort har avslutats. Detta var ett av årets bästa erbjudanden för high-end gaming.",
@@ -221,7 +220,7 @@ const expiredCoupons: Coupon[] = [
     uses: 156,
     type: "percentage",
     expired: true,
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-exp-003",
     expirationDate: "31/7/2024",
     moreInfo:
       "Sommarens VR-kampanj med 40% rabatt på headsets har gått ut. Kampanjen erbjöd fantastiska priser på Meta Quest och HTC Vive under sommarmånaderna.",
@@ -234,7 +233,7 @@ const expiredCoupons: Coupon[] = [
     uses: 1567,
     type: "free",
     expired: true,
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-exp-004",
     expirationDate: "31/12/2024",
     moreInfo:
       "Julkampanjen med fri frakt på alla gaming-produkter har avslutats. Under kampanjen kunde kunder få fri frakt oavsett orderbelopp.",
@@ -247,7 +246,7 @@ const expiredCoupons: Coupon[] = [
     uses: 234,
     type: "percentage",
     expired: true,
-    offerUrl: "https://www.webhallen.com",
+    offerUrl: "/webhallen/verify?id=wh-exp-005",
     expirationDate: "31/3/2024",
     moreInfo:
       "Påskens specialerbjudande på gaming-datorer har gått ut. Kampanjen erbjöd 35% rabatt på färdigbyggda gaming-riggar med RTX 4070 och RTX 4080.",
@@ -256,22 +255,18 @@ const expiredCoupons: Coupon[] = [
 
 export default function WebhallenPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
-  const [showPuzzleModal, setShowPuzzleModal] = useState(false)
 
-  // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
   const handleCouponSelect = (coupon: Coupon) => {
-    // Update URL when modal opens
     const newUrl = `/webhallen/offer/${coupon.id}#td-offer${coupon.id}`
     window.history.pushState({ offerId: coupon.id }, "", newUrl)
     setSelectedCoupon(coupon)
   }
 
   const handleModalClose = () => {
-    // Reset URL when modal closes
     window.history.pushState({}, "", "/webhallen")
     setSelectedCoupon(null)
   }
@@ -288,18 +283,17 @@ export default function WebhallenPage() {
       <main className="container mx-auto px-4 py-4 md:py-6">
         <div className="hidden md:block">
           <nav className="flex items-center space-x-2 text-sm text-gray-600">
-            <a href="/" className="hover:text-green-600">
-              Hem
-            </a>
+            <a href="/" className="hover:text-green-600">Hem</a>
             <span className="w-4 h-4">›</span>
             <span className="text-gray-900 font-bold">Webhallen</span>
           </nav>
         </div>
+
         <div className="flex flex-col xl:flex-row gap-6 xl:gap-8 mt-4 md:mt-6">
           <div className="flex-1 min-w-0">
             <WebhallenHeroSection />
 
-            {/* Gaming Computer Special Promotion */}
+            {/* Hero special */}
             <div className="mt-6 md:mt-8 bg-gradient-to-r from-blue-50 via-orange-50 to-blue-50 rounded-lg p-4 md:p-6 border-2 border-orange-200 shadow-lg">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
@@ -319,18 +313,17 @@ export default function WebhallenPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    const gamingCoupon = {
+                  onClick={() =>
+                    handleCouponSelect({
                       id: "gaming-computer-special",
                       title: "Gaming-datorer - Upp till 35% rabatt",
                       description: "Spara stort på de senaste gaming-datorerna hos Webhallen",
                       discount: "35%",
                       uses: 789,
-                      type: "percentage" as const,
-                      offerUrl: "https://www.webhallen.com",
-                    }
-                    handleCouponSelect(gamingCoupon)
-                  }}
+                      type: "percentage",
+                      offerUrl: "/webhallen/verify?id=gaming-computer-special",
+                    })
+                  }
                   className="bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 w-full sm:w-auto text-center"
                 >
                   Använd rabatt
@@ -338,7 +331,7 @@ export default function WebhallenPage() {
               </div>
             </div>
 
-            {/* Top Promo Codes Section */}
+            {/* Top list */}
             <section className="mt-6 md:mt-8">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
                 Topp Webhallen rabattkoder för{" "}
@@ -351,15 +344,18 @@ export default function WebhallenPage() {
               <div className="text-xs md:text-sm text-gray-500 mb-4">När du gör ett köp kan vi tjäna en provision.</div>
               <div className="space-y-3 md:space-y-4">
                 {topPromoCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} onUseDiscount={() => handleCouponSelect(coupon)} />
+                  <CouponCard
+                    key={coupon.id}
+                    coupon={coupon}
+                    onSelectCoupon={handleCouponSelect}
+                  />
                 ))}
               </div>
             </section>
 
-            {/* Email Subscription */}
             <EmailSubscription />
 
-            {/* Current Coupon Codes Table */}
+            {/* Table */}
             <section className="mt-8 md:mt-12">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
                 Aktuella Webhallen rabattkoder för september
@@ -389,8 +385,8 @@ export default function WebhallenPage() {
                                 coupon.type === "super"
                                   ? "text-orange-600"
                                   : coupon.type === "free"
-                                    ? "text-green-600"
-                                    : "text-orange-600"
+                                  ? "text-green-600"
+                                  : "text-orange-600"
                               }`}
                             >
                               {getDiscountDisplay(coupon.discount, coupon.type)}
@@ -418,35 +414,24 @@ export default function WebhallenPage() {
               </div>
             </section>
 
-            {/* Expired Codes */}
-            <section className="mt-8 md:mt-12">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Utgångna rabattkoder</h2>
-              <div className="space-y-3 md:space-y-4">
-                {expiredCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} onUseDiscount={() => handleCouponSelect(coupon)} />
-                ))}
-              </div>
-            </section>
-
-            {/* More Information */}
             <WebhallenMoreInformation />
-
-            {/* Selected Products Section */}
             <WebhallenSelectedProducts />
-
-            {/* FAQ Section */}
             <WebhallenFAQ />
           </div>
 
-          {/* Sidebar - Hidden on mobile, shown on desktop */}
           <div className="hidden xl:block xl:w-80 flex-shrink-0">
             <WebhallenSidebar />
           </div>
         </div>
       </main>
       <Footer />
-      {selectedCoupon && <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Webhallen" />}
-      <SliderPuzzleModal isOpen={showPuzzleModal} onClose={() => setShowPuzzleModal(false)} />
+      {selectedCoupon && (
+        <CouponModal
+          coupon={selectedCoupon}
+          onClose={handleModalClose}
+          storeName="Webhallen"
+        />
+      )}
     </div>
   )
 }
