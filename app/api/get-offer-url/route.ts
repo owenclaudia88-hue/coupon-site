@@ -1,7 +1,7 @@
-// app/<store>/verify/route.ts
+// app/api/get-offer-url/route.ts
 import { NextRequest, NextResponse } from "next/server"
 
-// 👇 Relative to: app/<store>/verify/route.ts  (go up to "app/", then into each store)
+// Relative to this file (../../ goes back to app/)
 import { offerRedirects as elgigantenRedirects } from "../../elgiganten/offerRedirects"
 import { offerRedirects as komplettRedirects }   from "../../komplett/offerRedirects"
 import { offerRedirects as powerRedirects }      from "../../power/offerRedirects"
@@ -21,16 +21,18 @@ const maps: Record<StoreKey, Record<string, string>> = {
 }
 
 function inferStore(req: NextRequest, explicit?: string): StoreKey {
+  // 1) explicit wins
   if (explicit && explicit in maps) return explicit as StoreKey
 
+  // 2) infer from Referer (works with your existing client calls)
   const ref = (req.headers.get("referer") || "").toLowerCase()
-
   if (ref.includes("/komplett"))  return "komplett"
   if (ref.includes("/power"))     return "power"
   if (ref.includes("/netonnet"))  return "netonnet"
   if (ref.includes("/webhallen")) return "webhallen"
   if (ref.includes("/cdon"))      return "cdon"
-  // default
+
+  // 3) default
   return "elgiganten"
 }
 
@@ -49,13 +51,13 @@ export async function POST(req: NextRequest) {
 
     const chosenStore = inferStore(req, store)
     const table = maps[chosenStore]
-    const url = table[id]
+    const url = table?.[id]
 
     if (!url) return new NextResponse("Offer not found", { status: 404 })
 
     return NextResponse.json({ url })
   } catch (err) {
-    console.error("resolve-offer error:", err)
+    console.error("get-offer-url error:", err)
     return new NextResponse("Internal Server Error", { status: 500 })
   }
 }
