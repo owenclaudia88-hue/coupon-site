@@ -190,13 +190,14 @@ export default function KomplettPage() {
 
               <div className="space-y-3 md:space-y-4">
                 {komplettCoupons.map((coupon) => (
-                  <CouponCard
-                    key={coupon.id}
-                    coupon={coupon}
-                    // IMPORTANT: CouponCard expects onUseDiscount
-                    onUseDiscount={() => handleCouponSelect(coupon)}
-                  />
-                ))}
+  <CouponCard
+    key={coupon.id}
+    coupon={coupon}
+    onUseDiscount={() => handleCouponSelect(coupon)}   // ✅ what CouponCard expects
+    onSelectCoupon={() => handleCouponSelect(coupon)}  // ✅ just in case older prop is used anywhere
+  />
+))}
+
               </div>
             </section>
 
