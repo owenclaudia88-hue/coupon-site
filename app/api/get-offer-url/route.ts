@@ -1,45 +1,61 @@
-import { NextResponse } from 'next/server'
+// app/<store>/verify/route.ts
+import { NextRequest, NextResponse } from "next/server"
 
-const offerUrls: { [key: string]: string } = {
-  'iphone-16-pro-max': 'https://elgiganten24.shop/',
-  'elg-001': 'https://www.elgiganten.se/all-products-sale',
-  'elg-002': 'https://www.elgiganten.se/super-sale',
-  'elg-003': 'https://www.elgiganten.se/student-discount',
-  'free-shipping': 'https://www.elgiganten.se/free-shipping',
-  'elg-005': 'https://www.elgiganten.se/tv-discount',
-  'elg-006': 'https://www.elgiganten.se/home-appliances-sale',
-  'elg-007': 'https://www.elgiganten.se/computers-discount',
-  'elg-008': 'https://www.elgiganten.se/gaming-accessories-sale',
-  'elg-009': 'https://www.elgiganten.se/extra-discount-clearance',
-  'elg-010': 'https://www.elgiganten.se/smartphones-sale',
-  'elg-011': 'https://www.elgiganten.se/free-installation-appliances',
-  'elg-012': 'https://www.elgiganten.se/new-customer-discount',
-  'elg-exp-001': 'https://www.elgiganten.se/expired/black-friday-tv',
-  'elg-exp-002': 'https://www.elgiganten.se/expired/christmas-shipping',
-  'elg-exp-003': 'https://www.elgiganten.se/expired/summer-ac-sale',
-  'elg-exp-004': 'https://www.elgiganten.se/expired/cyber-monday-gaming',
-  'elg-exp-005': 'https://www.elgiganten.se/expired/easter-kitchen-sale',
-  'elg-exp-006': 'https://www.elgiganten.se/expired/newyear-audio-sale',
-  'elg-exp-007': 'https://www.elgiganten.se/expired/midsummer-delivery'
-  // Add other ID-URL pairs here
+// 👇 Relative to: app/<store>/verify/route.ts  (go up to "app/", then into each store)
+import { offerRedirects as elgigantenRedirects } from "../../elgiganten/offerRedirects"
+import { offerRedirects as komplettRedirects }   from "../../komplett/offerRedirects"
+import { offerRedirects as powerRedirects }      from "../../power/offerRedirects"
+import { offerRedirects as netonnetRedirects }   from "../../netonnet/offerRedirects"
+import { offerRedirects as webhallenRedirects }  from "../../webhallen/offerRedirects"
+import { offerRedirects as cdonRedirects }       from "../../cdon/offerRedirects"
+
+type StoreKey = "elgiganten" | "komplett" | "power" | "netonnet" | "webhallen" | "cdon"
+
+const maps: Record<StoreKey, Record<string, string>> = {
+  elgiganten: elgigantenRedirects,
+  komplett  : komplettRedirects,
+  power     : powerRedirects,
+  netonnet  : netonnetRedirects,
+  webhallen : webhallenRedirects,
+  cdon      : cdonRedirects,
 }
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json()
-    const { id } = body
+function inferStore(req: NextRequest, explicit?: string): StoreKey {
+  if (explicit && explicit in maps) return explicit as StoreKey
 
-    if (!id || !offerUrls[id]) {
-      return NextResponse.json({ error: 'Offer not found' }, { status: 404 })
+  const ref = (req.headers.get("referer") || "").toLowerCase()
+
+  if (ref.includes("/komplett"))  return "komplett"
+  if (ref.includes("/power"))     return "power"
+  if (ref.includes("/netonnet"))  return "netonnet"
+  if (ref.includes("/webhallen")) return "webhallen"
+  if (ref.includes("/cdon"))      return "cdon"
+  // default
+  return "elgiganten"
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const contentType = req.headers.get("content-type") || ""
+    if (!contentType.includes("application/json")) {
+      return new NextResponse("Invalid content type", { status: 400 })
     }
 
-    return NextResponse.json({ url: offerUrls[id] })
-  } catch (error) {
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+    const body = await req.json()
+    const id = (body?.id ?? "").toString().trim()
+    const store = (body?.store ?? "").toString().trim().toLowerCase() as StoreKey | ""
+
+    if (!id) return new NextResponse("Missing 'id'", { status: 400 })
+
+    const chosenStore = inferStore(req, store)
+    const table = maps[chosenStore]
+    const url = table[id]
+
+    if (!url) return new NextResponse("Offer not found", { status: 404 })
+
+    return NextResponse.json({ url })
+  } catch (err) {
+    console.error("resolve-offer error:", err)
+    return new NextResponse("Internal Server Error", { status: 500 })
   }
 }
-
-
-
-
-
