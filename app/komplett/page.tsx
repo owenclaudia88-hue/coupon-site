@@ -10,8 +10,6 @@ import KomplettMoreInformation from "../components/KomplettMoreInformation"
 import KomplettSelectedProducts from "../components/KomplettSelectedProducts"
 import KomplettFAQ from "../components/KomplettFAQ"
 import KomplettSidebar from "../components/KomplettSidebar"
-import SliderPuzzleModal from "../../components/SliderPuzzleModal"
-import OfferPopup from "../components/OfferPopup"
 
 interface Coupon {
   id: string
@@ -131,24 +129,16 @@ const komplettCoupons: Coupon[] = [
 
 export default function KomplettPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
-  const [showPuzzleModal, setShowPuzzleModal] = useState(false)
-  const [showOfferPopup, setShowOfferPopup] = useState(false)
 
+  // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [])
-
-  // show timed popup like Elgiganten
-  useEffect(() => {
-    const t = setTimeout(() => setShowOfferPopup(true), 3000)
-    return () => clearTimeout(t)
   }, [])
 
   const handleCouponSelect = (coupon: Coupon) => {
     const newUrl = `/komplett/offer/${coupon.id}#td-offer${coupon.id}`
     window.history.pushState({ offerId: coupon.id }, "", newUrl)
     setSelectedCoupon(coupon)
-    setShowPuzzleModal(true) // keep parity with Elgiganten which opens the slider modal overlay
   }
 
   const handleModalClose = () => {
@@ -156,25 +146,11 @@ export default function KomplettPage() {
     setSelectedCoupon(null)
   }
 
-  const getDiscountDisplay = (discount: string, type: string) => {
-    if (type === "super") return "SUPER Rabatt"
-    if (type === "free") return "GRATIS Rabatt"
-    return `${discount} Rabatt`
-  }
-
-  // Popup “top offer” (use your first Komplett coupon)
-  const topOffer = {
-    title: "Upp till 45% rabatt på datorer och komponenter",
-    discount: "45%",
-    description: "Spara stort på processorer, grafikkort och färdigbyggda datorer",
-    offerUrl: "/komplett/verify?id=komp-001",
-  }
-
   return (
     <div className="min-h-screen bg-white">
       <Header />
       <main className="container mx-auto px-4 py-4 md:py-6">
-        {/* Page header (Komplett styling) */}
+        {/* Page header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6 md:mb-8">
           <div className="w-20 h-12 sm:w-24 sm:h-16 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 p-2 flex-shrink-0">
             <img src="/images/komplett-logo.svg" alt="Komplett Logo" className="w-full h-full object-contain" />
@@ -191,7 +167,7 @@ export default function KomplettPage() {
           <div className="flex-1 min-w-0">
             <KomplettHeroSection />
 
-            {/* Top promo list – same interaction pattern as Elgiganten */}
+            {/* Top promo codes */}
             <section className="mt-6 md:mt-8">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
                 Topp Komplett rabattkoder för{" "}
@@ -203,9 +179,7 @@ export default function KomplettPage() {
                   <CouponCard
                     key={coupon.id}
                     coupon={coupon}
-                    // Match Elgiganten: CouponCard there calls onSelectCoupon
-                    onSelectCoupon={() => handleCouponSelect(coupon)}
-                    // If your shared component still expects onUseDiscount, swap the prop name above accordingly.
+                    onUseDiscount={() => handleCouponSelect(coupon)}
                   />
                 ))}
               </div>
@@ -223,25 +197,13 @@ export default function KomplettPage() {
           </div>
         </div>
       </main>
+
       <Footer />
 
       {selectedCoupon && (
         <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Komplett" />
       )}
-
-      {/* Keep the slider modal like Elgiganten (remove if you decide to not use it) */}
-      <SliderPuzzleModal
-        isOpen={showPuzzleModal}
-        onClose={() => setShowPuzzleModal(false)}
-        destinationUrl={selectedCoupon?.offerUrl}
-      />
-
-      <OfferPopup
-        isOpen={showOfferPopup}
-        onClose={() => setShowOfferPopup(false)}
-        storeName="Komplett"
-        offer={topOffer}
-      />
     </div>
   )
 }
+
