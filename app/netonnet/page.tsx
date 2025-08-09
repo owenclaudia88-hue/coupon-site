@@ -11,6 +11,7 @@ import NetOnNetMoreInformation from "../components/NetOnNetMoreInformation"
 import NetOnNetFAQ from "../components/NetOnNetFAQ"
 import NetOnNetSelectedProducts from "../components/NetOnNetSelectedProducts"
 import NetOnNetSidebar from "../components/NetOnNetSidebar"
+import OfferPopup from "../components/OfferPopup"
 
 interface Coupon {
   id: string
@@ -36,8 +37,7 @@ const topPromoCoupons: Coupon[] = [
     type: "percentage",
     offerUrl: "/netonnet/verify?id=macbook-air-special",
     expirationDate: "15/9/2025",
-    moreInfo:
-      "Begränsat erbjudande på MacBook Air M2. Ingen kod behövs – rabatten tillämpas automatiskt.",
+    moreInfo: "Begränsat erbjudande på MacBook Air M2. Ingen kod behövs – rabatten tillämpas automatiskt.",
   },
   {
     id: "non-001",
@@ -48,8 +48,7 @@ const topPromoCoupons: Coupon[] = [
     type: "percentage",
     offerUrl: "/netonnet/verify?id=non-001",
     expirationDate: "30/9/2025",
-    moreInfo:
-      "Gäller gaming-datorer, kontorsdatorer, laptops och workstations.",
+    moreInfo: "Gäller gaming-datorer, kontorsdatorer, laptops och workstations.",
   },
   {
     id: "non-002",
@@ -60,8 +59,7 @@ const topPromoCoupons: Coupon[] = [
     type: "super",
     offerUrl: "/netonnet/verify?id=non-002",
     expirationDate: "12/9/2025",
-    moreInfo:
-      "Begränsat antal produkter och begränsad tid.",
+    moreInfo: "Begränsat antal produkter och begränsad tid.",
   },
   {
     id: "non-003",
@@ -72,8 +70,7 @@ const topPromoCoupons: Coupon[] = [
     type: "percentage",
     offerUrl: "/netonnet/verify?id=non-003",
     expirationDate: "31/12/2025",
-    moreInfo:
-      "Verifiera studentstatus och börja spara på elektronik för studierna.",
+    moreInfo: "Verifiera studentstatus och börja spara på elektronik för studierna.",
   },
   {
     id: "non-004",
@@ -84,8 +81,7 @@ const topPromoCoupons: Coupon[] = [
     type: "free",
     offerUrl: "/netonnet/verify?id=non-004",
     expirationDate: "31/12/2025",
-    moreInfo:
-      "Gäller på alla produkter, hemleverans eller utlämningsställe.",
+    moreInfo: "Gäller på alla produkter, hemleverans eller utlämningsställe.",
   },
   {
     id: "non-005",
@@ -96,8 +92,7 @@ const topPromoCoupons: Coupon[] = [
     type: "amount",
     offerUrl: "/netonnet/verify?id=non-005",
     expirationDate: "31/10/2025",
-    moreInfo:
-      "Gäller 4K/8K QLED och Neo QLED modeller.",
+    moreInfo: "Gäller 4K/8K QLED och Neo QLED modeller.",
   },
   {
     id: "non-006",
@@ -108,8 +103,7 @@ const topPromoCoupons: Coupon[] = [
     type: "percentage",
     offerUrl: "/netonnet/verify?id=non-006",
     expirationDate: "25/9/2025",
-    moreInfo:
-      "Razer, Logitech, SteelSeries, Corsair m.fl.",
+    moreInfo: "Razer, Logitech, SteelSeries, Corsair m.fl.",
   },
   {
     id: "non-007",
@@ -120,8 +114,7 @@ const topPromoCoupons: Coupon[] = [
     type: "amount",
     offerUrl: "/netonnet/verify?id=non-007",
     expirationDate: "15/10/2025",
-    moreInfo:
-      "Gäller alla färger och lagringskapaciteter.",
+    moreInfo: "Gäller alla färger och lagringskapaciteter.",
   },
   {
     id: "non-008",
@@ -132,8 +125,7 @@ const topPromoCoupons: Coupon[] = [
     type: "percentage",
     offerUrl: "/netonnet/verify?id=non-008",
     expirationDate: "20/9/2025",
-    moreInfo:
-      "Både trådlösa och kabelanslutna modeller ingår.",
+    moreInfo: "Både trådlösa och kabelanslutna modeller ingår.",
   },
   {
     id: "non-009",
@@ -144,8 +136,7 @@ const topPromoCoupons: Coupon[] = [
     type: "percentage",
     offerUrl: "/netonnet/verify?id=non-009",
     expirationDate: "15/10/2025",
-    moreInfo:
-      "Bosch, Siemens, Electrolux m.fl.",
+    moreInfo: "Bosch, Siemens, Electrolux m.fl.",
   },
   {
     id: "non-010",
@@ -156,8 +147,7 @@ const topPromoCoupons: Coupon[] = [
     type: "amount",
     offerUrl: "/netonnet/verify?id=non-010",
     expirationDate: "30/11/2025",
-    moreInfo:
-      "Gäller S24, S24+ och S24 Ultra.",
+    moreInfo: "Gäller S24, S24+ och S24 Ultra.",
   },
   {
     id: "non-011",
@@ -168,8 +158,7 @@ const topPromoCoupons: Coupon[] = [
     type: "free",
     offerUrl: "/netonnet/verify?id=non-011",
     expirationDate: "31/12/2025",
-    moreInfo:
-      "Kyl, frys, tvätt, diskmaskin m.m.",
+    moreInfo: "Kyl, frys, tvätt, diskmaskin m.m.",
   },
   {
     id: "non-012",
@@ -180,8 +169,7 @@ const topPromoCoupons: Coupon[] = [
     type: "percentage",
     offerUrl: "/netonnet/verify?id=non-012",
     expirationDate: "31/12/2025",
-    moreInfo:
-      "Gäller hela sortimentet och kan kombineras med andra erbjudanden.",
+    moreInfo: "Gäller hela sortimentet och kan kombineras med andra erbjudanden.",
   },
 ]
 
@@ -250,9 +238,16 @@ const expiredCoupons: Coupon[] = [
 
 export default function NetOnNetPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
+  const [showOfferPopup, setShowOfferPopup] = useState(false)
 
   useEffect(() => {
     window.scrollTo(0, 0)
+  }, [])
+
+  // Special offer popup after 3s (same behavior as Elgiganten/Power)
+  useEffect(() => {
+    const t = setTimeout(() => setShowOfferPopup(true), 3000)
+    return () => clearTimeout(t)
   }, [])
 
   const handleSelectCoupon = (coupon: Coupon) => {
@@ -272,13 +267,23 @@ export default function NetOnNetPage() {
     return `${discount} Rabatt`
   }
 
+  // Top offer for the timed popup (mirror Elgiganten pattern)
+  const topOffer = {
+    title: "Upp till 50% rabatt på MacBook Air M2",
+    discount: "50%",
+    description: "Spara stort på den senaste MacBook Air M2 hos NetOnNet",
+    offerUrl: "/netonnet/verify?id=macbook-air-special",
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
+
       <main className="container mx-auto px-4 py-4 md:py-6">
+        {/* Breadcrumb */}
         <div className="hidden md:block">
           <nav className="flex items-center space-x-2 text-sm text-gray-600">
-            <a href="/" className="hover:text-green-600">Hem</a>
+            <a href="/" className="hover:text-blue-600">Hem</a>
             <span className="w-4 h-4">›</span>
             <span className="text-gray-900 font-bold">NetOnNet</span>
           </nav>
@@ -409,6 +414,7 @@ export default function NetOnNetPage() {
           </div>
         </div>
       </main>
+
       <Footer />
 
       {selectedCoupon && (
@@ -418,6 +424,18 @@ export default function NetOnNetPage() {
           storeName="NetOnNet"
         />
       )}
+
+      <OfferPopup
+        isOpen={showOfferPopup}
+        onClose={() => setShowOfferPopup(false)}
+        storeName="NetOnNet"
+        offer={{
+          title: topOffer.title,
+          discount: topOffer.discount,
+          description: topOffer.description,
+          offerUrl: topOffer.offerUrl,
+        }}
+      />
     </div>
   )
 }
