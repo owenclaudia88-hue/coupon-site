@@ -2,7 +2,7 @@
 export const offerRedirects: Record<string, string> = {
   "macbook-air-special": "https://www.netonnet.se/",
   "non-001": "https://www.netonnet.se/",
-  "non-002": "https://www.netonnet.se/kampanj/",
+  "non-002": "https://www.netonnet.se/",
   "non-003": "https://www.netonnet.se/",
   "non-004": "https://www.netonnet.se/",
   "non-005": "https://www.netonnet.se/",
