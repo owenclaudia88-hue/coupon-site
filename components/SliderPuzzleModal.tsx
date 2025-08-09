@@ -1,14 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation" // NEW
 import { X, RotateCcw } from "lucide-react"
 
 interface SliderPuzzleModalProps {
   isOpen: boolean
   onClose: () => void
-  destinationUrl?: string  // 👈 add this line
+  destinationUrl?: string
 }
 
 const puzzleImages = [
@@ -18,7 +18,13 @@ const puzzleImages = [
   "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500&h=300&fit=crop&crop=center",
 ]
 
-export default function SliderPuzzleModal({ isOpen, onClose }: SliderPuzzleModalProps) {
+export default function SliderPuzzleModal({
+  isOpen,
+  onClose,
+  destinationUrl,             // NEW: actually receive it
+}: SliderPuzzleModalProps) {
+  const router = useRouter()   // NEW
+
   const [isDragging, setIsDragging] = useState(false)
   const [piecePosition, setPiecePosition] = useState(50)
   const [isCompleted, setIsCompleted] = useState(false)
@@ -30,15 +36,11 @@ export default function SliderPuzzleModal({ isOpen, onClose }: SliderPuzzleModal
   const containerRef = useRef<HTMLDivElement>(null)
   const pieceRef = useRef<HTMLDivElement>(null)
 
-  // Target position for the missing piece (center-right area)
   const targetPosition = 320
   const tolerance = 25
 
-  // Reset state when modal opens
   useEffect(() => {
-    if (isOpen) {
-      resetPuzzle()
-    }
+    if (isOpen) resetPuzzle()
   }, [isOpen])
 
   const resetPuzzle = () => {
@@ -57,45 +59,36 @@ export default function SliderPuzzleModal({ isOpen, onClose }: SliderPuzzleModal
     e.preventDefault()
   }
 
+  const succeedAndRedirect = () => {
+    setIsCompleted(true)
+    setIsVerifying(false)
+    setShowSuccess(true)
+
+    setTimeout(() => {
+      const url = destinationUrl || "/"
+      router.push(url)          // CHANGED: use router
+      onClose()
+    }, 2000)
+  }
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !containerRef.current || isCompleted) return
-
     const rect = containerRef.current.getBoundingClientRect()
     const imageWidth = rect.width
     const newPosition = Math.max(25, Math.min(e.clientX - rect.left, imageWidth - 25))
-
     setPiecePosition(newPosition)
 
-    // Check if piece is close to target position
-    const distance = Math.abs(newPosition - targetPosition)
-
-    if (distance < tolerance) {
+    if (Math.abs(newPosition - targetPosition) < tolerance) {
       setIsDragging(false)
       setPiecePosition(targetPosition)
       setIsVerifying(true)
-
-      // Simulate verification process
-      setTimeout(() => {
-        setIsCompleted(true)
-        setIsVerifying(false)
-        setShowSuccess(true)
-
-        // Redirect after success animation
-        setTimeout(() => {
-          // Hidden redirect URL - only revealed after successful verification
-          const redirectUrl = destinationUrl || "https://www.elgiganten.se"
-window.location.href = redirectUrl
-
-        }, 2000)
-      }, 1500)
+      setTimeout(succeedAndRedirect, 1500)
     }
   }
 
   const handleMouseUp = () => {
     if (!isCompleted && !isVerifying && isDragging) {
-      // Check if user released too far from target
-      const distance = Math.abs(piecePosition - targetPosition)
-      if (distance > tolerance) {
+      if (Math.abs(piecePosition - targetPosition) > tolerance) {
         setFailed(true)
         setTimeout(() => {
           setPiecePosition(50)
@@ -106,7 +99,6 @@ window.location.href = redirectUrl
     setIsDragging(false)
   }
 
-  // Touch events for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isCompleted || isVerifying) return
     setIsDragging(true)
@@ -116,39 +108,23 @@ window.location.href = redirectUrl
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !containerRef.current || isCompleted) return
-
     const rect = containerRef.current.getBoundingClientRect()
     const imageWidth = rect.width
     const touch = e.touches[0]
     const newPosition = Math.max(25, Math.min(touch.clientX - rect.left, imageWidth - 25))
-
     setPiecePosition(newPosition)
 
-    const distance = Math.abs(newPosition - targetPosition)
-
-    if (distance < tolerance) {
+    if (Math.abs(newPosition - targetPosition) < tolerance) {
       setIsDragging(false)
       setPiecePosition(targetPosition)
       setIsVerifying(true)
-
-      setTimeout(() => {
-        setIsCompleted(true)
-        setIsVerifying(false)
-        setShowSuccess(true)
-
-        setTimeout(() => {
-         const redirectUrl = destinationUrl || "https://www.elgiganten.se"
-window.location.href = redirectUrl
-
-        }, 2000)
-      }, 1500)
+      setTimeout(succeedAndRedirect, 1500)
     }
   }
 
   const handleTouchEnd = () => {
     if (!isCompleted && !isVerifying && isDragging) {
-      const distance = Math.abs(piecePosition - targetPosition)
-      if (distance > tolerance) {
+      if (Math.abs(piecePosition - targetPosition) > tolerance) {
         setFailed(true)
         setTimeout(() => {
           setPiecePosition(50)
@@ -191,7 +167,6 @@ window.location.href = redirectUrl
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {/* Background Image */}
             <img
               src={puzzleImages[currentImageIndex] || "/placeholder.svg"}
               alt="Pusselbilder"
@@ -199,35 +174,19 @@ window.location.href = redirectUrl
               draggable={false}
             />
 
-            {/* Missing piece cutout (white circle) */}
             <div
               className="absolute w-16 h-16 bg-white rounded-full border-2 border-dashed border-gray-300"
-              style={{
-                left: `${targetPosition}px`,
-                top: "50%",
-                transform: "translate(-50%, -50%)",
-              }}
+              style={{ left: `${targetPosition}px`, top: "50%", transform: "translate(-50%, -50%)" }}
             />
 
-            {/* Draggable puzzle piece */}
             <div
               ref={pieceRef}
               className={`absolute w-16 h-16 rounded-full border-4 cursor-move transition-all duration-200 overflow-hidden ${
                 isDragging ? "scale-110 shadow-xl z-10" : "shadow-lg"
               } ${
-                isCompleted
-                  ? "border-green-500"
-                  : failed
-                    ? "border-red-500"
-                    : isVerifying
-                      ? "border-blue-500"
-                      : "border-white"
+                isCompleted ? "border-green-500" : failed ? "border-red-500" : isVerifying ? "border-blue-500" : "border-white"
               }`}
-              style={{
-                left: `${piecePosition}px`,
-                top: "50%",
-                transform: "translate(-50%, -50%)",
-              }}
+              style={{ left: `${piecePosition}px`, top: "50%", transform: "translate(-50%, -50%)" }}
               onMouseDown={handleMouseDown}
               onTouchStart={handleTouchStart}
             >
@@ -259,17 +218,13 @@ window.location.href = redirectUrl
 
           {/* Slider Track */}
           <div className="mt-6 relative bg-gray-200 rounded-full h-12 overflow-hidden">
-            {/* Progress indicator */}
             <div
               className={`absolute top-0 left-0 h-full transition-all duration-300 rounded-full ${
                 isCompleted ? "bg-green-500" : isVerifying ? "bg-blue-500" : "bg-gray-400"
               }`}
-              style={{
-                width: `${Math.min((piecePosition / (containerRef.current?.offsetWidth || 400)) * 100, 100)}%`,
-              }}
+              style={{ width: `${Math.min((piecePosition / (containerRef.current?.offsetWidth || 400)) * 100, 100)}%` }}
             />
 
-            {/* Slider text */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <span
                 className={`text-sm font-medium transition-colors ${
@@ -279,10 +234,10 @@ window.location.href = redirectUrl
                 {isCompleted && showSuccess
                   ? "Verifierad! Omdirigerar..."
                   : failed
-                    ? "Misslyckades, försök igen"
-                    : isVerifying
-                      ? "Verifierar..."
-                      : "Skjut för att slutföra pusslet"}
+                  ? "Misslyckades, försök igen"
+                  : isVerifying
+                  ? "Verifierar..."
+                  : "Skjut för att slutföra pusslet"}
               </span>
             </div>
           </div>
