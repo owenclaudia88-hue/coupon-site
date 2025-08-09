@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import Header from "../components/Header"
 import CouponCard from "../components/CouponCard"
 import Footer from "../components/Footer"
@@ -10,9 +10,6 @@ import KomplettMoreInformation from "../components/KomplettMoreInformation"
 import KomplettSelectedProducts from "../components/KomplettSelectedProducts"
 import KomplettFAQ from "../components/KomplettFAQ"
 import KomplettSidebar from "../components/KomplettSidebar"
-
-// IMPORTANT: these two paths match your repo layout
-import SecurityCaptcha from "../../components/SecurityCaptcha"
 import OfferPopup from "../components/OfferPopup"
 
 interface Coupon {
@@ -133,27 +130,26 @@ const komplettCoupons: Coupon[] = [
 
 export default function KomplettPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
-  const [showCaptcha, setShowCaptcha] = useState(false)
   const [showOfferPopup, setShowOfferPopup] = useState(false)
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
-  // show timed popup like Elgiganten
+  // Timed popup (like Elgiganten)
   useEffect(() => {
     const t = setTimeout(() => setShowOfferPopup(true), 3000)
     return () => clearTimeout(t)
   }, [])
 
   const handleCouponSelect = (coupon: Coupon) => {
+    // Only open the CouponModal here (no captcha yet)
     const newUrl = `/komplett/offer/${coupon.id}#td-offer${coupon.id}`
     window.history.pushState({ offerId: coupon.id }, "", newUrl)
     setSelectedCoupon(coupon)
-    setShowCaptcha(true) // open the same modal UX
   }
 
-  const handleCouponModalClose = () => {
+  const handleModalClose = () => {
     window.history.pushState({}, "", "/komplett")
     setSelectedCoupon(null)
   }
@@ -164,7 +160,7 @@ export default function KomplettPage() {
     return `${discount} Rabatt`
   }
 
-  // Popup top offer (use your first Komplett coupon)
+  // “Top offer” content for OfferPopup
   const topOffer = {
     title: "Upp till 45% rabatt på datorer och komponenter",
     discount: "45%",
@@ -176,7 +172,7 @@ export default function KomplettPage() {
     <div className="min-h-screen bg-white">
       <Header />
       <main className="container mx-auto px-4 py-4 md:py-6">
-        {/* Page header (Komplett styling) */}
+        {/* Page header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6 md:mb-8">
           <div className="w-20 h-12 sm:w-24 sm:h-16 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 p-2 flex-shrink-0">
             <img src="/images/komplett-logo.svg" alt="Komplett Logo" className="w-full h-full object-contain" />
@@ -204,8 +200,7 @@ export default function KomplettPage() {
                   <CouponCard
                     key={coupon.id}
                     coupon={coupon}
-                    // Your CouponCard on Elgiganten uses onSelectCoupon; some versions use onUseDiscount.
-                    onSelectCoupon={() => handleCouponSelect(coupon)}
+                    // Your CouponCard (in repo) expects onUseDiscount
                     onUseDiscount={() => handleCouponSelect(coupon)}
                   />
                 ))}
@@ -226,16 +221,10 @@ export default function KomplettPage() {
       </main>
       <Footer />
 
+      {/* Only CouponModal on this page */}
       {selectedCoupon && (
-        <CouponModal coupon={selectedCoupon} onClose={handleCouponModalClose} storeName="Komplett" />
+        <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Komplett" />
       )}
-
-      {/* SecurityCaptcha — same UX as Elgiganten. Pass the verify URL for the chosen coupon. */}
-      <SecurityCaptcha
-        isOpen={showCaptcha}
-        onClose={() => setShowCaptcha(false)}
-        redirectUrl={selectedCoupon?.offerUrl || undefined}
-      />
 
       <OfferPopup
         isOpen={showOfferPopup}
