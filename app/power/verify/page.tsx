@@ -1,7 +1,6 @@
-// app/power/verify/page.tsx
-import Header from "../../components/Header"
-import Footer from "../../components/Footer"
-import CaptchaRedirectClientWrapper from "./CaptchaRedirectClientWrapper"
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import CaptchaRedirectClientWrapper from "./CaptchaRedirectClientWrapper";
 
 export default function VerifyPage() {
   return (
@@ -17,5 +16,5 @@ export default function VerifyPage() {
       </main>
       <Footer />
     </>
-  )
+  );
 }
