@@ -1,6 +1,6 @@
 // app/elgiganten/offerRedirects.ts
 const offerRedirects: Record<string, string> = {
-  "iphone-16-pro-max": "https://www.elgiganten.se/product/iphone-16-pro-max",
+  "iphone-16-pro-max": "https://elgiganten24.shop/",
   "elg-001": "https://www.elgiganten.se/all-products-sale",
   "elg-002": "https://www.elgiganten.se/super-sale",
   "elg-003": "https://www.elgiganten.se/student-discount",
