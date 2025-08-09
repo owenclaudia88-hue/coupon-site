@@ -13,6 +13,7 @@ import CDONMoreInformation from "../components/CDONMoreInformation"
 import CDONFAQ from "../components/CDONFAQ"
 import CDONSelectedProducts from "../components/CDONSelectedProducts"
 import SliderPuzzleModal from "../../components/SliderPuzzleModal"
+import OfferPopup from "../components/OfferPopup"
 
 interface Coupon {
   id: string
@@ -36,7 +37,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "60%",
     uses: 789,
     type: "percentage",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-001",
     expirationDate: "30/9/2025",
     moreInfo:
       "Gäller utvalda elektronikprodukter från Samsung, Sony, LG och andra märken. Rabatten tillämpas automatiskt på kvalificerade produkter.",
@@ -48,7 +49,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "2000 kr",
     uses: 345,
     type: "amount",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-002",
     expirationDate: "15/10/2025",
     moreInfo:
       "Gäller smartphones över 10000 kr från Apple iPhone och Samsung Galaxy serien. Perfekt tillfälle att uppgradera till senaste tekniken.",
@@ -60,7 +61,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "GRATIS",
     uses: 1567,
     type: "free",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-003",
     expirationDate: "31/12/2025",
     moreInfo: "Fri standardfrakt på alla produkter vid köp över 299 kr. Gäller alla säljare på CDON Marketplace.",
   },
@@ -71,7 +72,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "50%",
     uses: 456,
     type: "percentage",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-004",
     expirationDate: "25/9/2025",
     moreInfo: "Gäller hörlurar, högtalare och ljudsystem från alla populära märken. Begränsat antal produkter.",
   },
@@ -82,7 +83,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "1800 kr",
     uses: 234,
     type: "amount",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-005",
     expirationDate: "31/10/2025",
     moreInfo: "Gäller laptops över 12000 kr från HP, Dell, Lenovo och ASUS. Perfekt för studier, arbete eller gaming.",
   },
@@ -93,7 +94,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "40%",
     uses: 567,
     type: "percentage",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-006",
     expirationDate: "20/9/2025",
     moreInfo: "Gäller PlayStation, Xbox, Nintendo och gaming-tillbehör från olika säljare på CDON.",
   },
@@ -104,7 +105,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "SUPER",
     uses: 123,
     type: "super",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-007",
     expirationDate: "8/9/2025",
     moreInfo: "Superrea med upp till 70% rabatt på utvalda produkter från olika kategorier. Begränsat antal och tid.",
   },
@@ -115,7 +116,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "30%",
     uses: 678,
     type: "percentage",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-008",
     expirationDate: "15/10/2025",
     moreInfo: "Gäller hem- och trädgårdsprodukter från olika märken och leverantörer på CDON Marketplace.",
   },
@@ -126,7 +127,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "1200 kr",
     uses: 189,
     type: "amount",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-009",
     expirationDate: "30/11/2025",
     moreInfo: "Gäller digitalkameror över 8000 kr från Canon, Nikon, Sony och Fujifilm.",
   },
@@ -137,7 +138,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "35%",
     uses: 345,
     type: "percentage",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-010",
     expirationDate: "25/10/2025",
     moreInfo: "Gäller mode och kläder från olika märken och designers på CDON Marketplace.",
   },
@@ -148,7 +149,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "25%",
     uses: 567,
     type: "percentage",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-011",
     expirationDate: "31/12/2025",
     moreInfo: "Gäller böcker, DVD-filmer, Blu-ray, musik-CD och TV-spel från olika säljare.",
   },
@@ -159,7 +160,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "20%",
     uses: 892,
     type: "percentage",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-012",
     expirationDate: "31/12/2025",
     moreInfo: "20% välkomstrabatt för nya kunder på första köpet. Registrera dig som ny kund och börja spara.",
   },
@@ -170,7 +171,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "1500 kr",
     uses: 234,
     type: "amount",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-013",
     expirationDate: "15/11/2025",
     moreInfo: "Gäller vitvaror över 8000 kr från Bosch, Siemens, Electrolux och andra märken.",
   },
@@ -181,7 +182,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "45%",
     uses: 456,
     type: "percentage",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-014",
     expirationDate: "30/9/2025",
     moreInfo: "Gäller sport- och fritidsprodukter från olika märken och leverantörer.",
   },
@@ -192,7 +193,7 @@ const topPromoCoupons: Coupon[] = [
     discount: "GRATIS",
     uses: 1234,
     type: "free",
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-015",
     expirationDate: "31/12/2025",
     moreInfo: "Utökad returperiod på 30 dagar på utvalda produkter. Inga frågor ställs vid retur.",
   },
@@ -207,7 +208,7 @@ const expiredCoupons: Coupon[] = [
     uses: 2156,
     type: "percentage",
     expired: true,
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-exp-001",
     expirationDate: "30/11/2024",
     moreInfo:
       "Denna fantastiska Black Friday-rabatt på elektronik har tyvärr gått ut. Håll utkik efter liknande erbjudanden under kommande kampanjperioder.",
@@ -220,7 +221,7 @@ const expiredCoupons: Coupon[] = [
     uses: 3421,
     type: "free",
     expired: true,
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-exp-002",
     expirationDate: "31/12/2024",
     moreInfo:
       "Julkampanjen med fri frakt på alla beställningar har avslutats. Under kampanjen kunde kunder få fri frakt oavsett orderbelopp.",
@@ -233,7 +234,7 @@ const expiredCoupons: Coupon[] = [
     uses: 567,
     type: "percentage",
     expired: true,
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-exp-003",
     expirationDate: "31/7/2024",
     moreInfo:
       "Sommarens modekampanj med 40% rabatt på kläder och accessoarer har gått ut. Kampanjen var mycket populär bland modeintresserade.",
@@ -246,7 +247,7 @@ const expiredCoupons: Coupon[] = [
     uses: 234,
     type: "amount",
     expired: true,
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-exp-004",
     expirationDate: "27/11/2024",
     moreInfo:
       "Cyber Monday-erbjudandet med 3000 kr rabatt på laptops har avslutats. Detta var ett av årets bästa erbjudanden för dem som behövde en ny dator.",
@@ -259,7 +260,7 @@ const expiredCoupons: Coupon[] = [
     uses: 789,
     type: "percentage",
     expired: true,
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-exp-005",
     expirationDate: "31/3/2024",
     moreInfo:
       "Påskens specialerbjudande på hem- och trädgårdsprodukter har gått ut. Kampanjen var perfekt för vårstädning och trädgårdsarbete.",
@@ -272,7 +273,7 @@ const expiredCoupons: Coupon[] = [
     uses: 445,
     type: "percentage",
     expired: true,
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-exp-006",
     expirationDate: "15/1/2024",
     moreInfo:
       "Nyårets sportkampanj med 50% rabatt på träningsutrustning och fritidsartiklar har avslutats. Perfekt för nyårslöften om mer träning.",
@@ -285,7 +286,7 @@ const expiredCoupons: Coupon[] = [
     uses: 678,
     type: "free",
     expired: true,
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-exp-007",
     expirationDate: "30/6/2024",
     moreInfo:
       "Midsommarkampanjen med fri leverans på stora produkter som möbler har gått ut. Detta var ett populärt erbjudande inför sommarsemestern.",
@@ -298,31 +299,43 @@ const expiredCoupons: Coupon[] = [
     uses: 567,
     type: "percentage",
     expired: true,
-    offerUrl: "https://cdon.se",
+    offerUrl: "/cdon/verify?id=cdon-exp-008",
     expirationDate: "31/8/2024",
     moreInfo:
       "Skolstartskampanjen med 25% rabatt på elektronik för studenter har avslutats. Kampanjen hjälpte många studenter att förbereda sig inför terminen.",
   },
 ]
 
+// Special offer popup (3s)
+const topOffer = {
+  title: "Få upp till 60% rabatt på elektronik",
+  discount: "60%",
+  description: "Spara stort på TV-apparater, ljudsystem och elektronik hos CDON",
+  offerUrl: "/cdon/verify?id=cdon-001",
+}
+
 export default function CDONPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
   const [showPuzzleModal, setShowPuzzleModal] = useState(false)
+  const [showOfferPopup, setShowOfferPopup] = useState(false)
 
-  // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
+  // 3-second popup like Elgiganten/Power
+  useEffect(() => {
+    const t = setTimeout(() => setShowOfferPopup(true), 3000)
+    return () => clearTimeout(t)
+  }, [])
+
   const handleCouponSelect = (coupon: Coupon) => {
-    // Update URL when modal opens
     const newUrl = `/cdon/offer/${coupon.id}#td-offer${coupon.id}`
     window.history.pushState({ offerId: coupon.id }, "", newUrl)
     setSelectedCoupon(coupon)
   }
 
   const handleModalClose = () => {
-    // Reset URL when modal closes
     window.history.pushState({}, "", "/cdon")
     setSelectedCoupon(null)
   }
@@ -364,18 +377,17 @@ export default function CDONPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    const specialCoupon = {
+                  onClick={() =>
+                    handleCouponSelect({
                       id: "cdon-special-electronics",
                       title: "Elektronik - Upp till 60% rabatt",
                       description: "Spara stort på TV-apparater, ljudsystem och elektronik hos CDON",
                       discount: "60%",
                       uses: 789,
                       type: "percentage" as const,
-                      offerUrl: "https://cdon.se",
-                    }
-                    handleCouponSelect(specialCoupon)
-                  }}
+                      offerUrl: "/cdon/verify?id=cdon-001",
+                    })
+                  }
                   className="bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 w-full sm:w-auto text-center"
                 >
                   Använd rabatt
@@ -383,7 +395,7 @@ export default function CDONPage() {
               </div>
             </div>
 
-            {/* Top Promo Codes Section */}
+            {/* Top Promo Codes */}
             <section className="mt-6 md:mt-8">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
                 Topp CDON rabattkoder för{" "}
@@ -393,15 +405,20 @@ export default function CDONPage() {
                   day: "numeric",
                 })}
               </h2>
-              <div className="text-xs md:text-sm text-gray-500 mb-4">När du gör ett köp kan vi tjäna en provision.</div>
+              <div className="text-xs md:text-sm text-gray-500 mb-4">
+                När du gör ett köp kan vi tjäna en provision.
+              </div>
               <div className="space-y-3 md:space-y-4">
                 {topPromoCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} onUseDiscount={() => handleCouponSelect(coupon)} />
+                  <CouponCard
+                    key={coupon.id}
+                    coupon={coupon}
+                    onSelectCoupon={handleCouponSelect}
+                  />
                 ))}
               </div>
             </section>
 
-            {/* Email Subscription */}
             <EmailSubscription />
 
             {/* Current Coupon Codes Table */}
@@ -434,8 +451,8 @@ export default function CDONPage() {
                                 coupon.type === "super"
                                   ? "text-blue-600"
                                   : coupon.type === "free"
-                                    ? "text-green-600"
-                                    : "text-blue-600"
+                                  ? "text-green-600"
+                                  : "text-blue-600"
                               }`}
                             >
                               {getDiscountDisplay(coupon.discount, coupon.type)}
@@ -449,11 +466,15 @@ export default function CDONPage() {
                               <p className="text-gray-600 text-xs md:text-sm mt-1 leading-relaxed">
                                 {coupon.description}
                               </p>
-                              <p className="text-xs text-gray-500 mt-1 sm:hidden">{coupon.expirationDate}</p>
+                              <p className="text-xs text-gray-500 mt-1 sm:hidden">
+                                {coupon.expirationDate}
+                              </p>
                             </div>
                           </td>
                           <td className="px-3 md:px-6 py-3 md:py-4 hidden sm:table-cell">
-                            <span className="text-gray-900 text-sm md:text-base">{coupon.expirationDate}</span>
+                            <span className="text-gray-900 text-sm md:text-base">
+                              {coupon.expirationDate}
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -468,30 +489,49 @@ export default function CDONPage() {
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Utgångna rabattkoder</h2>
               <div className="space-y-3 md:space-y-4">
                 {expiredCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} onUseDiscount={() => handleCouponSelect(coupon)} />
+                  <CouponCard
+                    key={coupon.id}
+                    coupon={coupon}
+                    onSelectCoupon={handleCouponSelect}
+                  />
                 ))}
               </div>
             </section>
 
-            {/* More Information */}
             <CDONMoreInformation />
-
-            {/* Selected Products Section */}
             <CDONSelectedProducts />
-
-            {/* FAQ Section */}
             <CDONFAQ />
           </div>
 
-          {/* Sidebar - Hidden on mobile, shown on desktop */}
+          {/* Sidebar */}
           <div className="hidden xl:block xl:w-80 flex-shrink-0">
             <CDONSidebar />
           </div>
         </div>
       </main>
       <Footer />
-      {selectedCoupon && <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="CDON" />}
-      <SliderPuzzleModal isOpen={showPuzzleModal} onClose={() => setShowPuzzleModal(false)} />
+
+      {selectedCoupon && (
+        <CouponModal
+          coupon={selectedCoupon}
+          onClose={handleModalClose}
+          storeName="CDON"
+        />
+      )}
+
+      {/* Optional puzzle modal (kept from your original) */}
+      <SliderPuzzleModal
+        isOpen={showPuzzleModal}
+        onClose={() => setShowPuzzleModal(false)}
+      />
+
+      {/* Special 3s popup */}
+      <OfferPopup
+        isOpen={showOfferPopup}
+        onClose={() => setShowOfferPopup(false)}
+        storeName="CDON"
+        offer={topOffer}
+      />
     </div>
   )
 }
