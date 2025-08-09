@@ -1,14 +1,19 @@
-// app/power/offerRedirects.ts
+// Maps Power offer IDs → real destination URLs
 export const offerRedirects: Record<string, string> = {
-  "pow-001": "https://www.power.se/kampanj/allt/",
-  "pow-002": "https://www.power.se/kampanj/gaming/",
-  "pow-003": "https://www.power.se/kampanj/tv-och-ljud/",
-  "pow-004": "https://www.power.se/kampanj/datorer/",
-  "pow-005": "https://www.power.se/kampanj/smarta-hem/",
-  "pow-006": "https://www.power.se/kampanj/vitvaror/",
-  "pow-007": "https://www.power.se/kampanj/mobiler/",
-  "pow-008": "https://www.power.se/kampanj/rea/",
-  // expired examples if you want
-  "pow-exp-001": "https://www.power.se/expired/black-friday/",
-  "pow-exp-002": "https://www.power.se/expired/cyber-monday/",
-}
+  "power-001": "https://www.power.se/kampanjer",
+  "power-002": "https://www.power.se/kundservice/frakt",
+  "power-003": "https://www.power.se/outlet",
+  "power-004": "https://www.power.se/tv-och-ljud/tv",
+  "power-005": "https://www.power.se/tv-och-ljud/horlurar",
+  "power-006": "https://www.power.se/mobil-och-gps/mobiltelefoner",
+  "power-007": "https://www.power.se/vitvaror",
+  "power-008": "https://www.power.se/kampanjer/supersale",
+  "power-009": "https://www.power.se/student",
+  "power-010": "https://www.power.se/datorer-och-tillbehor/gaming-laptops",
+  "power-011": "https://www.power.se/kundservice/installation",
+  "power-012": "https://www.power.se/ny-kund",
+
+  // expired examples (optional)
+  "power-exp-001": "https://www.power.se/black-friday",
+  "power-exp-002": "https://www.power.se/cyber-monday",
+};
