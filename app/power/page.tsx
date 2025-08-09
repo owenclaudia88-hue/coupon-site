@@ -286,11 +286,12 @@ export default function PowerPage() {
               </div>
               <div className="space-y-3 md:space-y-4">
                 {powerCoupons.map((coupon) => (
-                  <CouponCard
-                    key={coupon.id}
-                    coupon={coupon}
-                    onUseDiscount={() => handleCouponSelect(coupon)}
-                  />
+<CouponCard
+  key={coupon.id}
+  coupon={coupon}
+  onSelectCoupon={() => handleCouponSelect(coupon)}
+/>
+
                 ))}
               </div>
             </section>
@@ -369,11 +370,12 @@ export default function PowerPage() {
               </h2>
               <div className="space-y-3 md:space-y-4">
                 {expiredCoupons.map((coupon) => (
-                  <CouponCard
-                    key={coupon.id}
-                    coupon={coupon}
-                    onUseDiscount={() => handleCouponSelect(coupon)}
-                  />
+<CouponCard
+  key={coupon.id}
+  coupon={coupon}
+  onSelectCoupon={() => handleCouponSelect(coupon)}
+/>
+
                 ))}
               </div>
             </section>
