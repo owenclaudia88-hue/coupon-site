@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Search, Menu, X, ChevronDown } from "lucide-react"
 
 // Search data
@@ -34,7 +34,6 @@ export default function Header() {
   const [isStoresDropdownOpen, setIsStoresDropdownOpen] = useState(false)
   const [isMobileStoresDropdownOpen, setIsMobileStoresDropdownOpen] = useState(false)
 
-  // Search functionality
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
@@ -42,73 +41,51 @@ export default function Header() {
   const searchRef = useRef<HTMLDivElement>(null)
   const mobileSearchRef = useRef<HTMLDivElement>(null)
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }
-
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false)
     setIsMobileStoresDropdownOpen(false)
   }
 
-  // Handle search functionality
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
-
     const query = searchQuery.toLowerCase().trim()
-
-    // First check if it's a store name
     const storeMatch = searchableStores.find((store) => store.name.toLowerCase().includes(query))
-
     if (storeMatch) {
-      // Redirect to store page
       window.location.href = storeMatch.href
       setSearchQuery("")
       setShowSearchResults(false)
       return
     }
-
-    // Then search for discounts/products
     const discountMatches = searchableDiscounts.filter(
       (discount) => discount.title.toLowerCase().includes(query) || discount.store.toLowerCase().includes(query),
     )
-
     if (discountMatches.length > 0) {
-      // Redirect to the first matching store
       window.location.href = discountMatches[0].href
       setSearchQuery("")
       setShowSearchResults(false)
       return
     }
-
-    // If no matches found, redirect to rabattkoder page
     window.location.href = "/rabattkoder"
     setSearchQuery("")
     setShowSearchResults(false)
   }
 
-  // Handle real-time search suggestions
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setSearchQuery(value)
-
     if (value.length > 1) {
       setIsSearching(true)
       const query = value.toLowerCase()
-
-      // Search stores
       const storeResults = searchableStores
         .filter((store) => store.name.toLowerCase().includes(query))
         .map((store) => ({ ...store, type: "store" }))
-
-      // Search discounts
       const discountResults = searchableDiscounts
         .filter(
           (discount) => discount.title.toLowerCase().includes(query) || discount.store.toLowerCase().includes(query),
         )
         .map((discount) => ({ ...discount, type: "discount" }))
-
       const allResults = [...storeResults, ...discountResults].slice(0, 6)
       setSearchResults(allResults)
       setShowSearchResults(allResults.length > 0)
@@ -119,14 +96,12 @@ export default function Header() {
     }
   }
 
-  // Handle clicking on search result
   const handleResultClick = (result: any) => {
     setSearchQuery("")
     setShowSearchResults(false)
     window.location.href = result.href
   }
 
-  // Close search results when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -138,7 +113,6 @@ export default function Header() {
         setShowSearchResults(false)
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
@@ -158,16 +132,8 @@ export default function Header() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14 md:h-12">
             {/* Logo Section */}
-            <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-all duration-200 group">
-              <div className="relative">
-                <div className="bg-gradient-to-r from-green-500 to-green-600 px-3 py-2 rounded-lg text-sm md:text-base font-bold shadow-lg transform group-hover:scale-105 transition-all duration-200">
-                  DISCOUNT
-                </div>
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-green-400 to-green-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity duration-200"></div>
-              </div>
-              <span className="font-bold text-base md:text-lg tracking-wide text-white group-hover:text-green-300 transition-colors duration-200">
-                NATION
-              </span>
+            <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-all duration-200">
+              <Image src="/images/logo.png" alt="Discount Nation Logo" width={140} height={40} priority />
             </Link>
 
             {/* Desktop Navigation */}
@@ -298,27 +264,26 @@ export default function Header() {
         }`}
       >
         <div className="flex flex-col h-full">
-          {/* Mobile Menu Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-slate-700 text-white">
-            <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-all duration-200 group">
-              <div className="relative">
-                <div className="bg-gradient-to-r from-green-500 to-green-600 px-2 py-1 rounded text-xs font-bold shadow-md transform group-hover:scale-105 transition-all duration-200">
-                  DISCOUNT
-                </div>
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-green-400 to-green-600 rounded blur opacity-20 group-hover:opacity-40 transition-opacity duration-200"></div>
-              </div>
-              <span className="font-bold text-sm tracking-wide text-white group-hover:text-green-300 transition-colors duration-200">
-                NATION
-              </span>
-            </Link>
-            <button
-              onClick={closeMobileMenu}
-              className="p-2 hover:bg-slate-600 rounded-lg transition-colors"
-              aria-label="Stäng meny"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+  {/* Mobile Menu Header */}
+<div className="flex items-center justify-between p-4 border-b border-gray-200 bg-slate-700 text-white">
+  <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-all duration-200 group">
+    <Image
+      src="/images/logo.png"
+      alt="Discount Nation"
+      width={120}
+      height={40}
+      priority
+    />
+  </Link>
+  <button
+    onClick={closeMobileMenu}
+    className="p-2 hover:bg-slate-600 rounded-lg transition-colors"
+    aria-label="Stäng meny"
+  >
+    <X className="w-5 h-5" />
+  </button>
+</div>
+
 
           {/* Mobile Search - Enhanced with functionality */}
           <div ref={mobileSearchRef} className="p-4 border-b border-gray-200 relative">
