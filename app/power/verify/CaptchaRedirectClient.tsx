@@ -1,8 +1,7 @@
-// app/power/verify/CaptchaRedirectClient.tsx
-"use client"
+"use client";
 
-import CaptchaRedirect from "../../components/CaptchaRedirect"
+import CaptchaRedirect from "../../components/CaptchaRedirect";
 
 export default function CaptchaRedirectClient() {
-  return <CaptchaRedirect store="power" />
+  return <CaptchaRedirect />;
 }
