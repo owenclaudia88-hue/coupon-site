@@ -11,6 +11,7 @@ import WebhallenMoreInformation from "../components/WebhallenMoreInformation"
 import WebhallenFAQ from "../components/WebhallenFAQ"
 import WebhallenSelectedProducts from "../components/WebhallenSelectedProducts"
 import WebhallenSidebar from "../components/WebhallenSidebar"
+import OfferPopup from "../components/OfferPopup" // <-- popup
 
 interface Coupon {
   id: string
@@ -255,9 +256,16 @@ const expiredCoupons: Coupon[] = [
 
 export default function WebhallenPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
+  const [showOfferPopup, setShowOfferPopup] = useState(false) // popup
 
   useEffect(() => {
     window.scrollTo(0, 0)
+  }, [])
+
+  // show special offer popup after 3s
+  useEffect(() => {
+    const t = setTimeout(() => setShowOfferPopup(true), 3000)
+    return () => clearTimeout(t)
   }, [])
 
   const handleCouponSelect = (coupon: Coupon) => {
@@ -275,6 +283,14 @@ export default function WebhallenPage() {
     if (type === "super") return "SUPER Rabatt"
     if (type === "free") return "GRATIS Rabatt"
     return `${discount} Rabatt`
+  }
+
+  // data for the popup
+  const topOffer = {
+    title: "Upp till 35% rabatt på gaming-datorer",
+    discount: "35%",
+    description: "Spara stort på de senaste gaming-datorerna hos Webhallen",
+    offerUrl: "/webhallen/verify?id=gaming-computer-special",
   }
 
   return (
@@ -425,6 +441,7 @@ export default function WebhallenPage() {
         </div>
       </main>
       <Footer />
+
       {selectedCoupon && (
         <CouponModal
           coupon={selectedCoupon}
@@ -432,6 +449,14 @@ export default function WebhallenPage() {
           storeName="Webhallen"
         />
       )}
+
+      {/* Special offer popup after 3s */}
+      <OfferPopup
+        isOpen={showOfferPopup}
+        onClose={() => setShowOfferPopup(false)}
+        storeName="Webhallen"
+        offer={topOffer}
+      />
     </div>
   )
 }
