@@ -1,5 +1,5 @@
-// This file maps offer IDs to actual redirect URLs (used server-side only)
-export const offerRedirectMap: Record<string, string> = {
+// app/elgiganten/offerRedirects.ts
+const offerRedirects: Record<string, string> = {
   "iphone-16-pro-max": "https://www.elgiganten.se/product/iphone-16-pro-max",
   "elg-001": "https://www.elgiganten.se/all-products-sale",
   "elg-002": "https://www.elgiganten.se/super-sale",
@@ -21,3 +21,5 @@ export const offerRedirectMap: Record<string, string> = {
   "elg-exp-006": "https://www.elgiganten.se/expired/newyear-audio-sale",
   "elg-exp-007": "https://www.elgiganten.se/expired/midsummer-delivery",
 }
+export { offerRedirects }      // named export for clients importing by name
+export default offerRedirects  // default export for clients importing default
