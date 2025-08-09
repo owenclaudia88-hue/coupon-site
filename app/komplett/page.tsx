@@ -136,17 +136,16 @@ export default function KomplettPage() {
     window.scrollTo(0, 0)
   }, [])
 
-  // Timed popup (like Elgiganten)
   useEffect(() => {
     const t = setTimeout(() => setShowOfferPopup(true), 3000)
     return () => clearTimeout(t)
   }, [])
 
   const handleCouponSelect = (coupon: Coupon) => {
-    // Only open the CouponModal here (no captcha yet)
     const newUrl = `/komplett/offer/${coupon.id}#td-offer${coupon.id}`
     window.history.pushState({ offerId: coupon.id }, "", newUrl)
-    setSelectedCoupon(coupon)
+    setSelectedCoupon(coupon)          // ← only open CouponModal
+    // DO NOT open SecurityCaptcha here (that caused the double popup)
   }
 
   const handleModalClose = () => {
@@ -154,13 +153,6 @@ export default function KomplettPage() {
     setSelectedCoupon(null)
   }
 
-  const getDiscountDisplay = (discount: string, type: string) => {
-    if (type === "super") return "SUPER Rabatt"
-    if (type === "free") return "GRATIS Rabatt"
-    return `${discount} Rabatt`
-  }
-
-  // “Top offer” content for OfferPopup
   const topOffer = {
     title: "Upp till 45% rabatt på datorer och komponenter",
     discount: "45%",
@@ -195,12 +187,13 @@ export default function KomplettPage() {
                 {new Date().toLocaleDateString("sv-SE", { year: "numeric", month: "long", day: "numeric" })}
               </h2>
               <div className="text-xs md:text-sm text-gray-500 mb-4">När du gör ett köp kan vi tjäna en provision.</div>
+
               <div className="space-y-3 md:space-y-4">
                 {komplettCoupons.map((coupon) => (
                   <CouponCard
                     key={coupon.id}
                     coupon={coupon}
-                    // Your CouponCard (in repo) expects onUseDiscount
+                    // IMPORTANT: CouponCard expects onUseDiscount
                     onUseDiscount={() => handleCouponSelect(coupon)}
                   />
                 ))}
@@ -219,9 +212,9 @@ export default function KomplettPage() {
           </div>
         </div>
       </main>
+
       <Footer />
 
-      {/* Only CouponModal on this page */}
       {selectedCoupon && (
         <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Komplett" />
       )}
