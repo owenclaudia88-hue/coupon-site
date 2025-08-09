@@ -11,8 +11,7 @@ import KomplettSelectedProducts from "../components/KomplettSelectedProducts"
 import KomplettFAQ from "../components/KomplettFAQ"
 import KomplettSidebar from "../components/KomplettSidebar"
 import SliderPuzzleModal from "../../components/SliderPuzzleModal"
-
-
+import OfferPopup from "../components/OfferPopup"
 
 interface Coupon {
   id: string
@@ -36,7 +35,7 @@ const komplettCoupons: Coupon[] = [
     discount: "45%",
     uses: 456,
     type: "percentage",
-    offerUrl: "https://www.komplett.se",
+    offerUrl: "/komplett/verify?id=komp-001",
     expirationDate: "30/9/2025",
     moreInfo: "Gäller datorkomponenter och färdigbyggda datorer från Intel, AMD, NVIDIA och andra märken.",
   },
@@ -47,7 +46,7 @@ const komplettCoupons: Coupon[] = [
     discount: "2000 kr",
     uses: 123,
     type: "amount",
-    offerUrl: "https://www.komplett.se",
+    offerUrl: "/komplett/verify?id=komp-002",
     expirationDate: "15/10/2025",
     moreInfo: "Gäller när du köper gaming-dator, skärm och gaming-tillbehör för minst 25000 kr totalt.",
   },
@@ -58,7 +57,7 @@ const komplettCoupons: Coupon[] = [
     discount: "GRATIS",
     uses: 1123,
     type: "free",
-    offerUrl: "https://www.komplett.se",
+    offerUrl: "/komplett/verify?id=komp-003",
     expirationDate: "31/12/2025",
     moreInfo: "Fri standardfrakt på alla produkter, inga minimikrav på orderbelopp.",
   },
@@ -69,7 +68,7 @@ const komplettCoupons: Coupon[] = [
     discount: "25%",
     uses: 234,
     type: "percentage",
-    offerUrl: "https://www.komplett.se",
+    offerUrl: "/komplett/verify?id=komp-004",
     expirationDate: "25/9/2025",
     moreInfo: "Gäller gaming-skärmar med 144Hz eller högre uppdateringsfrekvens.",
   },
@@ -80,7 +79,7 @@ const komplettCoupons: Coupon[] = [
     discount: "20%",
     uses: 167,
     type: "percentage",
-    offerUrl: "https://www.komplett.se",
+    offerUrl: "/komplett/verify?id=komp-005",
     expirationDate: "31/10/2025",
     moreInfo: "Gäller processorer över 3000 kr från Intel Core i5/i7/i9 och AMD Ryzen 5/7/9 serien.",
   },
@@ -91,7 +90,7 @@ const komplettCoupons: Coupon[] = [
     discount: "30%",
     uses: 345,
     type: "percentage",
-    offerUrl: "https://www.komplett.se",
+    offerUrl: "/komplett/verify?id=komp-006",
     expirationDate: "20/9/2025",
     moreInfo: "Gäller nätverksprodukter från ASUS, Netgear, TP-Link och andra märken.",
   },
@@ -102,7 +101,7 @@ const komplettCoupons: Coupon[] = [
     discount: "35%",
     uses: 567,
     type: "percentage",
-    offerUrl: "https://www.komplett.se",
+    offerUrl: "/komplett/verify?id=komp-007",
     expirationDate: "15/10/2025",
     moreInfo: "Gäller SSD-diskar, hårddiskar och extern lagring från Samsung, Western Digital och Kingston.",
   },
@@ -113,7 +112,7 @@ const komplettCoupons: Coupon[] = [
     discount: "15%",
     uses: 678,
     type: "percentage",
-    offerUrl: "https://www.komplett.se",
+    offerUrl: "/komplett/verify?id=komp-008",
     expirationDate: "31/12/2025",
     moreInfo: "Studentrabatt för verifierade studenter på hela sortimentet.",
   },
@@ -124,7 +123,7 @@ const komplettCoupons: Coupon[] = [
     discount: "40%",
     uses: 289,
     type: "percentage",
-    offerUrl: "https://www.komplett.se",
+    offerUrl: "/komplett/verify?id=komp-009",
     expirationDate: "30/11/2025",
     moreInfo: "Gäller gaming-tillbehör från Razer, Logitech, SteelSeries och andra märken.",
   },
@@ -133,86 +132,90 @@ const komplettCoupons: Coupon[] = [
 export default function KomplettPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
   const [showPuzzleModal, setShowPuzzleModal] = useState(false)
+  const [showOfferPopup, setShowOfferPopup] = useState(false)
 
-
-  // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
-const handleCouponSelect = (coupon: Coupon) => {
-  const newUrl = `/komplett/offer/${coupon.id}#td-offer${coupon.id}`
-  window.history.pushState({ offerId: coupon.id }, "", newUrl)
-  setSelectedCoupon(coupon)
-  setShowPuzzleModal(true)
-}
+  // show timed popup like Elgiganten
+  useEffect(() => {
+    const t = setTimeout(() => setShowOfferPopup(true), 3000)
+    return () => clearTimeout(t)
+  }, [])
 
+  const handleCouponSelect = (coupon: Coupon) => {
+    const newUrl = `/komplett/offer/${coupon.id}#td-offer${coupon.id}`
+    window.history.pushState({ offerId: coupon.id }, "", newUrl)
+    setSelectedCoupon(coupon)
+    setShowPuzzleModal(true) // keep parity with Elgiganten which opens the slider modal overlay
+  }
 
   const handleModalClose = () => {
     window.history.pushState({}, "", "/komplett")
     setSelectedCoupon(null)
   }
 
+  const getDiscountDisplay = (discount: string, type: string) => {
+    if (type === "super") return "SUPER Rabatt"
+    if (type === "free") return "GRATIS Rabatt"
+    return `${discount} Rabatt`
+  }
+
+  // Popup “top offer” (use your first Komplett coupon)
+  const topOffer = {
+    title: "Upp till 45% rabatt på datorer och komponenter",
+    discount: "45%",
+    description: "Spara stort på processorer, grafikkort och färdigbyggda datorer",
+    offerUrl: "/komplett/verify?id=komp-001",
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
       <main className="container mx-auto px-4 py-4 md:py-6">
-        <div className="hidden md:block">
-          <nav className="flex items-center space-x-2 text-sm text-gray-600">
-            <a href="/" className="hover:text-purple-600">
-              Hem
-            </a>
-            <span className="w-4 h-4">›</span>
-            <span className="text-gray-900 font-bold">Komplett</span>
-          </nav>
+        {/* Page header (Komplett styling) */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6 md:mb-8">
+          <div className="w-20 h-12 sm:w-24 sm:h-16 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 p-2 flex-shrink-0">
+            <img src="/images/komplett-logo.svg" alt="Komplett Logo" className="w-full h-full object-contain" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">Komplett Rabattkoder</h1>
+            <p className="text-purple-600 text-base sm:text-lg mt-1">
+              Spara stort på datorer och teknik – uppdaterad dagligen
+            </p>
+          </div>
         </div>
+
         <div className="flex flex-col xl:flex-row gap-6 xl:gap-8 mt-4 md:mt-6">
           <div className="flex-1 min-w-0">
-            {/* Hero Section */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6 md:mb-8">
-              <div className="w-20 h-12 sm:w-24 sm:h-16 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 p-2 flex-shrink-0">
-                <img src="/images/komplett-logo.svg" alt="Komplett Logo" className="w-full h-full object-contain" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">Komplett Rabattkoder</h1>
-                <p className="text-purple-600 text-base sm:text-lg mt-1">
-                  Spara stort på datorer och teknik – uppdaterad dagligen
-                </p>
-              </div>
-            </div>
-
-            {/* Hero Section Component */}
             <KomplettHeroSection />
 
-            {/* Top Promo Codes Section */}
+            {/* Top promo list – same interaction pattern as Elgiganten */}
             <section className="mt-6 md:mt-8">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
                 Topp Komplett rabattkoder för{" "}
-                {new Date().toLocaleDateString("sv-SE", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {new Date().toLocaleDateString("sv-SE", { year: "numeric", month: "long", day: "numeric" })}
               </h2>
               <div className="text-xs md:text-sm text-gray-500 mb-4">När du gör ett köp kan vi tjäna en provision.</div>
               <div className="space-y-3 md:space-y-4">
                 {komplettCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} onUseDiscount={() => handleCouponSelect(coupon)} />
+                  <CouponCard
+                    key={coupon.id}
+                    coupon={coupon}
+                    // Match Elgiganten: CouponCard there calls onSelectCoupon
+                    onSelectCoupon={() => handleCouponSelect(coupon)}
+                    // If your shared component still expects onUseDiscount, swap the prop name above accordingly.
+                  />
                 ))}
               </div>
             </section>
 
-            {/* Selected Products */}
             <KomplettSelectedProducts />
-
-            {/* More Information */}
             <KomplettMoreInformation />
-
-            {/* FAQ */}
             <KomplettFAQ />
           </div>
 
-          {/* Sidebar */}
           <div className="xl:w-80 flex-shrink-0">
             <div className="sticky top-6">
               <KomplettSidebar />
@@ -221,16 +224,24 @@ const handleCouponSelect = (coupon: Coupon) => {
         </div>
       </main>
       <Footer />
-     {selectedCoupon && (<CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Komplett" />
-)}
 
-<SliderPuzzleModal
-  isOpen={showPuzzleModal}
-  onClose={() => setShowPuzzleModal(false)}
-  destinationUrl={selectedCoupon?.offerUrl}
-/>
+      {selectedCoupon && (
+        <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Komplett" />
+      )}
 
+      {/* Keep the slider modal like Elgiganten (remove if you decide to not use it) */}
+      <SliderPuzzleModal
+        isOpen={showPuzzleModal}
+        onClose={() => setShowPuzzleModal(false)}
+        destinationUrl={selectedCoupon?.offerUrl}
+      />
 
+      <OfferPopup
+        isOpen={showOfferPopup}
+        onClose={() => setShowOfferPopup(false)}
+        storeName="Komplett"
+        offer={topOffer}
+      />
     </div>
   )
 }
