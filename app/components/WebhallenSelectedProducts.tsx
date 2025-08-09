@@ -1,8 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import CouponModal from "./CouponModal"
-
 const selectedProducts = [
   {
     id: 1,
@@ -67,82 +64,59 @@ const selectedProducts = [
 ]
 
 export default function WebhallenSelectedProducts() {
-  const [selectedProduct, setSelectedProduct] = useState<any>(null)
-  const [showModal, setShowModal] = useState(false)
-
-  const handleProductClick = (product: any) => {
-    setSelectedProduct(product)
-    setShowModal(true)
-  }
-
-  const handleCloseModal = () => {
-    setShowModal(false)
-    setSelectedProduct(null)
-  }
-
   return (
-    <>
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">Utvalda produkter från Webhallen</h2>
+    <section className="py-12 bg-white">
+      <div className="container mx-auto px-4">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
+          Utvalda produkter från Webhallen
+        </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {selectedProducts.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
-              >
-                <div className="relative">
-                  <img
-                    src={product.image || "/placeholder.svg"}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-3 left-3 bg-orange-500 text-white px-2 py-1 rounded-full text-sm font-bold">
-                    -{product.discount}
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-xl font-bold text-orange-600">{product.salePrice}</div>
-                      <div className="text-sm text-gray-500 line-through">{product.originalPrice}</div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleProductClick(product)}
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
-                  >
-                    Till produkt
-                  </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {selectedProducts.map((product) => (
+            <div
+              key={product.id}
+              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
+            >
+              <div className="relative">
+                <img
+                  src={product.image || "/placeholder.svg"}
+                  alt={product.name}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="absolute top-3 left-3 bg-orange-500 text-white px-2 py-1 rounded-full text-sm font-bold">
+                  -{product.discount}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Coupon Modal */}
-      {showModal && selectedProduct && (
-        <CouponModal
-          isOpen={showModal}
-          onClose={handleCloseModal}
-          couponCode="GAMING20"
-          discount="20% rabatt"
-          title={selectedProduct.name}
-          description={`Få 20% rabatt på ${selectedProduct.name} hos Webhallen`}
-          originalPrice={selectedProduct.originalPrice}
-          salePrice={selectedProduct.salePrice}
-          storeName="Webhallen"
-          storeUrl={selectedProduct.webhallen_url}
-          expiryDate="31 december 2024"
-        />
-      )}
-    </>
+              <div className="p-6">
+                <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
+                  {product.name}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  {product.description}
+                </p>
+
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="text-xl font-bold text-orange-600">{product.salePrice}</div>
+                    <div className="text-sm text-gray-500 line-through">{product.originalPrice}</div>
+                  </div>
+                </div>
+
+                {/* Direct redirect to Webhallen */}
+                <a
+                  href={product.webhallen_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
+                >
+                  Till produkt
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
