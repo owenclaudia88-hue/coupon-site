@@ -43,7 +43,7 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
     "https://picsum.photos/500/300?random=9",
   ]
 
-  // ---- Conversion helpers ----
+  // ---- Conversion helper (NO redirect) ----
   const fireClickConversionNoRedirect = () => {
     try {
       const fn = (window as any)?.gtag_report_conversion
@@ -60,21 +60,11 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
     }
   }
 
+  // ✅ After puzzle solved: close and navigate (NO conversion here to avoid double counting)
   const redirectToOffer = () => {
     setShowPuzzle(false)
     onClose()
     setTimeout(() => {
-      try {
-        const fn = (window as any)?.gtag_report_conversion
-        if (typeof fn === "function") {
-          // fire event and let snippet redirect via its callback
-          fn(offer.offerUrl)
-          return
-        }
-      } catch {
-        /* noop */
-      }
-      // fallback redirect if snippet missing
       window.location.href = offer.offerUrl
     }, 300) // small delay to let modal close
   }
