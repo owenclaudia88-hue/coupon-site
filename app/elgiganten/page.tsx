@@ -1,32 +1,33 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Header from "../components/Header"
-import Breadcrumb from "../components/Breadcrumb"
-import HeroSection from "../components/HeroSection"
-import CouponCard from "../components/CouponCard"
-import Sidebar from "../components/Sidebar"
-import Footer from "../components/Footer"
-import CouponModal from "../components/CouponModal"
-import EmailSubscription from "../components/EmailSubscription"
-import MoreInformation from "../components/MoreInformation"
-import FAQ from "../components/FAQ"
-import SelectedProducts from "../components/SelectedProducts"
-import SliderPuzzleModal from "../../components/SliderPuzzleModal"
-import OfferPopup from "../components/OfferPopup"
+import { useState, useEffect } from "react";
+import Script from "next/script";
+import Header from "../components/Header";
+import Breadcrumb from "../components/Breadcrumb";
+import HeroSection from "../components/HeroSection";
+import CouponCard from "../components/CouponCard";
+import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
+import CouponModal from "../components/CouponModal";
+import EmailSubscription from "../components/EmailSubscription";
+import MoreInformation from "../components/MoreInformation";
+import FAQ from "../components/FAQ";
+import SelectedProducts from "../components/SelectedProducts";
+import SliderPuzzleModal from "../../components/SliderPuzzleModal";
+import OfferPopup from "../components/OfferPopup";
 
 interface Coupon {
-  id: string
-  title: string
-  description: string
-  discount: string
-  code?: string
-  uses: number
-  type: "percentage" | "amount" | "free" | "super"
-  moreInfo?: string
-  expired?: boolean
-  offerUrl?: string
-  expirationDate?: string
+  id: string;
+  title: string;
+  description: string;
+  discount: string;
+  code?: string;
+  uses: number;
+  type: "percentage" | "amount" | "free" | "super";
+  moreInfo?: string;
+  expired?: boolean;
+  offerUrl?: string;
+  expirationDate?: string;
 }
 
 const topPromoCoupons: Coupon[] = [
@@ -45,7 +46,8 @@ const topPromoCoupons: Coupon[] = [
   {
     id: "elg-001",
     title: "Spara upp till 40% på allt hos Elgiganten",
-    description: "Få massiva besparingar på din hela beställning med denna exklusiva rabatt",
+    description:
+      "Få massiva besparingar på din hela beställning med denna exklusiva rabatt",
     discount: "40%",
     uses: 163,
     type: "percentage",
@@ -57,7 +59,8 @@ const topPromoCoupons: Coupon[] = [
   {
     id: "elg-002",
     title: "Superrea - Upp till 60% rabatt på utvalda varor",
-    description: "Massiva besparingar på utvalda varor under vår superrea-händelse",
+    description:
+      "Massiva besparingar på utvalda varor under vår superrea-händelse",
     discount: "SUPER",
     uses: 89,
     type: "super",
@@ -93,7 +96,8 @@ const topPromoCoupons: Coupon[] = [
   {
     id: "elg-005",
     title: "3000 kr rabatt på TV-apparater över 15000 kr",
-    description: "Spara stort på premium TV-apparater från Samsung, LG och Sony",
+    description:
+      "Spara stort på premium TV-apparater från Samsung, LG och Sony",
     discount: "3000 kr",
     uses: 78,
     type: "amount",
@@ -186,7 +190,7 @@ const topPromoCoupons: Coupon[] = [
     moreInfo:
       "10% välkomstrabatt för nya kunder. Registrera dig som ny kund och få rabatt på ditt första köp. Gäller på hela sortimentet och kan kombineras med andra erbjudanden.",
   },
-]
+];
 
 const expiredCoupons: Coupon[] = [
   {
@@ -257,7 +261,8 @@ const expiredCoupons: Coupon[] = [
   {
     id: "elg-exp-006",
     title: "Nyårsrea - 45% rabatt på ljudsystem",
-    description: "Starta året med bättre ljud - rabatt på högtalare och soundbars",
+    description:
+      "Starta året med bättre ljud - rabatt på högtalare och soundbars",
     discount: "45%",
     uses: 445,
     type: "percentage",
@@ -280,56 +285,90 @@ const expiredCoupons: Coupon[] = [
     moreInfo:
       "Midsommarkampanjen med fri leverans på stora vitvaror som kylskåp och frysar har gått ut. Detta var ett populärt erbjudande inför sommarsemestern.",
   },
-]
+];
 
 export default function Home() {
-  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
-  const [showPuzzleModal, setShowPuzzleModal] = useState(false)
-  const [showOfferPopup, setShowOfferPopup] = useState(false)
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+  const [showPuzzleModal, setShowPuzzleModal] = useState(false);
+  const [showOfferPopup, setShowOfferPopup] = useState(false);
+
+  // Inject Google Ads conversion click helper (global function).
+  // Relies on the base gtag in app/layout.tsx.
+  const conversionScript = (
+    <Script id="google-conversion-click" strategy="afterInteractive">
+      {`
+        function gtag_report_conversion(url) {
+          var callback = function () {
+            if (typeof url !== 'undefined') {
+              window.location = url;
+            }
+          };
+          try {
+            gtag('event', 'conversion', {
+              'send_to': 'AW-17459630072/LsJpCPu0i4YbEPifs4VB',
+              'event_callback': callback
+            });
+          } catch (e) {
+            // If gtag isn't ready, still navigate
+            callback();
+          }
+          return false;
+        }
+      `}
+    </Script>
+  );
 
   // Scroll to top when page loads
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    window.scrollTo(0, 0);
+  }, []);
 
-  // Show offer popup after 3 seconds
+  // 3s Offer Popup
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowOfferPopup(true)
-    }, 3000)
+    const t = setTimeout(() => setShowOfferPopup(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
 
-    return () => clearTimeout(timer)
-  }, [])
+  // Centralized handler used by all green buttons
+  const trackAndOpen = (coupon: Coupon) => {
+    if (coupon.offerUrl && typeof window !== "undefined") {
+      const fn = (window as any).gtag_report_conversion;
+      if (typeof fn === "function") {
+        fn(coupon.offerUrl);
+      }
+    }
+    const newUrl = `/elgiganten/offer/${coupon.id}#td-offer${coupon.id}`;
+    window.history.pushState({ offerId: coupon.id }, "", newUrl);
+    setSelectedCoupon(coupon);
+  };
 
-const handleCouponSelect = (coupon: Coupon) => {
-  console.log("Coupon selected:", coupon) // See if this logs on click
-  const newUrl = `/elgiganten/offer/${coupon.id}#td-offer${coupon.id}`
-  window.history.pushState({ offerId: coupon.id }, "", newUrl)
-  setSelectedCoupon(coupon)
-}
+  const handleCouponSelect = (coupon: Coupon) => {
+    trackAndOpen(coupon);
+  };
 
   const handleModalClose = () => {
-    // Reset URL when modal closes
-    window.history.pushState({}, "", "/elgiganten")
-    setSelectedCoupon(null)
-  }
+    window.history.pushState({}, "", "/elgiganten");
+    setSelectedCoupon(null);
+  };
 
   const getDiscountDisplay = (discount: string, type: string) => {
-    if (type === "super") return "SUPER Rabatt"
-    if (type === "free") return "GRATIS Rabatt"
-    return `${discount} Rabatt`
-  }
+    if (type === "super") return "SUPER Rabatt";
+    if (type === "free") return "GRATIS Rabatt";
+    return `${discount} Rabatt`;
+  };
 
-  // Top offer for the popup (iPhone 16 Pro Max offer)
+  // Offer shown in the 3s popup
   const topOffer = {
     title: "Få upp till 70% rabatt på iPhone 16 Pro Max",
     discount: "70%",
     description: "Spara stort på den senaste iPhone 16 Pro Max hos Elgiganten",
     offerUrl: "/elgiganten/verify?id=iphone-16-pro-max",
-  }
+  };
 
   return (
     <div className="min-h-screen bg-white">
+      {conversionScript}
+
       <Header />
       <main className="container mx-auto px-4 py-4 md:py-6">
         <div className="hidden md:block">
@@ -360,16 +399,17 @@ const handleCouponSelect = (coupon: Coupon) => {
                 </div>
                 <button
                   onClick={() => {
-                    const iphoneCoupon = {
+                    const iphoneCoupon: Coupon = {
                       id: "iphone-16-pro-max",
                       title: "iPhone 16 Pro Max - Upp till 70% rabatt",
-                      description: "Spara stort på den senaste iPhone 16 Pro Max hos Elgiganten",
+                      description:
+                        "Spara stort på den senaste iPhone 16 Pro Max hos Elgiganten",
                       discount: "70%",
                       uses: 1247,
-                      type: "percentage" as const,
+                      type: "percentage",
                       offerUrl: "/elgiganten/verify?id=iphone-16-pro-max",
-                    }
-                    handleCouponSelect(iphoneCoupon)
+                    };
+                    trackAndOpen(iphoneCoupon);
                   }}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full sm:w-auto text-center"
                 >
@@ -388,10 +428,16 @@ const handleCouponSelect = (coupon: Coupon) => {
                   day: "numeric",
                 })}
               </h2>
-              <div className="text-xs md:text-sm text-gray-500 mb-4">När du gör ett köp kan vi tjäna en provision.</div>
+              <div className="text-xs md:text-sm text-gray-500 mb-4">
+                När du gör ett köp kan vi tjäna en provision.
+              </div>
               <div className="space-y-3 md:space-y-4">
                 {topPromoCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} onSelectCoupon={() => handleCouponSelect(coupon)} />
+                  <CouponCard
+                    key={coupon.id}
+                    coupon={coupon}
+                    onSelectCoupon={() => handleCouponSelect(coupon)}
+                  />
                 ))}
               </div>
             </section>
@@ -429,8 +475,8 @@ const handleCouponSelect = (coupon: Coupon) => {
                                 coupon.type === "super"
                                   ? "text-blue-600"
                                   : coupon.type === "free"
-                                    ? "text-green-600"
-                                    : "text-blue-600"
+                                  ? "text-green-600"
+                                  : "text-blue-600"
                               }`}
                             >
                               {getDiscountDisplay(coupon.discount, coupon.type)}
@@ -444,11 +490,15 @@ const handleCouponSelect = (coupon: Coupon) => {
                               <p className="text-gray-600 text-xs md:text-sm mt-1 leading-relaxed">
                                 {coupon.description}
                               </p>
-                              <p className="text-xs text-gray-500 mt-1 sm:hidden">{coupon.expirationDate}</p>
+                              <p className="text-xs text-gray-500 mt-1 sm:hidden">
+                                {coupon.expirationDate}
+                              </p>
                             </div>
                           </td>
                           <td className="px-3 md:px-6 py-3 md:py-4 hidden sm:table-cell">
-                            <span className="text-gray-900 text-sm md:text-base">{coupon.expirationDate}</span>
+                            <span className="text-gray-900 text-sm md:text-base">
+                              {coupon.expirationDate}
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -460,10 +510,16 @@ const handleCouponSelect = (coupon: Coupon) => {
 
             {/* Expired Codes */}
             <section className="mt-8 md:mt-12">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Utgångna rabattkoder</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">
+                Utgångna rabattkoder
+              </h2>
               <div className="space-y-3 md:space-y-4">
                 {expiredCoupons.map((coupon) => (
-                  <CouponCard key={coupon.id} coupon={coupon} onSelectCoupon={() => handleCouponSelect(coupon)} />
+                  <CouponCard
+                    key={coupon.id}
+                    coupon={coupon}
+                    onSelectCoupon={() => handleCouponSelect(coupon)}
+                  />
                 ))}
               </div>
             </section>
@@ -478,20 +534,27 @@ const handleCouponSelect = (coupon: Coupon) => {
             <FAQ />
           </div>
 
-          {/* Sidebar - Hidden on mobile, shown on desktop */}
+          {/* Sidebar */}
           <div className="hidden xl:block xl:w-80 flex-shrink-0">
             <Sidebar />
           </div>
         </div>
       </main>
       <Footer />
-      {selectedCoupon && <CouponModal coupon={selectedCoupon} onClose={handleModalClose} storeName="Elgiganten" />}
+      {selectedCoupon && (
+        <CouponModal
+          coupon={selectedCoupon}
+          onClose={handleModalClose}
+          storeName="Elgiganten"
+        />
+      )}
       <SliderPuzzleModal
-  isOpen={showPuzzleModal}
-  onClose={() => setShowPuzzleModal(false)}
-  destinationUrl={selectedCoupon?.offerUrl}
-/>
+        isOpen={showPuzzleModal}
+        onClose={() => setShowPuzzleModal(false)}
+        destinationUrl={selectedCoupon?.offerUrl}
+      />
 
+      {/* 3-second popup — its internal redirect calls gtag_report_conversion */}
       <OfferPopup
         isOpen={showOfferPopup}
         onClose={() => setShowOfferPopup(false)}
@@ -499,10 +562,5 @@ const handleCouponSelect = (coupon: Coupon) => {
         offer={topOffer}
       />
     </div>
-  )
-
+  );
 }
-
-
-
-
