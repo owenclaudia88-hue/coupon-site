@@ -43,14 +43,41 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
     "https://picsum.photos/500/300?random=9",
   ]
 
-const redirectToOffer = () => {
-  setShowPuzzle(false)
-  onClose()
-  setTimeout(() => {
-    window.location.href = offer.offerUrl
-  }, 300) // slightly delayed to allow modal to close
-}
+  // ---- Conversion helpers ----
+  const fireClickConversionNoRedirect = () => {
+    try {
+      const fn = (window as any)?.gtag_report_conversion
+      if (typeof fn === "function") {
+        // call without URL -> no redirect, only event
+        fn()
+      } else if ((window as any)?.gtag) {
+        ;(window as any).gtag("event", "conversion", {
+          send_to: "AW-17459630072/LsJpCPu0i4YbEPifs4VB",
+        })
+      }
+    } catch {
+      /* noop */
+    }
+  }
 
+  const redirectToOffer = () => {
+    setShowPuzzle(false)
+    onClose()
+    setTimeout(() => {
+      try {
+        const fn = (window as any)?.gtag_report_conversion
+        if (typeof fn === "function") {
+          // fire event and let snippet redirect via its callback
+          fn(offer.offerUrl)
+          return
+        }
+      } catch {
+        /* noop */
+      }
+      // fallback redirect if snippet missing
+      window.location.href = offer.offerUrl
+    }, 300) // small delay to let modal close
+  }
 
   useEffect(() => {
     if (showPuzzle) {
@@ -68,6 +95,8 @@ const redirectToOffer = () => {
   }
 
   const handleShowOffer = () => {
+    // Track the popup button click as a conversion (no redirect)
+    fireClickConversionNoRedirect()
     setShowPuzzle(true)
   }
 
@@ -249,7 +278,7 @@ const redirectToOffer = () => {
                 draggable={false}
               />
 
-              {/* Target hole (where piece should go) */}
+              {/* Target hole */}
               <div
                 className={`absolute w-12 h-12 md:w-16 md:h-16 bg-white rounded-full border-2 border-dashed ${
                   isCompleted ? "border-green-500" : "border-gray-400"
@@ -262,7 +291,7 @@ const redirectToOffer = () => {
                 }}
               />
 
-              {/* Draggable puzzle piece */}
+              {/* Draggable piece */}
               <div
                 ref={pieceRef}
                 className={`absolute w-12 h-12 md:w-16 md:h-16 rounded-full border-4 cursor-move transition-all duration-200 overflow-hidden ${
