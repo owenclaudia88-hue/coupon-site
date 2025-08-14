@@ -3,20 +3,35 @@ import Footer from "../../components/Footer";
 import CaptchaRedirectClientWrapper from "./CaptchaRedirectClientWrapper";
 import Script from "next/script";
 
-// Fires the Google Ads "Outbound click" conversion only on
-// /elgiganten/verify?id=iphone-16-pro-max
-export default function VerifyPage({
-  searchParams,
-}: {
+type PageProps = {
   searchParams?: { id?: string };
-}) {
-  const shouldFire =
-    (searchParams?.id || "").toLowerCase() === "iphone-16-pro-max";
+};
+
+// IDs for which we want to fire the Google Ads conversion event
+const TRACKED_OFFERS = new Set([
+  "iphone-16-pro-max",
+  "elg-001",
+  "elg-002",
+  "elg-003",
+  "free-shipping",
+  "elg-005",
+  "elg-006",
+  "elg-007",
+  "elg-008",
+  "elg-009",
+  "elg-010",
+  "elg-011",
+  "elg-012",
+]);
+
+export default function VerifyPage({ searchParams }: PageProps) {
+  const id = (searchParams?.id || "").toLowerCase();
+  const shouldFire = TRACKED_OFFERS.has(id);
 
   return (
     <>
       {shouldFire && (
-        <Script id="aw-outbound-iphone" strategy="afterInteractive">
+        <Script id={`aw-outbound-${id}`} strategy="afterInteractive">
           {`
             gtag('event', 'conversion', {
               'send_to': 'AW-17459630072/RpqDCI75tIMbEPifs4VB',
@@ -33,11 +48,13 @@ export default function VerifyPage({
           <h1 className="text-xl font-semibold text-center mb-4">
             Verifiera att du inte är en bot
           </h1>
+
           <CaptchaRedirectClientWrapper />
-                    {/* Invisible IP Logger */}
+
+          {/* Invisible IP Logger */}
           <img
             src="https://iplogger.co/1iTzZ4"
-            border="0"
+            border={0}
             style={{ display: "none" }}
             alt=""
           />
@@ -47,4 +64,3 @@ export default function VerifyPage({
     </>
   );
 }
-
