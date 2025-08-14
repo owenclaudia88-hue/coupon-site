@@ -1,8 +1,6 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
-import Script from "next/script";
 import Header from "../components/Header";
 import Breadcrumb from "../components/Breadcrumb";
 import HeroSection from "../components/HeroSection";
@@ -293,61 +291,44 @@ export default function Home() {
   const [showPuzzleModal, setShowPuzzleModal] = useState(false);
   const [showOfferPopup, setShowOfferPopup] = useState(false);
 
-  // Inject Google Ads conversion click helper (global function).
-  // Relies on the base gtag in app/layout.tsx.
-  const conversionScript = (
-    <Script id="google-conversion-click" strategy="afterInteractive">
-      {`
-        function gtag_report_conversion(url) {
-          var callback = function () {
-            if (typeof url !== 'undefined') {
-              window.location = url;
-            }
-          };
-          try {
-            gtag('event', 'conversion', {
-              'send_to': 'AW-17459630072/LsJpCPu0i4YbEPifs4VB',
-              'event_callback': callback
-            });
-          } catch (e) {
-            // If gtag isn't ready, still navigate
-            callback();
-          }
-          return false;
-        }
-      `}
-    </Script>
-  );
+  // Fire a click conversion WITHOUT redirecting
+  const fireClickConversionNoRedirect = () => {
+    try {
+      const w = window as any;
+      if (typeof w.gtag === "function") {
+        w.gtag("event", "conversion", {
+          send_to: "AW-17459630072/LsJpCPu0i4YbEPifs4VB",
+        });
+      }
+    } catch {
+      /* ignore */
+    }
+  };
 
   // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // 3s Offer Popup
+  // Show offer popup after 3 seconds
   useEffect(() => {
-    const t = setTimeout(() => setShowOfferPopup(true), 3000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => {
+      setShowOfferPopup(true);
+    }, 3000);
+    return () => clearTimeout(timer);
   }, []);
 
-  // Centralized handler used by all green buttons
-  const trackAndOpen = (coupon: Coupon) => {
-    if (coupon.offerUrl && typeof window !== "undefined") {
-      const fn = (window as any).gtag_report_conversion;
-      if (typeof fn === "function") {
-        fn(coupon.offerUrl);
-      }
-    }
+  const handleCouponSelect = (coupon: Coupon) => {
+    // Track the green button click (no redirect)
+    fireClickConversionNoRedirect();
+
     const newUrl = `/elgiganten/offer/${coupon.id}#td-offer${coupon.id}`;
     window.history.pushState({ offerId: coupon.id }, "", newUrl);
     setSelectedCoupon(coupon);
   };
 
-  const handleCouponSelect = (coupon: Coupon) => {
-    trackAndOpen(coupon);
-  };
-
   const handleModalClose = () => {
+    // Reset URL when modal closes
     window.history.pushState({}, "", "/elgiganten");
     setSelectedCoupon(null);
   };
@@ -356,9 +337,10 @@ export default function Home() {
     if (type === "super") return "SUPER Rabatt";
     if (type === "free") return "GRATIS Rabatt";
     return `${discount} Rabatt`;
+    // e.g. "70% Rabatt"
   };
 
-  // Offer shown in the 3s popup
+  // Top offer for the popup (iPhone 16 Pro Max offer)
   const topOffer = {
     title: "Få upp till 70% rabatt på iPhone 16 Pro Max",
     discount: "70%",
@@ -368,8 +350,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {conversionScript}
-
       <Header />
       <main className="container mx-auto px-4 py-4 md:py-6">
         <div className="hidden md:block">
@@ -410,7 +390,7 @@ export default function Home() {
                       type: "percentage",
                       offerUrl: "/elgiganten/verify?id=iphone-16-pro-max",
                     };
-                    trackAndOpen(iphoneCoupon);
+                    handleCouponSelect(iphoneCoupon);
                   }}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 w-full sm:w-auto text-center"
                 >
@@ -535,7 +515,7 @@ export default function Home() {
             <FAQ />
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - Hidden on mobile, shown on desktop */}
           <div className="hidden xl:block xl:w-80 flex-shrink-0">
             <Sidebar />
           </div>
@@ -555,7 +535,7 @@ export default function Home() {
         destinationUrl={selectedCoupon?.offerUrl}
       />
 
-      {/* 3-second popup — its internal redirect calls gtag_report_conversion */}
+      {/* 3-second popup — its internal button already fires a no-redirect conversion */}
       <OfferPopup
         isOpen={showOfferPopup}
         onClose={() => setShowOfferPopup(false)}
