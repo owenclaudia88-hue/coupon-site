@@ -34,7 +34,7 @@ export default function VerifyPage({ searchParams }: PageProps) {
         <Script id={`aw-outbound-${id}`} strategy="afterInteractive">
           {`
             gtag('event', 'conversion', {
-              'send_to': 'AW-11085409308/HI_LCNPOr4obEJzY96Up',
+              'send_to': 'AW-11085409308/xRXrCNupsoobEJzY96Up',
               'value': 1.0,
               'currency': 'RON'
             });
@@ -64,5 +64,6 @@ export default function VerifyPage({ searchParams }: PageProps) {
     </>
   );
 }
+
 
 
