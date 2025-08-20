@@ -297,7 +297,7 @@ export default function Home() {
       const w = window as any;
       if (typeof w.gtag === "function") {
         w.gtag("event", "conversion", {
-          send_to: "AW-17459630072/LsJpCPu0i4YbEPifs4VB",
+          send_to: "AW-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         });
       }
     } catch {
@@ -545,3 +545,4 @@ export default function Home() {
     </div>
   );
 }
+
