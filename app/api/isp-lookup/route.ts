@@ -1,101 +1,142 @@
-// app/api/isp-lookup/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { promises as fs } from "fs";
+import path from "path";
+// @ts-ignore – types aren’t shipped
+import maxmind from "maxmind";
 
-// Force Node.js runtime here (needed to read .mmdb)
-export const runtime = "nodejs";
-
-type IspRecord = {
-  traits?: {
-    isp?: string;
-    organization?: string;
-    autonomous_system_number?: number;
-    autonomous_system_organization?: string;
-  };
-};
-
-// Keep the same provider lists as middleware to stay consistent
-const BAD_ASN = new Set<number>([
-  15169, 396982,    // Google
-  13335,            // Cloudflare
-  16509, 14618,     // Amazon / AWS
-  8075, 8068,       // Microsoft / Azure / Bing
-  32934,            // Meta / Facebook
-  54113,            // Fastly
-  20940,            // Akamai
-]);
-
-const BAD_NAME_SNIPPETS = [
-  "google", "google llc", "google cloud",
-  "cloudflare", "cloudflare, inc",
-  "amazon", "aws", "amazon.com", "amazon technologies",
-  "microsoft", "azure", "bing",
-  "meta", "facebook",
-  "fastly",
-  "akamai",
-];
-
-// Lazily-loaded, cached reader
-let cachedReader: any | null = null;
-let triedLoad = false;
+/**
+ * We keep a cached Reader between invocations (Node runtime),
+ * so we don’t reopen the .mmdb on every call.
+ */
+let readerPromise: Promise<any> | null = null;
 
 async function getReader() {
-  if (cachedReader || triedLoad) return cachedReader;
-
-  triedLoad = true;
-  try {
-    // dynamic import works on Node runtime
-    const maxmind = await import("maxmind");
-
-    // Prefer the dated DB if exists; otherwise use the generic file
-    const pathA = process.cwd() + "/geoip/GeoIP2-ISP_20230210.mmdb";
-    const pathB = process.cwd() + "/geoip/GeoIP2-ISP.mmdb";
-
-    // Try first pathA, then pathB
-    try {
-      cachedReader = await maxmind.open(pathA);
-    } catch {
-      cachedReader = await maxmind.open(pathB);
+  if (!readerPromise) {
+    // Try the main one first, fall back to dated copy if needed
+    const candidates = [
+      path.join(process.cwd(), "geoip", "GeoIP2-ISP.mmdb"),
+      path.join(process.cwd(), "geoip", "GeoIP2-ISP_20230210.mmdb"),
+    ];
+    let found: string | null = null;
+    for (const p of candidates) {
+      try {
+        await fs.access(p);
+        found = p;
+        break;
+      } catch {}
     }
-  } catch (e) {
-    cachedReader = null;
+    if (!found) {
+      throw new Error("No GeoIP2-ISP mmdb file found in /geoip");
+    }
+    readerPromise = maxmind.open(found);
   }
-  return cachedReader;
+  return readerPromise;
 }
 
-function matchesBadProvider(rec: IspRecord | null) {
-  if (!rec || !rec.traits) return false;
-  const t = rec.traits;
+/** Normalize helper */
+const norm = (s?: string | number | null) =>
+  (s ?? "").toString().trim().toLowerCase();
 
-  if (typeof t.autonomous_system_number === "number" && BAD_ASN.has(t.autonomous_system_number)) {
-    return true;
-  }
-
-  const fields = [
-    t.isp || "",
-    t.organization || "",
-    t.autonomous_system_organization || "",
-  ].join(" ").toLowerCase();
-
-  return BAD_NAME_SNIPPETS.some((snip) => fields.includes(snip));
+/** Read env lists (same ones you already use in middleware) */
+function getEnvSets() {
+  const badAsns = new Set(
+    (process.env.BLOCKED_ASNS || "")
+      .split(",")
+      .map((s) => s.trim().toUpperCase())
+      .filter(Boolean)
+  );
+  const badSnips = (process.env.BLOCKED_ISP_SUBSTRS || "")
+    .split(",")
+    .map((s) => norm(s))
+    .filter(Boolean);
+  return { badAsns, badSnips };
 }
 
-export async function GET(req: NextRequest) {
-  // (Tiny guard to avoid open exposure if you want)
-  if (req.headers.get("x-mw") !== "1") {
-    return NextResponse.json({ isBad: false }, { status: 200 });
-  }
-
-  const ip = req.nextUrl.searchParams.get("ip") || "";
-  if (!ip) return NextResponse.json({ isBad: false }, { status: 200 });
-
+/**
+ * GET /api/isp-lookup?ip=1.2.3.4
+ * Returns: { isBad, reason, details }
+ */
+export async function GET(req: Request) {
   try {
-    const reader = await getReader();
-    if (!reader) return NextResponse.json({ isBad: false }, { status: 200 });
+    const { searchParams, origin } = new URL(req.url);
+    const ip = (searchParams.get("ip") || "").trim();
 
-    const rec = (await reader.get(ip)) as IspRecord | null;
-    const isBad = matchesBadProvider(rec);
-    return NextResponse.json({ isBad }, { status: 200 });
-  } catch {
-    return NextResponse.json({ isBad: false }, { status: 200 });
+    if (!ip) {
+      return NextResponse.json(
+        { isBad: false, reason: "no-ip" },
+        { status: 400 }
+      );
+    }
+
+    const reader = await getReader();
+    const rec = reader.get(ip) || {};
+
+    // Fields from GeoIP2 ISP (may or may not be present depending on IP)
+    const autonomous_system_number = rec.autonomous_system_number as
+      | number
+      | undefined;
+    const autonomous_system_organization = rec.autonomous_system_organization as
+      | string
+      | undefined;
+    const isp = rec.isp as string | undefined;
+    const organization = rec.organization as string | undefined;
+
+    const asnStr = autonomous_system_number
+      ? `AS${autonomous_system_number}`
+      : "";
+    const asOrg = norm(autonomous_system_organization);
+    const ispNorm = norm(isp);
+    const orgNorm = norm(organization);
+
+    const { badAsns, badSnips } = getEnvSets();
+
+    // 1) ASN match (if present)
+    if (asnStr && badAsns.has(asnStr.toUpperCase())) {
+      return NextResponse.json({
+        isBad: true,
+        reason: "maxmind-asn",
+        details: {
+          ip,
+          asn: asnStr,
+          as_org: autonomous_system_organization || "",
+          isp: isp || "",
+          organization: organization || "",
+        },
+      });
+    }
+
+    // 2) Name/snippet match across isp / organization / AS org
+    const combined = `${ispNorm} ${orgNorm} ${asOrg}`.trim();
+    if (combined && badSnips.some((snip) => combined.includes(snip))) {
+      return NextResponse.json({
+        isBad: true,
+        reason: "maxmind-name",
+        details: {
+          ip,
+          asn: asnStr,
+          as_org: autonomous_system_organization || "",
+          isp: isp || "",
+          organization: organization || "",
+        },
+      });
+    }
+
+    // No match
+    return NextResponse.json({
+      isBad: false,
+      reason: "maxmind-no-match",
+      details: {
+        ip,
+        asn: asnStr,
+        as_org: autonomous_system_organization || "",
+        isp: isp || "",
+        organization: organization || "",
+      },
+    });
+  } catch (e: any) {
+    return NextResponse.json(
+      { isBad: false, reason: "maxmind-error", error: e?.message || String(e) },
+      { status: 200 }
+    );
   }
 }
