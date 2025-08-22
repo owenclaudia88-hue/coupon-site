@@ -48,6 +48,39 @@ const BAD_NAME_SNIPPETS: string[] = [
   "3bb",
 ];
 
+/** ─────────────────────────────
+ * Add-on blocklists (ASNs + names/domains)
+ * ───────────────────────────── */
+const EXTRA_BAD_ASN: string[] = [
+  "AS15169", "AS396982", "AS36040", "AS19527", "AS139070", "AS36561", "AS43515", "AS16550",
+  "AS32934", "AS63293",
+  "AS8075", "AS8068", "AS8069", "AS12076", "AS13443", "AS14413", "AS40793",
+  "AS16509", "AS14618", "AS7224", "AS19047", "AS36263", "AS8987",
+  "AS13335",
+  "AS20940", "AS12222", "AS16625", "AS16702", "AS35994", "AS32787", "AS63949",
+  "AS54113",
+];
+
+for (const a of EXTRA_BAD_ASN) BAD_ASN.add(a.toUpperCase());
+
+const EXTRA_BAD_NAME_SNIPPETS: string[] = [
+  "google", "google llc", "google ireland limited", "google cloud",
+  "googlebot", "youtube", "ggc", "1e100.net", "googleusercontent.com", "gvt1.com", "google.com",
+  "meta", "meta platforms", "facebook", "facebook inc", "fb.com",
+  "instagram", "whatsapp", "oculus", "threads", "meta.com", "facebook.com", "instagram.com",
+  "microsoft", "microsoft corporation", "azure", "windows.net", "bing", "msn",
+  "microsoft.com", "azure.com", "linkedin", "linkedin corporation", "linkedin.com",
+  "amazon", "amazon.com", "amazon technologies", "aws", "amazon web services",
+  "amazonaws.com", "cloudfront.net",
+  "cloudflare", "cloudflare, inc", "cloudflare.com",
+  "akamai", "akamai technologies", "akamai international", "akamaiedge.net",
+  "akamaitechnologies.com", "akamai.com", "prolexic",
+  "fastly", "fastly, inc", "fastly.com", "fastly.net",
+  "linode", "linode, llc", "linode.com",
+];
+
+BAD_NAME_SNIPPETS.push(...EXTRA_BAD_NAME_SNIPPETS.map((s) => s.toLowerCase()));
+
 /* ======= Optional ENV-driven extensions (no redeploy code changes) ======= */
 // Comma-separated lists are supported, e.g. "AS15169,AS16509"
 if (process.env.BLOCKED_ASNS) {
