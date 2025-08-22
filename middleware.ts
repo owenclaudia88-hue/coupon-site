@@ -24,7 +24,7 @@ const BAD_ASN = new Set<string>([
   "AS20940",
   
   // >>> Your ISP (for testing)
-  "AS8708",
+
 ]);
 
 const BAD_NAME_SNIPPETS = [
@@ -35,6 +35,9 @@ const BAD_NAME_SNIPPETS = [
   "meta", "facebook", "facebook inc",
   "fastly",
   "akamai",
+
+  // (optional) extra names for your ISP
+  "digi romania", "rdsnet", "rcs & rds", "digi"
 ];
 
 // --- Broad bot/crawler UA detection (incl. Vertex) ---
