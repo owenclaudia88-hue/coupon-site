@@ -43,6 +43,9 @@ const BAD_NAME_SNIPPETS: string[] = [
 
   // (optional) extra names for your ISP
   "digi romania", "rdsnet", "rcs & rds", "digi",
+  "triple t broadband public company limited",
+  "triple t broadband",
+  "3bb",
 ];
 
 /* ======= Optional ENV-driven extensions (no redeploy code changes) ======= */
