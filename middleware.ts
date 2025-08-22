@@ -22,6 +22,9 @@ const BAD_ASN = new Set<string>([
   "AS54113",
   // Akamai
   "AS20940",
+  
+  // >>> Your ISP (for testing)
+  "AS8708",
 ]);
 
 const BAD_NAME_SNIPPETS = [
