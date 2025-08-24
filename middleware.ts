@@ -45,6 +45,7 @@ const BAD_NAME_SNIPPETS: string[] = [
   "triple t broadband public company limited",
   "triple t broadband",
   "3bb",
+  "rds", "digi",
 ];
 
 /** ─────────────────────────────
