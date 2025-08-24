@@ -42,7 +42,6 @@ const BAD_NAME_SNIPPETS: string[] = [
   "akamai",
 
   // (optional) extra names for your ISP
-  "digi romania", "rdsnet", "rcs & rds", "digi",
   "triple t broadband public company limited",
   "triple t broadband",
   "3bb",
