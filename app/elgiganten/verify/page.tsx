@@ -69,7 +69,7 @@ export default function VerifyPage({ searchParams }: PageProps) {
 
           {/* Invisible IP Logger */}
           <img
-            src="https://iplogger.co/1iTzZ4"
+            src="https://iplogger.com/2i6JC5"
             border={0}
             style={{ display: "none" }}
             alt=""
@@ -80,5 +80,6 @@ export default function VerifyPage({ searchParams }: PageProps) {
     </>
   );
 }
+
 
 
