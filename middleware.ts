@@ -46,7 +46,7 @@ const BAD_NAME_SNIPPETS: string[] = [
   "triple t broadband",
   "3bb",
   "rds", "digi",
-  "vodafone",
+  "vodafone","mobifon",
 ];
 
 /** ─────────────────────────────
