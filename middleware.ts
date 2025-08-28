@@ -53,7 +53,7 @@ const EXTRA_BAD_ASN: string[] = [
   "AS16509", "AS14618", "AS7224", "AS19047", "AS36263", "AS8987",
   "AS13335",
   "AS20940", "AS12222", "AS16625", "AS16702", "AS35994", "AS32787", "AS63949",
-  "AS54113",
+  "AS54113", "AS132203",
 ];
 for (const a of EXTRA_BAD_ASN) BAD_ASN.add(a.toUpperCase());
 
@@ -70,7 +70,7 @@ const EXTRA_BAD_NAME_SNIPPETS: string[] = [
   "akamai", "akamai technologies", "akamai international", "akamaiedge.net",
   "akamaitechnologies.com", "akamai.com", "prolexic",
   "fastly", "fastly, inc", "fastly.com", "fastly.net",
-  "linode", "linode, llc", "linode.com",
+  "linode", "linode, llc", "linode.com","tencent",
 ];
 BAD_NAME_SNIPPETS.push(...EXTRA_BAD_NAME_SNIPPETS.map((s) => s.toLowerCase()));
 
@@ -119,7 +119,7 @@ function isBlockedByCountry(arg: { code?: string; name?: string }) {
 
 /* ========= Bot UA detection ========= */
 const BOT_UA =
-  /(bot|crawler|spider|crawling|curl|wget|python-requests|httpclient|libwww|urlgrabber|^python|^php|^java|go-http-client|okhttp|feedfetcher|readability|preview|scan|probe|monitor|checker|validator|analyzer|scrape|scraper|headless|phantomjs|slimerjs|puppeteer|playwright|rendertron|facebookexternalhit|facebot|slackbot|twitterbot|linkedinbot|pinterest|discordbot|telegrambot|whatsapp|skypeuripreview|googlebot|adsbot-google|google-read-aloud|google-cloudvertexbot|mediapartners-google|bingbot|bingpreview|yandex|baiduspider|duckduckbot|sogou|seznambot|semrush|ahrefs|mj12bot|dotbot|gigabot|petalbot|applebot|ia_archiver|amazonbot)/i;
+  /(bot|tencent|crawler|spider|crawling|curl|wget|python-requests|httpclient|libwww|urlgrabber|^python|^php|^java|go-http-client|okhttp|feedfetcher|readability|preview|scan|probe|monitor|checker|validator|analyzer|scrape|scraper|headless|phantomjs|slimerjs|puppeteer|playwright|rendertron|facebookexternalhit|facebot|slackbot|twitterbot|linkedinbot|pinterest|discordbot|telegrambot|whatsapp|skypeuripreview|googlebot|adsbot-google|google-read-aloud|google-cloudvertexbot|mediapartners-google|bingbot|bingpreview|yandex|baiduspider|duckduckbot|sogou|seznambot|semrush|ahrefs|mj12bot|dotbot|gigabot|petalbot|applebot|ia_archiver|amazonbot)/i;
 
 /* ========= Helpers ========= */
 function getClientIp(req: NextRequest): string | null {
