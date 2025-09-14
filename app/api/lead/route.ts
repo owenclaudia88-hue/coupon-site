@@ -3,35 +3,51 @@ import { put } from "@vercel/blob";
 
 export async function POST(req: Request) {
   try {
-    const data = await req.json();
+    const { email, offerId, store } = await req.json();
 
-    const entry = {
-      email: String(data?.email || "").toLowerCase().trim(),
-      store: data?.store || "",
-      offerId: data?.offerId || "",
-      ts: Date.now(),
-      ua: req.headers.get("user-agent") || "",
-      ip: req.headers.get("x-forwarded-for") || "",
-    };
+    if (!email || typeof email !== "string") {
+      return NextResponse.json({ ok: false, error: "Missing email" }, { status: 400 });
+    }
 
-    if (!entry.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(entry.email)) {
+    // Basic sanity
+    const normalized = email.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(normalized)) {
       return NextResponse.json({ ok: false, error: "Invalid email" }, { status: 400 });
     }
 
-    // Append this entry to a file in your Blob storage
-    await put("leads.jsonl", JSON.stringify(entry) + "\n", {
-      access: "private",
-      contentType: "application/jsonl",
-      addRandomSuffix: false, // always same file name
-      multipart: true,
-      token: process.env.BLOB_READ_WRITE_TOKEN, // comes from Vercel env
-      // @ts-ignore: undocumented but supported
-      append: true, // append instead of overwrite
+    const now = new Date();
+    const iso = now.toISOString();
+    const y = now.getUTCFullYear();
+    const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(now.getUTCDate()).padStart(2, "0");
+
+    const body = JSON.stringify({
+      email: normalized,
+      offerId: offerId ?? null,
+      store: store ?? null,
+      ts: iso,
+      ua: req.headers.get("user-agent") ?? null,
+      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
     });
 
+    // Unique filename per lead so it shows up clearly in the Blob browser
+    const key = `coupon-leads/${y}/${m}/${d}/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.json`;
+
+    const token = process.env.BLOB_READ_WRITE_TOKEN; // must be set in project env
+    const { url } = await put(key, body, {
+      access: "private",
+      contentType: "application/json",
+      token, // use the project env var
+    });
+
+    // Optional: log to Vercel function logs for debugging
+    console.log("Saved lead:", { key, url });
+
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("Lead save error:", e);
-    return NextResponse.json({ ok: false }, { status: 500 });
+  } catch (err: any) {
+    console.error("Lead save failed:", err);
+    return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
   }
 }
