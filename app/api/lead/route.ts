@@ -1,52 +1,58 @@
-import { put } from "@vercel/blob";
+// app/api/lead/route.ts
+import { NextResponse } from 'next/server'
+import { put } from '@vercel/blob'
 
-export const runtime = "edge";
+export const runtime = 'edge' // keep this so it runs fast and near users
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+type LeadBody = {
+  email?: string
+  offerId?: string
+  store?: string
+  ts?: number
+}
+
+const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => ({}));
-    const email = String(body?.email || "").trim();
-    const offerId = String(body?.offerId || "unknown");
-    const store = String(body?.store || "unknown");
-    const ts = Number(body?.ts) || Date.now();
+    const { email, offerId, store, ts }: LeadBody = await req.json()
 
-    if (!EMAIL_RE.test(email)) {
-      return new Response(JSON.stringify({ ok: false, error: "invalid_email" }), {
-        status: 400, headers: { "content-type": "application/json" }
-      });
+    if (!email || !isEmail(email)) {
+      return NextResponse.json({ ok: false, error: 'bad_email' }, { status: 400 })
     }
-
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      // You’ll see this in Vercel function logs if the env var is missing
-      return new Response(JSON.stringify({ ok: false, error: "missing_blob_token" }), {
-        status: 500, headers: { "content-type": "application/json" }
-      });
+      return NextResponse.json({ ok: false, error: 'no_blob_token' }, { status: 500 })
     }
 
-    const id = `${store}-${offerId}-${ts}-${Math.random().toString(36).slice(2)}`;
-    await put(`coupon-leads/${id}.json`,
-      JSON.stringify({ email, offerId, store, ts,
-        ua: req.headers.get("user-agent") || "",
-        ip: req.headers.get("x-forwarded-for") || null
-      }, null, 2),
-      { access: "private", contentType: "application/json" }
-    );
+    // basic metadata
+    const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0] || null
+    const ua = req.headers.get('user-agent') || null
 
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 201, headers: { "content-type": "application/json" }
-    });
+    const payload = JSON.stringify({
+      email: email.trim().toLowerCase(),
+      offerId: offerId || null,
+      store: store || null,
+      ts: ts || Date.now(),
+      ip,
+      ua,
+    })
+
+    // nice key structure in your Blob store
+    const day = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+    const key = `leads/${day}/${crypto.randomUUID()}.json`
+
+    await put(key, payload, {
+      access: 'public',                       // <-- THIS fixes the error
+      contentType: 'application/json',
+      token: process.env.BLOB_READ_WRITE_TOKEN, // use the RW token from Vercel env
+    })
+
+    return NextResponse.json({ ok: true })
   } catch (err: any) {
-    console.error("lead error:", err);
-    return new Response(JSON.stringify({ ok: false, error: err?.message || "server_error" }), {
-      status: 500, headers: { "content-type": "application/json" }
-    });
+    console.error('lead error:', err)
+    return NextResponse.json(
+      { ok: false, error: err?.message || 'unknown' },
+      { status: 500 },
+    )
   }
-}
-
-export async function GET() {
-  return new Response(JSON.stringify({ ok: true }), {
-    headers: { "content-type": "application/json" }
-  });
 }
