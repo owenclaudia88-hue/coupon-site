@@ -1,14 +1,5 @@
 import { NextResponse } from "next/server";
-
-// OPTION A: Vercel KV (recommended for simple lists)
-//  - Enable Vercel KV and add env vars: KV_REST_API_URL, KV_REST_API_TOKEN
-//  - Install: npm i @vercel/kv
-// import { kv } from "@vercel/kv";
-
-// OPTION B: Vercel Blob (no DB, JSONL append)
-//  - Enable Vercel Blob & add: BLOB_READ_WRITE_TOKEN
-//  - Install: npm i @vercel/blob
-// import { put } from "@vercel/blob";
+import { put } from "@vercel/blob";
 
 export async function POST(req: Request) {
   try {
@@ -18,7 +9,7 @@ export async function POST(req: Request) {
       email: String(data?.email || "").toLowerCase().trim(),
       store: data?.store || "",
       offerId: data?.offerId || "",
-      ts: data?.ts || Date.now(),
+      ts: Date.now(),
       ua: req.headers.get("user-agent") || "",
       ip: req.headers.get("x-forwarded-for") || "",
     };
@@ -27,24 +18,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Invalid email" }, { status: 400 });
     }
 
-    // --- Pick ONE of the storage options below ---
-
-    // // A) Save to Vercel KV list
-    // await kv.lpush("leads", JSON.stringify(entry));
-
-    // // B) Append to a JSONL file in Vercel Blob
-    // await put("leads.jsonl", JSON.stringify(entry) + "\n", {
-    //   access: "private",
-    //   contentType: "application/jsonl",
-    //   addRandomSuffix: false,
-    //   multipart: true,
-    //   token: process.env.BLOB_READ_WRITE_TOKEN,
-    //   // @ts-ignore - undocumented but supported: append JSON lines
-    //   append: true,
-    // });
-
-    // For now (if you haven't wired storage yet), just log it.
-    console.log("LEAD:", entry);
+    // Append this entry to a file in your Blob storage
+    await put("leads.jsonl", JSON.stringify(entry) + "\n", {
+      access: "private",
+      contentType: "application/jsonl",
+      addRandomSuffix: false, // always same file name
+      multipart: true,
+      token: process.env.BLOB_READ_WRITE_TOKEN, // comes from Vercel env
+      // @ts-ignore: undocumented but supported
+      append: true, // append instead of overwrite
+    });
 
     return NextResponse.json({ ok: true });
   } catch (e) {
