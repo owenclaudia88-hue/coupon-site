@@ -39,7 +39,10 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValidEmail(email)) return;
+    if (!isValidEmail(email)) {
+      setErrorMsg("Ange en giltig e-postadress.");
+      return;
+    }
 
     setSending(true);
     setErrorMsg(null);
@@ -58,9 +61,8 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
       // Regardless of POST result, continue to the offer – middleware decides
       redirectToOffer();
     } catch (err) {
-      // Still let them through if the network hiccups
       console.error("Lead save failed:", err);
-      redirectToOffer();
+      redirectToOffer(); // Still let them through
     } finally {
       setSending(false);
     }
