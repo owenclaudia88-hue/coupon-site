@@ -95,7 +95,7 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
         </div>
 
         <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 mb-6 text-center">
-          <p className="text-gray-700 font-semibold">Ingen kod behövs</p>
+          <p className="text-gray-700 font-semibold">Ingen kod behövs ✅</p>
         </div>
 
         <button
