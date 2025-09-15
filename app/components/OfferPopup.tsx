@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 
 interface OfferPopupProps {
@@ -11,12 +11,17 @@ interface OfferPopupProps {
     title: string;
     discount: string;
     description: string;
-    offerUrl: string; // should point to /elgiganten/verify?... so middleware kicks in
+    offerUrl: string; // points to /elgiganten/verify?... so middleware kicks in
   };
 }
 
 export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferPopupProps) {
   if (!isOpen) return null;
+
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 
   // ---- Fire a conversion WITHOUT redirect (avoid double-counting) ----
   const fireClickConversionNoRedirect = () => {
@@ -34,13 +39,51 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
     }
   };
 
-  // 👉 Direct-to-offer (no puzzle) so middleware handles UA/ISP/ASN checks
-  const handleUseDiscount = () => {
-    fireClickConversionNoRedirect();
+  // Same redirect behavior so middleware still handles UA/ISP/ASN checks
+  const redirectToOffer = () => {
+    const dest = offer?.offerUrl || "/";
     onClose();
     setTimeout(() => {
-      window.location.href = offer?.offerUrl || "/";
+      window.location.href = dest;
     }, 120);
+  };
+
+  // Save lead, then go to offer
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValidEmail(email) || sending) return;
+
+    setSending(true);
+
+    try {
+      // Try to pull an `id` from the offerUrl if present, otherwise send the title
+      let offerId: string | null = null;
+      try {
+        const u = new URL(offer.offerUrl, window.location.origin);
+        offerId = u.searchParams.get("id");
+      } catch {
+        /* ignore */
+      }
+
+      await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          offerId: offerId || offer.title,
+          store: storeName,
+          ts: Date.now(),
+        }),
+      });
+    } catch {
+      // ignore network errors – we still allow the user through
+    } finally {
+      setSending(false);
+    }
+
+    // Fire your ad conversion (no redirect) and continue
+    fireClickConversionNoRedirect();
+    redirectToOffer();
   };
 
   return (
@@ -76,7 +119,7 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
           </div>
 
           {/* Main Title */}
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Såg du detta erbjudande än??</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Såg du detta erbjudande än?</h2>
 
           {/* Subtitle */}
           <p className="text-gray-600 mb-6 text-sm">
@@ -93,13 +136,36 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
             </p>
           </div>
 
-          {/* Use Discount Button (no puzzle) */}
-          <button
-            onClick={handleUseDiscount}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors text-base mb-4"
-          >
-            Använd rabatt
-          </button>
+          {/* Email gate (added) */}
+          <form onSubmit={handleUnlock} className="mb-4 space-y-3 text-left">
+            <p className="text-sm text-gray-700">
+              För att låsa upp rabatten, ange din e-postadress nedan. Du skickas sedan vidare till
+              erbjudandet.
+            </p>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Ange din e-postadress"
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+              required
+            />
+
+            {/* Use Discount Button (submit) */}
+            <button
+              type="submit"
+              disabled={!isValidEmail(email) || sending}
+              className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors text-base ${
+                !isValidEmail(email) || sending
+                  ? "bg-blue-300 text-white cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
+            >
+              Använd rabatt
+            </button>
+          </form>
 
           {/* Cute Character Illustration */}
           <div className="flex justify-center">
