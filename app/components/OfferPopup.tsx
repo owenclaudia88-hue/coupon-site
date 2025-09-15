@@ -76,7 +76,7 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
           </div>
 
           {/* Main Title */}
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Såg du detta erbjudande än?</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Såg du detta erbjudande än??</h2>
 
           {/* Subtitle */}
           <p className="text-gray-600 mb-6 text-sm">
