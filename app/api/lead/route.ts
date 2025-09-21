@@ -58,13 +58,9 @@ const SPINTAX_BODY_MAIN_BASE = `{Bästa Elgiganten-kund,|Elgiganten-kund,|Bästa
 {Tack för att du registrerade dig via en av våra betrodda partnersajter.|Vi är glada att du har gått med oss genom en av våra partnerplattformar.|Tack för att du anmälde dig via en av våra partnersidor.|Vi uppskattar att du gick med oss via vårt partnernätverk.}  
 {Vi samarbetar med utvalda partners för att kunna erbjuda de mest exklusiva erbjudandena,|Genom att samarbeta med ledande sajter kan vi dela oslagbara deals,|Med våra betrodda partners kan vi leverera unika rabatter,} och idag {har vi något speciellt reserverat för dig.|är vi glada att dela ett unikt tillfälle.|har du låst upp en exklusiv belöning.}
 
----
-
 {För att fira öppningen av vår flaggskeppsbutik i Stockholm ger vi tidig tillgång till en exklusiv iPhone 17 Pro Max-rabatt.|Som en del av vår nya butikslansering i Stockholm kan du nu ta del av en partner-exklusiv rabatt på iPhone 17 Pro Max.|Vi firar vår senaste butik i Stockholm med ett tidsbegränsat erbjudande på iPhone 17 Pro Max, reserverat för partneranvändare.|Vår stora öppning i Stockholm kommer med en belöning: tidig tillgång till iPhone 17 Pro Max till specialpris.}
 
 {Din iPhone 17 Pro Max är reserverad, men du måste bekräfta dina uppgifter inom 48 timmar för att hämta den.|Vi har lagt undan en enhet åt dig, men du behöver fylla i leveransinformationen inom 48 timmar.|Erbjudandet är tidskänsligt, så se till att bekräfta din beställning snart.|Vänta inte – denna partner-exklusiva belöning löper ut om den inte görs anspråk på snabbt.}
-
----
 
 👉 {Säkra din iPhone 17 Pro Max nu|Hämta ditt exklusiva iPhone 17 Pro Max-erbjudande|Lås upp din iPhone 17 Pro Max-rabatt|Bekräfta din belöning idag|Ta del av erbjudandet nu} genom att besöka en av dessa länkar:  
 
@@ -79,11 +75,7 @@ const SPINTAX_BODY_MAIN_BASE = `{Bästa Elgiganten-kund,|Elgiganten-kund,|Bästa
 |https://tinyurl.com/bp5wnra8
 |https://tinyurl.com/yc63mu8v}
 
----
-
 {Detta erbjudande gäller endast under en begränsad tid och endast via vårt partnernätverk, så vänta inte för länge.|Skynda dig – detta partnerexklusiva erbjudande varar inte länge.|Agera snabbt – begränsat antal finns tillgängligt genom denna partnerkampanj.|Vi kan bara hålla din reservation en kort tid, så agera nu.|När 48 timmar har gått släpps din reserverade iPhone till nästa kund.}
-
----
 
 {Tack igen för att du är en del av vår community och firar denna viktiga milstolpe med oss.|Vi är tacksamma för din lojalitet och ser fram emot att välkomna dig snart i våra butiker.|Tack för att du firar med oss när vi expanderar i Sverige.|Ditt stöd gör vår tillväxt möjlig och detta är vårt sätt att ge tillbaka.|Vi är stolta över att räkna dig som en av våra mest värdefulla kunder.}
 
