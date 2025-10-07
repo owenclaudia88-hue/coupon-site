@@ -35,7 +35,7 @@ function escapeHtml(s: string) {
 
 function renderOneOfferLinkHtml(href: string) {
   return `<p style="margin:0 0 8px 0;">
-    <a href="${href}" style="color:#2563eb;text-decoration:underline;">Öppna erbjudandet</a>
+    <a href="${href}" style="color:#2563eb;text-decoration:underline;">Läs mer om erbjudandet</a>
   </p>`
 }
 
@@ -55,7 +55,7 @@ function buildHtmlOneLink(
         ? `<div style="margin:0 0 14px 0;">${offerLinkHtml}</div>`
         : `<p style="margin:0 0 14px 0;">${escapeHtml(p).replace(/\n/g, '<br>')}</p>`
     )
-  .join('\n')
+    .join('\n')
 
   const footer = companyFooterLines
     .map((line, i) => `<p style="font-size:12px;color:#6b7280;margin:${i ? '2px 0 0' : '0 0 2px'};">${escapeHtml(line)}</p>`)
@@ -88,7 +88,6 @@ function buildPlainTextOneLink(
 /* --- Patch: add alt="" to Brevo tracking pixel to avoid SpamAssassin penalty --- */
 function addAltToTrackingPixel(html: string) {
   // Insert alt="" into any <img> whose src contains sendibt3 (Brevo tracking)
-  // Example pixel: <img width="1" height="1" src="https://...sendibt3.com/...">
   return html.replace(/<img([^>]+src="[^"]*sendibt3[^"]*")/gi, '<img alt=""$1')
 }
 
@@ -115,7 +114,6 @@ function listUnsubHeader(unsubUrl: string, mailto?: string) {
 }
 
 /* -------------- Offer map + signed redirect URL -------------- */
-/** Final destinations (your sverige9 links), keyed by id a–j */
 const OFFER_MAP: Record<string, string> = {
   a:'https://sverige9.site/?u=t24z5ram',
   b:'https://sverige9.site/?u=dbvkru2j',
@@ -140,42 +138,38 @@ async function signedRedirectUrl(id: string, ts: number, origin: string, secret:
 }
 
 /* ---------------- SPINTAX (SV) — single-link placeholder ---------------- */
-const SPINTAX_SUBJECT_MAIN = `{Exklusivt|Speciellt|Begränsat tillfälle|Grattis!|Du har blivit utvald till ett|Missa inte detta} iPhone 17 Pro Max {erbjudande|deal|rabatt|belöning} — {för att fira vår flaggskeppsbutik|för att fira vår nya butik i Stockholm|som en del av vår stora öppning i Stockholm|tillgängligt endast via vårt partnernätverk} 🎉`
+/* Softer subject: no emojis, no “belöning”, “grattis”, “missa inte” */
+const SPINTAX_SUBJECT_MAIN =
+  `{Tack för din registrering|Välkommen|Bekräftelse|Information om ditt konto} – iPhone 17 Pro Max {rabattinformation|kampanjinfo|uppdatering}`
 
-const SPINTAX_BODY_MAIN_BASE = `{Bästa Elgiganten-kund,|Elgiganten-kund,|Bästa värderade kund,|Bästa kund,|Bästa Elgiganten-klient,|Bästa värdefulla kund,|Bästa smartphone-entusiast,|Värderade kund,|Värderade klient,|Hej,|Hej där,}
+const SPINTAX_BODY_MAIN_BASE = `{Hej,|Hej där,|Hej och tack för att du hörde av dig,}
 
-{Tack för att du registrerade dig via en av våra betrodda partnersajter.|Vi är glada att du har gått med oss genom en av våra partnerplattformar.|Tack för att du anmälde dig via en av våra partnersidor.|Vi uppskattar att du gick med oss via vårt partnernätverk.}  
-{Vi samarbetar med utvalda partners för att kunna erbjuda de mest exklusiva erbjudandena,|Genom att samarbeta med ledande sajter kan vi dela oslagbara deals,|Med våra betrodda partners kan vi leverera unika rabatter,} och idag {har vi något speciellt reserverat för dig.|är vi glada att dela ett unikt tillfälle.|har du låst upp en exklusiv belöning.}
+Du har registrerat dig via en av våra partnerwebbplatser. Vi samarbetar med utvalda aktörer för att dela relevanta erbjudanden och uppdateringar med våra kunder.
 
-{För att fira öppningen av vår flaggskeppsbutik i Stockholm ger vi tidig tillgång till en exklusiv iPhone 17 Pro Max-rabatt.|Som en del av vår nya butikslansering i Stockholm kan du nu ta del av en partner-exklusiv rabatt på iPhone 17 Pro Max.|Vi firar vår senaste butik i Stockholm med ett tidsbegränsat erbjudande på iPhone 17 Pro Max, reserverat för partneranvändare.|Vår stora öppning i Stockholm kommer med en belöning: tidig tillgång till iPhone 17 Pro Max till specialpris.}
-
-{Din iPhone 17 Pro Max är reserverad, men du måste bekräfta dina uppgifter inom 48 timmar för att hämta den.|Vi har lagt undan en enhet åt dig, men du behöver fylla i leveransinformationen inom 48 timmar.|Erbjudandet är tidskänsligt, så se till att bekräfta din beställning snart.|Vänta inte – denna partner-exklusiva belöning löper ut om den inte görs anspråk på snabbt.}
-
-👉 {Säkra din iPhone 17 Pro Max nu|Hämta ditt exklusiva iPhone 17 Pro Max-erbjudande|Lås upp din iPhone 17 Pro Max-rabatt|Bekräfta din belöning idag|Ta del av erbjudandet nu} genom att klicka här:
+I samband med öppningen av vår butik i Stockholm vill vi informera om aktuella priser och kampanjer för iPhone 17 Pro Max. Om du vill läsa mer, hittar du detaljerna här:
 
 [[OFFER_LINK]]
 
-{Detta erbjudande gäller endast under en begränsad tid och endast via vårt partnernätverk, så vänta inte för länge.|Skynda dig – detta partnerexklusiva erbjudande varar inte länge.|Agera snabbt – begränsat antal finns tillgängligt genom denna partnerkampanj.|Vi kan bara hålla din reservation en kort tid, så agera nu.|När 48 timmar har gått släpps din reserverade iPhone till nästa kund.}
+Du får det här meddelandet eftersom du nyligen anmälde dig via en partnerwebbplats. Om du inte vill ta emot fler uppdateringar kan du avsluta prenumerationen längst ned i mejlet.
 
-{Tack igen för att du är en del av vår community och firar denna viktiga milstolpe med oss.|Vi är tacksamma för din lojalitet och ser fram emot att välkomna dig snart i våra butiker.|Tack för att du firar med oss när vi expanderar i Sverige.|Ditt stöd gör vår tillväxt möjlig och detta är vårt sätt att ge tillbaka.|Vi är stolta över att räkna dig som en av våra mest värdefulla kunder.}
-
-{Med vänliga hälsningar,|Vänliga hälsningar,|Varma hälsningar,|Med uppskattning,|Med tack,|Hälsningar,}`
+{Vänliga hälsningar,|Med vänliga hälsningar,|Allt gott,}`
 
 const SIGNOFFS = [
-  'Elgigantens Smartphone-team','Elgigantens Kundsupport','Elgigantens Tävlingsavdelning',
-  'Elgiganten Sverige','Elgigantens Onlineavdelning','Elgigantens Kundrelationer','Elgigantens Online-team'
+  'Elgigantens Onlineavdelning','Elgigantens Kundsupport','Elgiganten Sverige'
 ]
 
-const SPINTAX_SUBJECT_REM = `{Påminnelse|Sista chansen|Missa inte|Sista påminnelsen|Snabb påminnelse}: iPhone 17 Pro Max {erbjudande|rabatt|deal} — {slutar snart|går ut snart|sista timmarna} ⏳`
+const SPINTAX_SUBJECT_REM =
+  `{Påminnelse|Uppföljning|Kort uppdatering}: information om iPhone 17 Pro Max-erbjudande`
 
-const SPINTAX_BODY_REM = `{Bästa Elgiganten-kund,|Elgiganten-kund,|Bästa värderade kund,|Bästa kund,|Bästa Elgiganten-klient,|Bästa värdefulla kund,|Bästa smartphone-entusiast,|Värderade kund,|Värderade klient,|Hej,|Hej där,}
+const SPINTAX_BODY_REM = `{Hej igen,|Hej,}
 
-{En snabb påminnelse om ditt exklusiva iPhone 17 Pro Max-erbjudande.|Din partner-exklusiva iPhone 17 Pro Max-rabatt är fortfarande tillgänglig – men inte länge till.|En liten heads-up: din iPhone 17 Pro Max-deal håller på att gå ut.}  
-{När vi firar vår nya flaggskeppsbutik i Stockholm,|Till ära av vår nya butik i Stockholm,|För att markera lanseringen av vår flaggskeppsbutik i Stockholm,} {reserverade vi tillgång för partnerkunder som dig.|fick du tidig tillgång via vårt partnernätverk.|låste du upp prioriterad tillgång genom våra partners.}
+Vi vill bara skicka en kort uppdatering. Om du fortfarande vill läsa mer om kampanjen för iPhone 17 Pro Max finns informationen här:
 
-{Det finns begränsat med tid kvar för att bekräfta dina uppgifter|Endast en kort tidsram återstår för att hämta erbjudandet|Vi är nere på de sista reservationerna}, {så agera nu|så gör anspråk på det innan det är för sent|innan fönstret stängs}.
+[[OFFER_LINK]]
 
-👉 [[OFFER_LINK]]`
+Tack för att du är med i vårt nyhetsflöde. Du kan när som helst avsluta prenumerationen via länken längst ned.
+
+{Vänliga hälsningar,|Med vänliga hälsningar,|Allt gott,}`
 
 /* ---------------- Route ---------------- */
 export async function POST(req: Request) {
@@ -293,11 +287,13 @@ export async function POST(req: Request) {
     const baseHeaders = {
       'X-Entity-Ref-ID': `lead-${id}`,
       'List-Unsubscribe': listUnsubHeader(unsubUrlPre, listUnsubMail || undefined),
+      // One-click unsubscribe header
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
     }
 
     // Schedule REMINDER first to get messageId for unsubscribe token
     let htmlReminderPre = buildHtmlOneLink(bodyReminderCore, offerLinkHtml, unsubUrlPre, companyFooterLines)
-    htmlReminderPre = addAltToTrackingPixel(htmlReminderPre) // <-- add alt="" to tracking pixel
+    htmlReminderPre = addAltToTrackingPixel(htmlReminderPre)
     const textReminderPre = buildPlainTextOneLink(bodyReminderCore, clickUrl, unsubUrlPre, companyFooterLines)
 
     const resReminder = await sendBrevo(subjectReminder, htmlReminderPre, textReminderPre, scheduledAtReminder, baseHeaders)
@@ -312,11 +308,13 @@ export async function POST(req: Request) {
     const headersWithUnsub = {
       ...baseHeaders,
       'List-Unsubscribe': listUnsubHeader(unsubUrl, listUnsubMail || undefined),
+      // keep one-click here too
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
     }
 
     // Build and schedule WELCOME (single-link)
     let htmlWelcome = buildHtmlOneLink(bodyWelcomeCore, offerLinkHtml, unsubUrl, companyFooterLines)
-    htmlWelcome = addAltToTrackingPixel(htmlWelcome) // <-- add alt="" to tracking pixel
+    htmlWelcome = addAltToTrackingPixel(htmlWelcome)
     const textWelcome = buildPlainTextOneLink(bodyWelcomeCore, clickUrl, unsubUrl, companyFooterLines)
 
     const resWelcome = await sendBrevo(subjectWelcome, htmlWelcome, textWelcome, scheduledAtWelcome, headersWithUnsub)
@@ -338,7 +336,6 @@ export async function POST(req: Request) {
       scheduledAtWelcome,
       scheduledAtReminder,
       reminderMessageId: reminderMsgId,
-      // QA
       unsubscribeUrl: unsubUrl,
       clickUrlUsed: clickUrl,
       offerIdPicked,
