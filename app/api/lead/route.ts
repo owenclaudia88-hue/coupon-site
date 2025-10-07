@@ -28,63 +28,59 @@ function expandSpintax(input: string): string {
   return str
 }
 
-/* -------------- HTML / Text helpers -------------- */
+/* -------------- HTML / Text helpers (single link) -------------- */
 function escapeHtml(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-function buildHtml(
+function renderOneOfferLinkHtml(href: string) {
+  return `<p style="margin:0 0 8px 0;">
+    <a href="${href}" style="color:#2563eb;text-decoration:underline;">Öppna erbjudandet</a>
+  </p>`
+}
+
+function buildHtmlOneLink(
   textBody: string,
-  offerLinksHtml: string,
+  offerLinkHtml: string,
   unsubHref: string,
   companyFooterLines: string[],
 ) {
-  // Replace the placeholder with raw HTML block (do it before escaping paragraphs)
-  const withBlockToken = textBody.replaceAll('[[OFFER_LINKS]]', '__OFFER_LINKS_HTML__')
+  const withToken = textBody.replaceAll('[[OFFER_LINK]]', '__OFFER_LINK_HTML__')
 
-  const paragraphs = withBlockToken
+  const paragraphs = withToken
     .trim()
     .split(/\n{2,}/)
-    .map(p => {
-      if (p.includes('__OFFER_LINKS_HTML__')) {
-        // keep a paragraph wrapper for spacing, then inject the links HTML
-        return `<div style="margin:0 0 14px 0;">${offerLinksHtml}</div>`
-      }
-      return `<p style="margin:0 0 14px 0;">${escapeHtml(p).replace(/\n/g, '<br>')}</p>`
-    })
+    .map(p =>
+      p.includes('__OFFER_LINK_HTML__')
+        ? `<div style="margin:0 0 14px 0;">${offerLinkHtml}</div>`
+        : `<p style="margin:0 0 14px 0;">${escapeHtml(p).replace(/\n/g, '<br>')}</p>`
+    )
     .join('\n')
 
-  const footerHtml =
-    companyFooterLines
-      .map((line, i) =>
-        `<p style="font-size:12px;color:#6b7280;margin:${i === 0 ? '0 0 2px 0' : '2px 0 0 0'};">${escapeHtml(line)}</p>`
-      )
-      .join('\n')
+  const footer = companyFooterLines
+    .map((line, i) => `<p style="font-size:12px;color:#6b7280;margin:${i ? '2px 0 0' : '0 0 2px'};">${escapeHtml(line)}</p>`)
+    .join('\n')
 
-  return `<!doctype html>
-<html>
-  <body style="margin:0;padding:24px;font-family:Arial,Helvetica,sans-serif;line-height:1.55;color:#111827;background:#ffffff;">
+  return `<!doctype html><html><body style="margin:0;padding:24px;font-family:Arial,Helvetica,sans-serif;line-height:1.55;color:#111827;">
     <div style="max-width:600px;margin:0 auto;">
       ${paragraphs}
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
-      ${footerHtml}
+      ${footer}
       <p style="font-size:12px;color:#6b7280;margin:8px 0 0 0;">
         <a href="${unsubHref}" style="color:#6b7280;text-decoration:underline;">Avsluta prenumeration</a>
       </p>
     </div>
-  </body>
-</html>`
+  </body></html>`
 }
 
-function buildPlainText(
+function buildPlainTextOneLink(
   textBody: string,
-  offerLinks: string[],
+  offerLink: string,
   unsubHref: string,
   companyFooterLines: string[],
 ) {
-  const list = offerLinks.map((l, i) => `• Länk ${i + 1}: ${l}`).join('\n')
-  const withLinks = textBody.replaceAll('[[OFFER_LINKS]]', list)
-  return `${withLinks}\n\n---\n${companyFooterLines.join('\n')}\nAvsluta prenumeration: ${unsubHref}\n`
+  return textBody.replaceAll('[[OFFER_LINK]]', offerLink)
+    + `\n\n---\n${companyFooterLines.join('\n')}\nAvsluta prenumeration: ${unsubHref}\n`
 }
 
 /* -------------- Edge-safe HMAC (base64url) -------------- */
@@ -109,38 +105,32 @@ function listUnsubHeader(unsubUrl: string, mailto?: string) {
   return parts.join(', ')
 }
 
-/* -------------- Offer links -------------- */
-/** Build many final links to sverige9.site so Brevo can rewrite/track them. */
-function buildOfferLinks(): string[] {
-  // If you set OFFER_LINKS as a comma-separated list in env, we use that.
-  const env = (process.env.OFFER_LINKS || '').trim()
-  if (env) {
-    return env
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-  }
-
-  // Default: generate multiple variants with unique query params (no paths to avoid 404s)
-  const base = process.env.OFFER_BASE || 'https://sverige9.site/'
-  const campaigns = ['welcome', 'exclusive', 'partner', 'vip', 'launch', 'stockholm', 'deal', 'promo', 'offer', 'save']
-  const links: string[] = []
-  for (const c of campaigns) {
-    const u = Math.random().toString(36).slice(2, 10)
-    const sep = base.includes('?') ? '&' : '?'
-    links.push(`${base}${sep}utm_source=brevo&utm_medium=email&utm_campaign=${c}&u=${u}`)
-  }
-  return links
+/* -------------- Offer map + signed redirect URL -------------- */
+/** Final destinations (your sverige9 links), keyed by id a–j */
+const OFFER_MAP: Record<string, string> = {
+  a:'https://sverige9.site/?u=t24z5ram',
+  b:'https://sverige9.site/?u=dbvkru2j',
+  c:'https://sverige9.site/?u=dptpemtg',
+  d:'https://sverige9.site/?u=ozvr91w8',
+  e:'https://sverige9.site/?u=8g5jfjn6',
+  f:'https://sverige9.site/?u=rtcuf15g',
+  g:'https://sverige9.site/?u=8ujezx2w',
+  h:'https://sverige9.site/?u=xrve41hw',
+  i:'https://sverige9.site/?u=2q2s2f23',
+  j:'https://sverige9.site/?u=in2z7s27',
 }
 
-function renderOfferLinksHtml(links: string[]) {
-  // Hyperlink text kept short/clean; Brevo will auto-rewrite for tracking/branding
-  return links
-    .map((href, i) => `<p style="margin:0 0 8px 0;"><a href="${href}" style="color:#2563eb;text-decoration:underline;">Öppna erbjudandet ${links.length > 1 ? `#${i + 1}` : ''}</a></p>`)
-    .join('\n')
+function pickOfferId(): string {
+  const keys = Object.keys(OFFER_MAP)
+  return keys[Math.floor(Math.random() * keys.length)]
 }
 
-/* ---------------- SPINTAX (SV) ---------------- */
+async function signedRedirectUrl(id: string, ts: number, origin: string, secret: string) {
+  const sig = await hmac(`${id}|${ts}`, secret)
+  return `${origin}/o.php?id=${id}&ts=${ts}&sig=${sig}`
+}
+
+/* ---------------- SPINTAX (SV) — single-link placeholder ---------------- */
 const SPINTAX_SUBJECT_MAIN = `{Exklusivt|Speciellt|Begränsat tillfälle|Grattis!|Du har blivit utvald till ett|Missa inte detta} iPhone 17 Pro Max {erbjudande|deal|rabatt|belöning} — {för att fira vår flaggskeppsbutik|för att fira vår nya butik i Stockholm|som en del av vår stora öppning i Stockholm|tillgängligt endast via vårt partnernätverk} 🎉`
 
 const SPINTAX_BODY_MAIN_BASE = `{Bästa Elgiganten-kund,|Elgiganten-kund,|Bästa värderade kund,|Bästa kund,|Bästa Elgiganten-klient,|Bästa värdefulla kund,|Bästa smartphone-entusiast,|Värderade kund,|Värderade klient,|Hej,|Hej där,}
@@ -152,9 +142,9 @@ const SPINTAX_BODY_MAIN_BASE = `{Bästa Elgiganten-kund,|Elgiganten-kund,|Bästa
 
 {Din iPhone 17 Pro Max är reserverad, men du måste bekräfta dina uppgifter inom 48 timmar för att hämta den.|Vi har lagt undan en enhet åt dig, men du behöver fylla i leveransinformationen inom 48 timmar.|Erbjudandet är tidskänsligt, så se till att bekräfta din beställning snart.|Vänta inte – denna partner-exklusiva belöning löper ut om den inte görs anspråk på snabbt.}
 
-👉 {Säkra din iPhone 17 Pro Max nu|Hämta ditt exklusiva iPhone 17 Pro Max-erbjudande|Lås upp din iPhone 17 Pro Max-rabatt|Bekräfta din belöning idag|Ta del av erbjudandet nu} genom att besöka någon av dessa länkar:
+👉 {Säkra din iPhone 17 Pro Max nu|Hämta ditt exklusiva iPhone 17 Pro Max-erbjudande|Lås upp din iPhone 17 Pro Max-rabatt|Bekräfta din belöning idag|Ta del av erbjudandet nu} genom att klicka här:
 
-[[OFFER_LINKS]]
+[[OFFER_LINK]]
 
 {Detta erbjudande gäller endast under en begränsad tid och endast via vårt partnernätverk, så vänta inte för länge.|Skynda dig – detta partnerexklusiva erbjudande varar inte länge.|Agera snabbt – begränsat antal finns tillgängligt genom denna partnerkampanj.|Vi kan bara hålla din reservation en kort tid, så agera nu.|När 48 timmar har gått släpps din reserverade iPhone till nästa kund.}
 
@@ -176,7 +166,7 @@ const SPINTAX_BODY_REM = `{Bästa Elgiganten-kund,|Elgiganten-kund,|Bästa värd
 
 {Det finns begränsat med tid kvar för att bekräfta dina uppgifter|Endast en kort tidsram återstår för att hämta erbjudandet|Vi är nere på de sista reservationerna}, {så agera nu|så gör anspråk på det innan det är för sent|innan fönstret stängs}.
 
-👉 [[OFFER_LINKS]]`
+👉 [[OFFER_LINK]]`
 
 /* ---------------- Route ---------------- */
 export async function POST(req: Request) {
@@ -224,12 +214,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, leadKey: key, emailScheduled: false })
     }
 
-    // Force unsubscribe under your sender domain
+    // Force in-domain endpoints
     const unsubOrigin = process.env.UNSUB_ORIGIN || 'https://elgigantensupport.online'
+    const redirectOrigin = process.env.REDIRECT_ORIGIN || 'https://elgigantensupport.online'
+    const redirectSecret = process.env.REDIRECT_SECRET || '6f3d7c29f8b45a7e1bde93f02a61c48c5a78d3ef4b9c217f93c0d7aebf42c1a1'
 
-    // Build many final links to sverige9.site
-    const offerLinks = buildOfferLinks()
-    const offerLinksHtml = renderOfferLinksHtml(offerLinks)
+    // Choose one offer id & build signed redirect URL
+    const offerIdPicked = pickOfferId()
+    const tsNow = Date.now()
+    const clickUrl = await signedRedirectUrl(offerIdPicked, tsNow, redirectOrigin, redirectSecret)
+    const offerLinkHtml = renderOneOfferLinkHtml(clickUrl)
 
     // Company footer
     const companyFooterLines = [
@@ -239,7 +233,7 @@ export async function POST(req: Request) {
       'Sweden'
     ]
 
-    // TEST: default welcome delay 1 minute (you can override with ?delayMin=)
+    // Schedule: welcome in 1 minute by default, reminder in 24h
     const url = new URL(req.url)
     const delayMin = Math.max(0, Number(url.searchParams.get('delayMin') ?? '1'))
     const reminderHours = Math.max(1, Number(url.searchParams.get('reminderHours') ?? '24'))
@@ -283,7 +277,6 @@ export async function POST(req: Request) {
     }
 
     // Temporary unsubscribe before we know reminder messageId
-    const tsNow = Date.now()
     const preToken = `${normalizedEmail}|pending|${tsNow}`
     const sigPre = process.env.UNSUB_SECRET ? await hmac(preToken, process.env.UNSUB_SECRET) : 'nosig'
     const unsubUrlPre = `${unsubOrigin}/api/unsubscribe?e=${encodeURIComponent(normalizedEmail)}&m=pending&t=${tsNow}&sig=${sigPre}`
@@ -294,8 +287,8 @@ export async function POST(req: Request) {
     }
 
     // Schedule REMINDER first to get messageId for unsubscribe token
-    const htmlReminderPre = buildHtml(bodyReminderCore, offerLinksHtml, unsubUrlPre, companyFooterLines)
-    const textReminderPre = buildPlainText(bodyReminderCore, offerLinks, unsubUrlPre, companyFooterLines)
+    const htmlReminderPre = buildHtmlOneLink(bodyReminderCore, offerLinkHtml, unsubUrlPre, companyFooterLines)
+    const textReminderPre = buildPlainTextOneLink(bodyReminderCore, clickUrl, unsubUrlPre, companyFooterLines)
     const resReminder = await sendBrevo(subjectReminder, htmlReminderPre, textReminderPre, scheduledAtReminder, baseHeaders)
     const reminderOk = resReminder.ok
     const reminderData = reminderOk ? await resReminder.json().catch(() => ({})) : null
@@ -310,9 +303,9 @@ export async function POST(req: Request) {
       'List-Unsubscribe': listUnsubHeader(unsubUrl, listUnsubMail || undefined),
     }
 
-    // Build and schedule WELCOME
-    const htmlWelcome = buildHtml(bodyWelcomeCore, offerLinksHtml, unsubUrl, companyFooterLines)
-    const textWelcome = buildPlainText(bodyWelcomeCore, offerLinks, unsubUrl, companyFooterLines)
+    // Build and schedule WELCOME (single-link)
+    const htmlWelcome = buildHtmlOneLink(bodyWelcomeCore, offerLinkHtml, unsubUrl, companyFooterLines)
+    const textWelcome = buildPlainTextOneLink(bodyWelcomeCore, clickUrl, unsubUrl, companyFooterLines)
 
     const resWelcome = await sendBrevo(subjectWelcome, htmlWelcome, textWelcome, scheduledAtWelcome, headersWithUnsub)
     const welcomeOk = resWelcome.ok
@@ -335,7 +328,8 @@ export async function POST(req: Request) {
       reminderMessageId: reminderMsgId,
       // QA
       unsubscribeUrl: unsubUrl,
-      offerLinksUsed: offerLinks,
+      clickUrlUsed: clickUrl,
+      offerIdPicked,
     })
   } catch (err: any) {
     console.error('lead error:', err)
