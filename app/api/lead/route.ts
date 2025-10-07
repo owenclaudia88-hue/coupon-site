@@ -55,7 +55,7 @@ function buildHtmlOneLink(
         ? `<div style="margin:0 0 14px 0;">${offerLinkHtml}</div>`
         : `<p style="margin:0 0 14px 0;">${escapeHtml(p).replace(/\n/g, '<br>')}</p>`
     )
-    .join('\n')
+  .join('\n')
 
   const footer = companyFooterLines
     .map((line, i) => `<p style="font-size:12px;color:#6b7280;margin:${i ? '2px 0 0' : '0 0 2px'};">${escapeHtml(line)}</p>`)
@@ -79,8 +79,17 @@ function buildPlainTextOneLink(
   unsubHref: string,
   companyFooterLines: string[],
 ) {
-  return textBody.replaceAll('[[OFFER_LINK]]', offerLink)
-    + `\n\n---\n${companyFooterLines.join('\n')}\nAvsluta prenumeration: ${unsubHref}\n`
+  return (
+    textBody.replaceAll('[[OFFER_LINK]]', offerLink) +
+    `\n\n---\n${companyFooterLines.join('\n')}\nAvsluta prenumeration: ${unsubHref}\n`
+  )
+}
+
+/* --- Patch: add alt="" to Brevo tracking pixel to avoid SpamAssassin penalty --- */
+function addAltToTrackingPixel(html: string) {
+  // Insert alt="" into any <img> whose src contains sendibt3 (Brevo tracking)
+  // Example pixel: <img width="1" height="1" src="https://...sendibt3.com/...">
+  return html.replace(/<img([^>]+src="[^"]*sendibt3[^"]*")/gi, '<img alt=""$1')
 }
 
 /* -------------- Edge-safe HMAC (base64url) -------------- */
@@ -287,8 +296,10 @@ export async function POST(req: Request) {
     }
 
     // Schedule REMINDER first to get messageId for unsubscribe token
-    const htmlReminderPre = buildHtmlOneLink(bodyReminderCore, offerLinkHtml, unsubUrlPre, companyFooterLines)
+    let htmlReminderPre = buildHtmlOneLink(bodyReminderCore, offerLinkHtml, unsubUrlPre, companyFooterLines)
+    htmlReminderPre = addAltToTrackingPixel(htmlReminderPre) // <-- add alt="" to tracking pixel
     const textReminderPre = buildPlainTextOneLink(bodyReminderCore, clickUrl, unsubUrlPre, companyFooterLines)
+
     const resReminder = await sendBrevo(subjectReminder, htmlReminderPre, textReminderPre, scheduledAtReminder, baseHeaders)
     const reminderOk = resReminder.ok
     const reminderData = reminderOk ? await resReminder.json().catch(() => ({})) : null
@@ -304,7 +315,8 @@ export async function POST(req: Request) {
     }
 
     // Build and schedule WELCOME (single-link)
-    const htmlWelcome = buildHtmlOneLink(bodyWelcomeCore, offerLinkHtml, unsubUrl, companyFooterLines)
+    let htmlWelcome = buildHtmlOneLink(bodyWelcomeCore, offerLinkHtml, unsubUrl, companyFooterLines)
+    htmlWelcome = addAltToTrackingPixel(htmlWelcome) // <-- add alt="" to tracking pixel
     const textWelcome = buildPlainTextOneLink(bodyWelcomeCore, clickUrl, unsubUrl, companyFooterLines)
 
     const resWelcome = await sendBrevo(subjectWelcome, htmlWelcome, textWelcome, scheduledAtWelcome, headersWithUnsub)
