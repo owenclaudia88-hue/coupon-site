@@ -140,12 +140,13 @@ async function signedRedirectUrl(id: string, ts: number, origin: string, secret:
 
 /* SUBJECT — Welcome */
 const SPINTAX_SUBJECT_MAIN =
-`{Bästa Elgiganten-kund!|Elgiganten-kund!|Bästa värderade kund!|Bästa kund!|Bästa Elgiganten-kund!|Värdefull kund!|Hej från Elgiganten!} 
-{Din reservation för iPhone 17 Pro Max|Bekräfta din åtkomst till iPhone 17 Pro Max|iPhone 17 Pro Max – reservation väntar|Tidigt tillträde till iPhone 17 Pro Max|Information om din iPhone 17 Pro Max-åtkomst}`
+`{Din reservation för iPhone 17 Pro Max|Bekräfta din åtkomst till iPhone 17 Pro Max|iPhone 17 Pro Max – reservation väntar|Tidigt tillträde till iPhone 17 Pro Max|Information om din iPhone 17 Pro Max-åtkomst}`
 
 /* BODY — Welcome */
 const SPINTAX_BODY_MAIN_BASE =
-`{Vi är glada att du gick med oss via en av våra betrodda partnersajter.|Tack för att du registrerade dig via vårt partnernätverk.|Vi uppskattar att du valt att ta emot nyheter via våra partners.}
+`{Bästa Elgiganten-kund!|Elgiganten-kund!|Bästa värderade kund!|Bästa kund!|Bästa Elgiganten-kund!|Värdefull kund!|Hej från Elgiganten!}
+
+{Vi är glada att du gick med oss via en av våra betrodda partnersajter.|Tack för att du registrerade dig via vårt partnernätverk.|Vi uppskattar att du valt att ta emot nyheter via våra partners.}
 
 För att uppmärksamma öppningen av vår nya flaggskeppsbutik i Stockholm erbjuder vi {ett särskilt introduktionspris|tidig åtkomst till kampanjpris|ett förmånligt lanseringserbjudande} på iPhone 17 Pro Max för utvalda kunder.
 
@@ -175,7 +176,7 @@ const SPINTAX_SUBJECT_REM =
 
 /* BODY — Reminder */
 const SPINTAX_BODY_REM =
-`{Hej igen,|Hej,}
+`{Bästa Elgiganten-kund!|Elgiganten-kund!|Bästa värderade kund!|Bästa kund!|Bästa Elgiganten-kund!|Värdefull kund!|Hej från Elgiganten!}
 
 {Detta är en vänlig påminnelse om din reserverade iPhone 17 Pro Max.|Din enhet väntar fortfarande på bekräftelse.|Vi vill bara uppmärksamma dig på att din reservation ännu inte har slutförts.}
 
@@ -191,6 +192,7 @@ const SPINTAX_BODY_REM =
 Du kan när som helst avsluta prenumerationen via länken längst ned i detta mejl.
 
 {Tack för ditt fortsatta förtroende.|Vi uppskattar att du är en del av vårt kundnätverk.|Vi ser fram emot att hjälpa dig snart.}`
+
 
 /* ---------------- Route ---------------- */
 export async function POST(req: Request) {
