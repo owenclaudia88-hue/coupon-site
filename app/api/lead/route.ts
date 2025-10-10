@@ -136,62 +136,107 @@ async function signedRedirectUrl(id: string, ts: number, origin: string, secret:
   return `${origin}/o.php?id=${id}&ts=${ts}&sig=${sig}`
 }
 
-/* ---------------- RICH SPINTAX (SV) – Reservation/Confirmation Style ---------------- */
+/* ============= INBOX-SAFE, RICH SPINTAX (SV) ============= */
 
-/* SUBJECT — Welcome */
-const SPINTAX_SUBJECT_MAIN =
-`{Din reservation för iPhone 17 Pro Max|Bekräfta din åtkomst till iPhone 17 Pro Max|iPhone 17 Pro Max – reservation väntar|Tidigt tillträde till iPhone 17 Pro Max|Information om din iPhone 17 Pro Max-åtkomst}`
+/* Subjects — Welcome (calm, service-like) */
+export const SPINTAX_SUBJECT_MAIN =
+`{Välkommen – iPhone 17 Pro Max kampanjinformation
+|Information om iPhone 17 Pro Max-kampanj
+|Uppdatering: iPhone 17 Pro Max
+|Din iPhone 17 Pro Max-reservation
+|Detaljer om din iPhone 17 Pro Max-reservation
+|Notis: iPhone 17 Pro Max introduktionspris
+|iPhone 17 Pro Max – pris & tillgänglighet
+|Bekräftelse av intresse: iPhone 17 Pro Max
+|Förhandsinformation: iPhone 17 Pro Max
+|Startinformation för iPhone 17 Pro Max kampanj
+}`
 
-/* BODY — Welcome */
-const SPINTAX_BODY_MAIN_BASE =
-`{Bästa Elgiganten-kund!|Elgiganten-kund!|Bästa värderade kund!|Bästa kund!|Bästa Elgiganten-kund!|Värdefull kund!|Hej från Elgiganten!}
+/* Body — Welcome */
+export const SPINTAX_BODY_MAIN_BASE =
+`{Bästa Elgiganten-kund!|Elgiganten-kund!|Bästa värderade kund!|Bästa kund!|Bästa Elgiganten-kund!|Värdefull kund!|Hej från Elgiganten!|Hej,}
 
-{Vi är glada att du gick med oss via en av våra betrodda partnersajter.|Tack för att du registrerade dig via vårt partnernätverk.|Vi uppskattar att du valt att ta emot nyheter via våra partners.}
+{Tack för att du registrerade dig via vårt partnernätverk.
+|Vi uppskattar att du valt att ta emot uppdateringar via en av våra partnerwebbplatser.
+|Tack för ditt intresse – din registrering har bekräftats via vårt partnernätverk.
+|Vi är glada att du nyligen anslöt dig via en partnerplattform.}
 
-För att uppmärksamma öppningen av vår nya flaggskeppsbutik i Stockholm erbjuder vi {ett särskilt introduktionspris|tidig åtkomst till kampanjpris|ett förmånligt lanseringserbjudande} på iPhone 17 Pro Max för utvalda kunder.
+{I samband med öppningen av vår nya butik i Stockholm delar vi kampanjinformation för iPhone 17 Pro Max.
+|För att uppmärksamma vår nya butik i Stockholm erbjuder vi ett introduktionspris på iPhone 17 Pro Max.
+|Med anledning av vår butikslansering i Stockholm finns uppdaterade villkor för iPhone 17 Pro Max.
+|Inför vår öppning i Stockholm ger vi förhandsinformation om pris och tillgänglighet för iPhone 17 Pro Max.}
 
-{En enhet är reserverad i ditt namn,|Vi har lagt undan en enhet åt dig,|Din enhet är redan reserverad,} men du behöver {bekräfta dina uppgifter|fylla i leveransinformationen|slutföra din bekräftelse} {snart|inom kort|innan tiden löper ut} för att säkra den.
+{En enhet är reserverad i ditt namn. För att behålla reservationen ber vi dig slutföra bekräftelsen inom kort.
+|Vi har lagt undan en enhet åt dig – vänligen bekräfta dina uppgifter för att säkra den.
+|Din reservation är aktiv och kan behållas genom att du bekräftar dina uppgifter.
+|För att säkerställa din plats i kön, slutför gärna bekräftelsen inom den angivna tidsramen.
+|Reservationen gäller tills vidare men behöver bekräftas för att gälla efter tidsfönstret.}
 
-👉 {Bekräfta din åtkomst här|Klicka här för att bekräfta din reservation|Säkra din enhet här}:
+👉 {Läs mer och bekräfta här:
+|Se detaljer och bekräfta här:
+|Öppna reservationssidan:
+|Visa villkor och bekräfta:
+|Gå vidare till reservationen:}
 [[OFFER_LINK]]
 
-Denna reservation gäller endast {under en begränsad tid|en kort period|inom en tidsram}, och {om den inte bekräftas i tid kommer den att släppas vidare|utan bekräftelse överlåts den till nästa kund|utan bekräftelse förloras åtkomsten}.
+{Din reservation är tidsbegränsad och kan komma att släppas om den inte bekräftas i tid.
+|Vänligen notera att reservationen gäller under en begränsad period.
+|Observera att erbjudandet är tidsbundet och reservationen avslutas automatiskt utan bekräftelse.
+|Gäller under en kort period – bekräfta om du vill behålla platsen.}
 
-{Tack för din lojalitet.|Vi uppskattar ditt fortsatta intresse.|Vi ser fram emot att hälsa dig välkommen i våra butiker.}
+{Vi uppskattar ditt intresse och ser fram emot att välkomna dig i våra butiker.
+|Tack för din lojalitet – vi ser fram emot att hjälpa dig framöver.
+|Tack för att du följer våra uppdateringar.}
 
-Du kan när som helst avsluta prenumerationen via länken längst ned i detta mejl.`
+{Du kan när som helst avsluta prenumerationen via länken längst ned i detta mejl.
+|Om du inte vill få fler uppdateringar kan du avsluta prenumerationen via länken längst ned.}
 
-/* SIGN-OFF */
-const SIGNOFFS = [
-  'Med vänliga hälsningar,\nElgiganten Onlineavdelning',
-  'Vänliga hälsningar,\nElgigantens Kundsupport',
-  'Hälsningar,\nElgiganten Sverige',
-  'Varma hälsningar,\nElgigantens Smartphone-team',
-  'Med uppskattning,\nElgigantens Online-team'
+{Vänliga hälsningar,|Med vänliga hälsningar,|Varma hälsningar,|Allt gott,}`
+
+/* Sign-offs to append after SPINTAX_BODY_* with **${signoff}** in your code */
+export const SIGNOFFS = [
+  'Elgigantens Onlineavdelning',
+  'Elgigantens Kundsupport',
+  'Elgiganten Sverige',
+  'Elgigantens Smartphone-team',
+  'Elgigantens Kundrelationer'
 ]
 
-/* SUBJECT — Reminder */
-const SPINTAX_SUBJECT_REM =
-`{Påminnelse|Sista chansen|Uppföljning}: Bekräfta din iPhone 17 Pro Max-reservation`
+/* Subjects — Reminder (a bit firmer, still inbox-safe) */
+export const SPINTAX_SUBJECT_REM =
+`{Påminnelse: din iPhone 17 Pro Max-reservation
+|Uppföljning: iPhone 17 Pro Max kampanjinformation
+|Notis: tidsfönster för iPhone 17 Pro Max
+|Kort påminnelse om iPhone 17 Pro Max
+|Din iPhone 17 Pro Max-reservation – uppdatering
+}`
 
-/* BODY — Reminder */
-const SPINTAX_BODY_REM =
-`{Bästa Elgiganten-kund!|Elgiganten-kund!|Bästa värderade kund!|Bästa kund!|Bästa Elgiganten-kund!|Värdefull kund!|Hej från Elgiganten!}
+/* Body — Reminder (includes “ignore if already confirmed” + unsubscribe) */
+export const SPINTAX_BODY_REM =
+`{Hej igen,|Hej,}
 
-{Detta är en vänlig påminnelse om din reserverade iPhone 17 Pro Max.|Din enhet väntar fortfarande på bekräftelse.|Vi vill bara uppmärksamma dig på att din reservation ännu inte har slutförts.}
+{En kort uppdatering om din iPhone 17 Pro Max-reservation.
+|Vi vill bara påminna om din pågående iPhone 17 Pro Max-reservation.
+|Som en vänlig påminnelse gällande din iPhone 17 Pro Max-reservation.}
 
-{För att säkra din enhet behöver du bekräfta dina uppgifter snart.|Bekräfta din åtkomst innan tidsfönstret stänger.|Reservationen gäller bara en kort tid till.}
+{Tillgången är begränsad och tidsfönstret stänger snart.
+|Kampanjfönstret är tidsbundet och platserna är begränsade.
+|Reservationen behålls så länge den bekräftas inom tidsramen.}
 
-👉 {Bekräfta här|Säkra enheten nu|Fullfölj din reservation}:
+👉 {Öppna reservationssidan:
+|Se detaljer och bekräfta:
+|Fortsätt till bekräftelsen:
+|Läs mer och bekräfta:}
 [[OFFER_LINK]]
 
-{Om du redan har bekräftat kan du bortse från detta mejl.|Om du redan slutfört reservationen behöver du inte göra något mer.}
+{Om du redan har bekräftat kan du bortse från detta mejl.
+|Har du redan slutfört bekräftelsen? Då behöver du inte göra något mer.}
 
-{Om du inte bekräftar i tid släpps enheten till nästa kund.|Utan bekräftelse förlorar du din plats.|Vi kan tyvärr inte hålla reservationen längre än tidsfönstret tillåter.}
+{Du kan när som helst avsluta prenumerationen via länken längst ned i detta mejl.
+|Vill du inte få fler uppdateringar? Avsluta prenumerationen via länken längst ned.}
 
-Du kan när som helst avsluta prenumerationen via länken längst ned i detta mejl.
+{Vänliga hälsningar,|Med vänliga hälsningar,|Allt gott,}`
 
-{Tack för ditt fortsatta förtroende.|Vi uppskattar att du är en del av vårt kundnätverk.|Vi ser fram emot att hjälpa dig snart.}`
 
 
 /* ---------------- Route ---------------- */
