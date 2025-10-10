@@ -160,19 +160,22 @@ const SPINTAX_BODY_MAIN_BASE = `{Bästa kund!|Bästa Elgiganten-kund!|Värdefull
 {Med vänliga hälsningar,|Vänliga hälsningar,|Varma hälsningar,|Allt gott,}
 **{Elgigantens Onlineavdelning|Elgigantens Kundsupport|Elgiganten Sverige|Elgigantens Smartphone-team}**`
 
+/* ---------- SIGNOFF pool ---------- */
+const SIGNOFFS = [
+  'Elgigantens Onlineavdelning',
+  'Elgigantens Kundsupport',
+  'Elgiganten Sverige',
+  'Elgigantens Smartphone-team'
+]
 
-/* Subjects — Reminder (a bit firmer, still inbox-safe) */
-export const SPINTAX_SUBJECT_REM =
-`{Påminnelse: din iPhone 17 Pro Max-reservation
+/* ---------- Reminder (firmer but inbox-safe) ---------- */
+const SPINTAX_SUBJECT_REM = `{Påminnelse: din iPhone 17 Pro Max-reservation
 |Uppföljning: iPhone 17 Pro Max kampanjinformation
 |Notis: tidsfönster för iPhone 17 Pro Max
-|Kort påminnelse om iPhone 17 Pro Max
-|Din iPhone 17 Pro Max-reservation – uppdatering
-}`
+|Kort påminnelse: iPhone 17 Pro Max
+|Din iPhone 17 Pro Max-reservation – uppdatering}`
 
-/* Body — Reminder (includes “ignore if already confirmed” + unsubscribe) */
-export const SPINTAX_BODY_REM =
-`{Hej igen,|Hej,}
+const SPINTAX_BODY_REM = `{Bästa kund!|Bästa Elgiganten-kund!|Värdefull kund!|Elgiganten-kund!}
 
 {En kort uppdatering om din iPhone 17 Pro Max-reservation.
 |Vi vill bara påminna om din pågående iPhone 17 Pro Max-reservation.
@@ -194,9 +197,8 @@ export const SPINTAX_BODY_REM =
 {Du kan när som helst avsluta prenumerationen via länken längst ned i detta mejl.
 |Vill du inte få fler uppdateringar? Avsluta prenumerationen via länken längst ned.}
 
-{Vänliga hälsningar,|Med vänliga hälsningar,|Allt gott,}`
-
-
+{Med vänliga hälsningar,|Vänliga hälsningar,|Allt gott,}
+**{Elgigantens Onlineavdelning|Elgigantens Kundsupport|Elgiganten Sverige|Elgigantens Smartphone-team}**`
 
 /* ---------------- Route ---------------- */
 export async function POST(req: Request) {
@@ -267,6 +269,7 @@ export async function POST(req: Request) {
     const scheduledAtWelcome = new Date(Date.now() + delayMin * 60 * 1000).toISOString()
     const scheduledAtReminder = new Date(Date.now() + reminderHours * 60 * 60 * 1000).toISOString()
 
+    // Expand spintax
     const subjectWelcome = expandSpintax(SPINTAX_SUBJECT_MAIN)
     const signoff = SIGNOFFS[Math.floor(Math.random() * SIGNOFFS.length)]
     const bodyWelcomeCore = expandSpintax(SPINTAX_BODY_MAIN_BASE) + `\n\n**${signoff}**`
@@ -274,6 +277,7 @@ export async function POST(req: Request) {
     const subjectReminder = expandSpintax(SPINTAX_SUBJECT_REM)
     const bodyReminderCore = expandSpintax(SPINTAX_BODY_REM) + `\n\n**${signoff}**`
 
+    // Helper to send via Brevo
     async function sendBrevo(
       subject: string,
       htmlContent: string,
@@ -296,6 +300,7 @@ export async function POST(req: Request) {
       })
     }
 
+    // Temporary unsubscribe before we know reminder messageId
     const preToken = `${normalizedEmail}|pending|${tsNow}`
     const sigPre = process.env.UNSUB_SECRET ? await hmac(preToken, process.env.UNSUB_SECRET) : 'nosig'
     const unsubUrlPre = `${unsubOrigin}/api/unsubscribe?e=${encodeURIComponent(normalizedEmail)}&m=pending&t=${tsNow}&sig=${sigPre}`
@@ -306,6 +311,7 @@ export async function POST(req: Request) {
       'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
     }
 
+    // Schedule reminder first to get messageId
     let htmlReminderPre = buildHtmlOneLink(bodyReminderCore, offerLinkHtml, unsubUrlPre, companyFooterLines)
     htmlReminderPre = addAltToTrackingPixel(htmlReminderPre)
     const textReminderPre = buildPlainTextOneLink(bodyReminderCore, clickUrl, unsubUrlPre, companyFooterLines)
@@ -313,8 +319,9 @@ export async function POST(req: Request) {
     const resReminder = await sendBrevo(subjectReminder, htmlReminderPre, textReminderPre, scheduledAtReminder, baseHeaders)
     const reminderOk = resReminder.ok
     const reminderData = reminderOk ? await resReminder.json().catch(() => ({})) : null
-    const reminderMsgId = reminderData?.messageId || 'pending'
+    const reminderMsgId = (reminderData as any)?.messageId || 'pending'
 
+    // Final unsubscribe link with reminder messageId
     const tokenPayload = `${normalizedEmail}|${reminderMsgId}|${tsNow}`
     const sig = process.env.UNSUB_SECRET ? await hmac(tokenPayload, process.env.UNSUB_SECRET) : 'nosig'
     const unsubUrl = `${unsubOrigin}/api/unsubscribe?e=${encodeURIComponent(normalizedEmail)}&m=${encodeURIComponent(reminderMsgId)}&t=${tsNow}&sig=${sig}`
@@ -324,6 +331,7 @@ export async function POST(req: Request) {
       'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
     }
 
+    // Welcome
     let htmlWelcome = buildHtmlOneLink(bodyWelcomeCore, offerLinkHtml, unsubUrl, companyFooterLines)
     htmlWelcome = addAltToTrackingPixel(htmlWelcome)
     const textWelcome = buildPlainTextOneLink(bodyWelcomeCore, clickUrl, unsubUrl, companyFooterLines)
