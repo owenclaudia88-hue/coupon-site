@@ -42,7 +42,7 @@ const BAD_NAME_SNIPPETS: string[] = [
   "triple t broadband",
   "3bb",
   "rds", "digi",
-  "vodafone","mobifon",
+  //"vodafone","mobifon",
 ];
 
 /** Add-on ASN + name rules */
