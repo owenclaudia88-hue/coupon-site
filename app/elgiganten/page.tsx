@@ -32,15 +32,15 @@ interface Coupon {
 const topPromoCoupons: Coupon[] = [
   {
     id: "iphone-16-pro-max",
-    title: "Specialerbjudande – Upp till 70% rabatt på iPhone 16 Pro Max",
-    description: "Spara stort på den senaste iPhone 16 Pro Max hos Elgiganten",
+    title: "Specialerbjudande – Upp till 70% rabatt på iPhone 17 Pro Max",
+    description: "Spara stort på den senaste iPhone 17 Pro Max hos Elgiganten",
     discount: "70%",
     uses: 1247,
     type: "percentage",
     offerUrl: "/elgiganten/verify?id=iphone-16-pro-max",
     expirationDate: "15/9/2025",
     moreInfo:
-      "Begränsat erbjudande på iPhone 16 Pro Max. Få upp till 70% rabatt på den senaste iPhone-modellen med alla nya funktioner. Ingen kod behövs - rabatten tillämpas automatiskt vid köp.",
+      "Begränsat erbjudande på iPhone 17 Pro Max. Få upp till 70% rabatt på den senaste iPhone-modellen med alla nya funktioner. Ingen kod behövs - rabatten tillämpas automatiskt vid köp.",
   },
   {
     id: "elg-001",
@@ -342,9 +342,9 @@ export default function Home() {
 
   // Top offer for the popup (iPhone 16 Pro Max offer)
   const topOffer = {
-    title: "Få upp till 70% rabatt på iPhone 16 Pro Max",
+    title: "Få upp till 70% rabatt på iPhone 17 Pro Max",
     discount: "70%",
-    description: "Spara stort på den senaste iPhone 16 Pro Max hos Elgiganten",
+    description: "Spara stort på den senaste iPhone 17 Pro Max hos Elgiganten",
     offerUrl: "/elgiganten/verify?id=iphone-16-pro-max",
   };
 
@@ -382,9 +382,9 @@ export default function Home() {
                   onClick={() => {
                     const iphoneCoupon: Coupon = {
                       id: "iphone-16-pro-max",
-                      title: "iPhone 16 Pro Max - Upp till 70% rabatt",
+                      title: "iPhone 17 Pro Max - Upp till 70% rabatt",
                       description:
-                        "Spara stort på den senaste iPhone 16 Pro Max hos Elgiganten",
+                        "Spara stort på den senaste iPhone 17 Pro Max hos Elgiganten",
                       discount: "70%",
                       uses: 1247,
                       type: "percentage",
@@ -545,4 +545,5 @@ export default function Home() {
     </div>
   );
 }
+
 
