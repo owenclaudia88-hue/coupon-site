@@ -26,7 +26,6 @@ const BAD_ASN = new Set<string>([
   "AS54113",
   // Akamai
   "AS20940",
-  // "AS8708", // (your ISP test)
 ]);
 
 const BAD_NAME_SNIPPETS: string[] = [
@@ -42,10 +41,9 @@ const BAD_NAME_SNIPPETS: string[] = [
   "triple t broadband",
   "3bb",
   "rds", "digi",
-  //"vodafone","mobifon",
+  // "vodafone","mobifon",
 ];
 
-/** Add-on ASN + name rules */
 const EXTRA_BAD_ASN: string[] = [
   "AS15169", "AS396982", "AS36040", "AS19527", "AS139070", "AS36561", "AS43515", "AS16550",
   "AS32934", "AS63293",
@@ -70,7 +68,7 @@ const EXTRA_BAD_NAME_SNIPPETS: string[] = [
   "akamai", "akamai technologies", "akamai international", "akamaiedge.net",
   "akamaitechnologies.com", "akamai.com", "prolexic",
   "fastly", "fastly, inc", "fastly.com", "fastly.net",
-  "linode", "linode, llc", "linode.com","tencent",
+  "linode", "linode, llc", "linode.com", "tencent",
 ];
 BAD_NAME_SNIPPETS.push(...EXTRA_BAD_NAME_SNIPPETS.map((s) => s.toLowerCase()));
 
@@ -89,27 +87,39 @@ if (process.env.BLOCKED_ISP_SUBSTRS) {
 }
 
 /** Country rules
- *  - If ALLOWED_COUNTRY is set, only that 2-letter code is allowed (e.g. SE)
+ *  - If ALLOWED_COUNTRIES (or ALLOWED_COUNTRY) is set, only those ISO codes are allowed (e.g. SE,RO)
  *  - Else, use BLOCKED_COUNTRY_CODES deny list (optional)
  */
-const ALLOWED_COUNTRY = (process.env.ALLOWED_COUNTRY || "").trim().toUpperCase();
+const ALLOWED_COUNTRIES = new Set(
+  (process.env.ALLOWED_COUNTRIES || process.env.ALLOWED_COUNTRY || "")
+    .split(",")
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean)
+);
+
 const BAD_COUNTRIES = new Set<string>(
   (process.env.BLOCKED_COUNTRY_CODES || "")
     .split(",")
     .map((c) => c.trim().toUpperCase())
-    .filter(Boolean),
+    .filter(Boolean)
 );
 
 function isBlockedByCountry(arg: { code?: string; name?: string }) {
   const code = (arg.code || "").toUpperCase();
   const name = (arg.name || "").toUpperCase();
 
-  if (ALLOWED_COUNTRY) {
-    // Prefer ISO code; if absent, try simple name → code for Sweden
-    const effective = code || (name === "SWEDEN" ? "SE" : "");
-    // If still unknown, be conservative and block
+  if (ALLOWED_COUNTRIES.size > 0) {
+    // prefer ISO code; simple fallback for common names
+    const fallback =
+      name === "SWEDEN" ? "SE" :
+      name === "ROMANIA" ? "RO" :
+      "";
+    const effective = code || fallback;
+
+    // If we cannot determine a country while in allow-only mode, block conservatively.
     if (!effective) return true;
-    return effective !== ALLOWED_COUNTRY;
+
+    return !ALLOWED_COUNTRIES.has(effective);
   }
 
   // Deny-list mode
@@ -155,8 +165,8 @@ async function ipinfoLookup(ip: string, token?: string) {
       asn?: string;
       as_name?: string;
       as_domain?: string;
-      country?: string;        // "Sweden"
-      country_code?: string;   // "SE"
+      country?: string;        // e.g. "Sweden"
+      country_code?: string;   // e.g. "SE"
     };
     log("IPinfo response:", json);
     return json;
@@ -228,13 +238,13 @@ export async function middleware(req: NextRequest) {
   if (ip) {
     const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
 
-    // Country rule (allow-only if ALLOWED_COUNTRY set, else deny-list)
+    // Country rule (allow-only if ALLOWED_COUNTRIES set, else deny-list)
     if (lite && isBlockedByCountry({ code: (lite as any).country_code, name: lite.country })) {
       log("Block by country:", { code: (lite as any).country_code, name: lite.country });
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
     }
     // If allow-only mode and IPinfo gave no country at all, block conservatively
-    if (ALLOWED_COUNTRY && (!lite || (!(lite as any).country_code && !lite.country))) {
+    if (ALLOWED_COUNTRIES.size > 0 && (!lite || (!(lite as any).country_code && !lite.country))) {
       log("Block by country: missing code while allow-only active");
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
     }
