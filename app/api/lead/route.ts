@@ -263,7 +263,7 @@ export async function POST(req: Request) {
     ]
 
     const url = new URL(req.url)
-    const delayMin = Math.max(0, Number(url.searchParams.get('delayMin') ?? '1'))
+    const delayMin = Math.max(0, Number(url.searchParams.get('delayMin') ?? '10'))
     const reminderHours = Math.max(1, Number(url.searchParams.get('reminderHours') ?? '24'))
 
     const scheduledAtWelcome = new Date(Date.now() + delayMin * 60 * 1000).toISOString()
