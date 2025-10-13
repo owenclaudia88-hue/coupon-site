@@ -368,10 +368,10 @@ export default function Home() {
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight">
-                      Specialerbjudande – Upp till 70% rabatt på iPhone 16 Pro Max
+                      Specialerbjudande – Upp till 70% rabatt på iPhone 17 Pro Max
                     </h3>
                     <p className="text-gray-600 text-sm sm:text-base mt-1">
-                      Spara stort på den senaste iPhone 16 Pro Max hos Elgiganten
+                      Spara stort på den senaste iPhone 17 Pro Max hos Elgiganten
                     </p>
                     <p className="text-xs sm:text-sm text-gray-500 mt-1">
                       Ingen kod behövs – rabatten tillämpas automatiskt
@@ -545,5 +545,6 @@ export default function Home() {
     </div>
   );
 }
+
 
 
