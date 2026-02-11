@@ -111,6 +111,8 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
                   ? "/images/komplett-logo.svg"
                   : storeName === "CDON"
                   ? "/images/cdon-logo.png"
+                  : storeName === "ヤマダデンキ"
+                  ? "/images/yamada-logo.png"
                   : "/images/elgiganten-logo.svg"
               }
               alt={`${storeName} Logo`}
@@ -119,28 +121,35 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
           </div>
 
           {/* Main Title */}
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Såg du detta erbjudande än?</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            {storeName === "ヤマダデンキ" ? "このオファーはもうご覧になりましたか？" : "Såg du detta erbjudande än?"}
+          </h2>
 
           {/* Subtitle */}
           <p className="text-gray-600 mb-6 text-sm">
-            Kunder har nyligen tagit detta erbjudande — missa inte!
+            {storeName === "ヤマダデンキ"
+              ? "最近多くのお客様がこのオファーをご利用されています — お見逃しなく！"
+              : "Kunder har nyligen tagit detta erbjudande — missa inte!"}
           </p>
 
           {/* Current Offer */}
-          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 mb-6 border border-blue-200">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Aktuellt erbjudande:</h3>
-            <p className="text-blue-700 font-semibold text-base mb-2">{offer.title}</p>
+          <div className={`bg-gradient-to-r ${storeName === "ヤマダデンキ" ? "from-red-50 to-orange-50 border-red-200" : "from-blue-50 to-green-50 border-blue-200"} rounded-lg p-4 mb-6 border`}>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              {storeName === "ヤマダデンキ" ? "現在のオファー:" : "Aktuellt erbjudande:"}
+            </h3>
+            <p className={`${storeName === "ヤマダデンキ" ? "text-red-700" : "text-blue-700"} font-semibold text-base mb-2`}>{offer.title}</p>
             <p className="text-gray-600 text-sm mb-3">{offer.description}</p>
-            <p className="text-green-700 font-medium text-sm">
-              Rabatten tillämpas automatiskt vid kassan.
+            <p className={`${storeName === "ヤマダデンキ" ? "text-red-700" : "text-green-700"} font-medium text-sm`}>
+              {storeName === "ヤマダデンキ" ? "レジにて自動適用されます。" : "Rabatten tillämpas automatiskt vid kassan."}
             </p>
           </div>
 
           {/* Email gate (added) */}
           <form onSubmit={handleUnlock} className="mb-4 space-y-3 text-left">
             <p className="text-sm text-gray-700">
-              För att låsa upp rabatten, ange din e-postadress nedan. Du skickas sedan vidare till
-              erbjudandet.
+              {storeName === "ヤマダデンキ"
+                ? "クーポンを解除するには、以下にメールアドレスを入力してください。その後、オファーページへ移動します。"
+                : "För att låsa upp rabatten, ange din e-postadress nedan. Du skickas sedan vidare till erbjudandet."}
             </p>
             <input
               type="email"
@@ -148,7 +157,7 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Ange din e-postadress"
+              placeholder={storeName === "ヤマダデンキ" ? "メールアドレスを入力" : "Ange din e-postadress"}
               className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               required
             />
@@ -159,11 +168,11 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
               disabled={!isValidEmail(email) || sending}
               className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors text-base ${
                 !isValidEmail(email) || sending
-                  ? "bg-blue-300 text-white cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
+                  ? storeName === "ヤマダデンキ" ? "bg-red-300 text-white cursor-not-allowed" : "bg-blue-300 text-white cursor-not-allowed"
+                  : storeName === "ヤマダデンキ" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
             >
-              Använd rabatt
+              {storeName === "ヤマダデンキ" ? "クーポンを使う" : "Använd rabatt"}
             </button>
           </form>
 

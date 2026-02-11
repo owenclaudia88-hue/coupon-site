@@ -8,8 +8,9 @@ import { offerRedirects as powerRedirects }      from "../../power/offerRedirect
 import { offerRedirects as netonnetRedirects }   from "../../netonnet/offerRedirects"
 import { offerRedirects as webhallenRedirects }  from "../../webhallen/offerRedirects"
 import { offerRedirects as cdonRedirects }       from "../../cdon/offerRedirects"
+import { offerRedirects as yamadaRedirects }     from "../../yamada/offerRedirects"
 
-type StoreKey = "elgiganten" | "komplett" | "power" | "netonnet" | "webhallen" | "cdon"
+type StoreKey = "elgiganten" | "komplett" | "power" | "netonnet" | "webhallen" | "cdon" | "yamada"
 
 const maps: Record<StoreKey, Record<string, string>> = {
   elgiganten: elgigantenRedirects,
@@ -18,6 +19,7 @@ const maps: Record<StoreKey, Record<string, string>> = {
   netonnet  : netonnetRedirects,
   webhallen : webhallenRedirects,
   cdon      : cdonRedirects,
+  yamada    : yamadaRedirects,
 }
 
 function inferStore(req: NextRequest, explicit?: string): StoreKey {
@@ -31,6 +33,7 @@ function inferStore(req: NextRequest, explicit?: string): StoreKey {
   if (ref.includes("/netonnet"))  return "netonnet"
   if (ref.includes("/webhallen")) return "webhallen"
   if (ref.includes("/cdon"))      return "cdon"
+  if (ref.includes("/yamada"))    return "yamada"
 
   // 3) default
   return "elgiganten"

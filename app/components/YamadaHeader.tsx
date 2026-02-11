@@ -6,7 +6,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Search, Menu, X, ChevronDown } from "lucide-react"
 
-// Search data
 const searchableStores = [
   { name: "Elgiganten", href: "/elgiganten", deals: 13 },
   { name: "Power", href: "/power", deals: 12 },
@@ -21,18 +20,14 @@ const searchableDiscounts = [
   { title: "iPhone", store: "Elgiganten", href: "/elgiganten", discount: "70%" },
   { title: "Samsung TV", store: "Power", href: "/power", discount: "25%" },
   { title: "MacBook", store: "NetOnNet", href: "/netonnet", discount: "25%" },
-  { title: "Gaming dator", store: "Webhallen", href: "/webhallen", discount: "30%" },
-  { title: "Laptop", store: "Komplett", href: "/komplett", discount: "45%" },
-  { title: "Elektronik", store: "CDON", href: "/cdon", discount: "60%" },
-  { title: "TV", store: "Elgiganten", href: "/elgiganten", discount: "40%" },
-  { title: "Smartphone", store: "Power", href: "/power", discount: "50%" },
-  { title: "Dator", store: "Komplett", href: "/komplett", discount: "45%" },
-  { title: "Hörlurar", store: "CDON", href: "/cdon", discount: "40%" },
+  { title: "ゲーミングPC", store: "Webhallen", href: "/webhallen", discount: "30%" },
+  { title: "ノートパソコン", store: "Komplett", href: "/komplett", discount: "45%" },
   { title: "iPhone", store: "ヤマダデンキ", href: "/yamada", discount: "70%" },
   { title: "テレビ", store: "ヤマダデンキ", href: "/yamada", discount: "40%" },
+  { title: "冷蔵庫", store: "ヤマダデンキ", href: "/yamada", discount: "25%" },
 ]
 
-export default function Header() {
+export default function YamadaHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isStoresDropdownOpen, setIsStoresDropdownOpen] = useState(false)
   const [isMobileStoresDropdownOpen, setIsMobileStoresDropdownOpen] = useState(false)
@@ -121,47 +116,47 @@ export default function Header() {
   }, [])
 
   const stores = [
-    { name: "Elgiganten", href: "/elgiganten", deals: "13 erbjudanden" },
-    { name: "Power", href: "/power", deals: "12 erbjudanden" },
-    { name: "NetOnNet", href: "/netonnet", deals: "12 erbjudanden" },
-    { name: "Webhallen", href: "/webhallen", deals: "12 erbjudanden" },
-    { name: "Komplett", href: "/komplett", deals: "9 erbjudanden" },
-    { name: "CDON", href: "/cdon", deals: "15 erbjudanden" },
-    { name: "ヤマダデンキ", href: "/yamada", deals: "13 erbjudanden" },
+    { name: "Elgiganten", href: "/elgiganten", deals: "13件" },
+    { name: "Power", href: "/power", deals: "12件" },
+    { name: "NetOnNet", href: "/netonnet", deals: "12件" },
+    { name: "Webhallen", href: "/webhallen", deals: "12件" },
+    { name: "Komplett", href: "/komplett", deals: "9件" },
+    { name: "CDON", href: "/cdon", deals: "15件" },
+    { name: "ヤマダデンキ", href: "/yamada", deals: "13件" },
   ]
 
   return (
     <>
-      <header className="bg-slate-700 text-white relative z-50">
+      <header className="bg-[#003478] text-white relative z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14 md:h-12">
             {/* Logo Section */}
             <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-all duration-200">
-              <Image src="/images/logo.png" alt="Discount Nation Logo" width={140} height={40} priority />
+              <Image src="/images/logo.png" alt="Discount Nation ロゴ" width={140} height={40} priority />
             </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-6 text-sm">
-              <Link href="/rabattkoder" className="hover:text-green-400 transition-colors">
-                Rabattkoder
+              <Link href="/rabattkoder" className="hover:text-red-300 transition-colors">
+                クーポンコード
               </Link>
 
               {/* Stores Dropdown */}
               <div className="relative group">
-                <button className="flex items-center hover:text-green-400 transition-colors cursor-pointer">
-                  Butiker
+                <button className="flex items-center hover:text-red-300 transition-colors cursor-pointer">
+                  ストア一覧
                   <ChevronDown className="w-4 h-4 ml-1" />
                 </button>
 
                 <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <div className="px-4 py-2 border-b border-gray-100">
-                    <h3 className="text-sm font-semibold text-gray-900">Populära butiker</h3>
+                    <h3 className="text-sm font-semibold text-gray-900">人気ストア</h3>
                   </div>
                   {stores.map((store, index) => (
                     <Link
                       key={index}
                       href={store.href}
-                      className="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-green-600 transition-colors cursor-pointer"
+                      className="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors cursor-pointer"
                     >
                       <span className="font-medium">{store.name}</span>
                       <span className="text-xs text-gray-500">{store.deals}</span>
@@ -170,24 +165,24 @@ export default function Header() {
                 </div>
               </div>
 
-              <Link href="/om-oss" className="hover:text-green-400 transition-colors">
-                Om oss
+              <Link href="/om-oss" className="hover:text-red-300 transition-colors">
+                会社概要
               </Link>
-              <Link href="/kontakta-oss" className="hover:text-green-400 transition-colors">
-                Kontakta oss
+              <Link href="/kontakta-oss" className="hover:text-red-300 transition-colors">
+                お問い合わせ
               </Link>
             </nav>
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-2 hover:bg-slate-600 rounded-lg transition-colors"
+              className="lg:hidden p-2 hover:bg-[#002a60] rounded-lg transition-colors"
               onClick={toggleMobileMenu}
-              aria-label="Öppna meny"
+              aria-label="メニューを開く"
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            {/* Desktop Search - Enhanced with functionality */}
+            {/* Desktop Search */}
             <div ref={searchRef} className="relative hidden md:block">
               <form onSubmit={handleSearch}>
                 <div className="relative">
@@ -195,8 +190,8 @@ export default function Header() {
                     type="text"
                     value={searchQuery}
                     onChange={handleSearchInput}
-                    placeholder="Sök rabattkoder..."
-                    className="bg-slate-600 text-white placeholder-gray-300 px-3 py-1 pr-8 rounded text-sm w-32 lg:w-48 focus:outline-none focus:ring-2 focus:ring-green-500 focus:w-56 transition-all duration-200"
+                    placeholder="クーポンを検索..."
+                    className="bg-[#002a60] text-white placeholder-gray-300 px-3 py-1 pr-8 rounded text-sm w-32 lg:w-48 focus:outline-none focus:ring-2 focus:ring-red-500 focus:w-56 transition-all duration-200"
                   />
                   <button type="submit" className="absolute right-2 top-1/2 transform -translate-y-1/2">
                     <Search className="w-4 h-4 text-gray-300 hover:text-white transition-colors" />
@@ -204,13 +199,12 @@ export default function Header() {
                 </div>
               </form>
 
-              {/* Desktop Search Results Dropdown */}
               {showSearchResults && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-80 overflow-y-auto min-w-80">
                   {isSearching ? (
                     <div className="p-4 text-center text-gray-500">
-                      <div className="animate-spin w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                      <span className="text-sm">Söker...</span>
+                      <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <span className="text-sm">検索中...</span>
                     </div>
                   ) : (
                     <>
@@ -224,17 +218,17 @@ export default function Header() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <div className="font-semibold text-gray-900 text-sm">{result.name}</div>
-                                <div className="text-xs text-gray-600">{result.deals} aktiva erbjudanden</div>
+                                <div className="text-xs text-gray-600">{result.deals}件のオファー</div>
                               </div>
-                              <div className="text-green-600 text-xs font-medium">Butik →</div>
+                              <div className="text-red-600 text-xs font-medium">ストア →</div>
                             </div>
                           ) : (
                             <div className="flex items-center justify-between">
                               <div>
                                 <div className="font-semibold text-gray-900 text-sm">{result.title}</div>
-                                <div className="text-xs text-gray-600">hos {result.store}</div>
+                                <div className="text-xs text-gray-600">{result.store}</div>
                               </div>
-                              <div className="text-green-600 text-xs font-medium">{result.discount} rabatt</div>
+                              <div className="text-red-600 text-xs font-medium">{result.discount} OFF</div>
                             </div>
                           )}
                         </button>
@@ -242,9 +236,9 @@ export default function Header() {
                       <div className="px-4 py-2 bg-gray-50 text-center">
                         <button
                           onClick={handleSearch}
-                          className="text-green-600 hover:text-green-700 font-medium text-xs"
+                          className="text-red-600 hover:text-red-700 font-medium text-xs"
                         >
-                          Se alla resultat för "{searchQuery}" →
+                          「{searchQuery}」の全結果を見る →
                         </button>
                       </div>
                     </>
@@ -268,28 +262,20 @@ export default function Header() {
         }`}
       >
         <div className="flex flex-col h-full">
-  {/* Mobile Menu Header */}
-<div className="flex items-center justify-between p-4 border-b border-gray-200 bg-slate-700 text-white">
-  <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-all duration-200 group">
-    <Image
-      src="/images/logo.png"
-      alt="Discount Nation"
-      width={120}
-      height={40}
-      priority
-    />
-  </Link>
-  <button
-    onClick={closeMobileMenu}
-    className="p-2 hover:bg-slate-600 rounded-lg transition-colors"
-    aria-label="Stäng meny"
-  >
-    <X className="w-5 h-5" />
-  </button>
-</div>
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#003478] text-white">
+            <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-all duration-200 group">
+              <Image src="/images/logo.png" alt="Discount Nation" width={120} height={40} priority />
+            </Link>
+            <button
+              onClick={closeMobileMenu}
+              className="p-2 hover:bg-[#002a60] rounded-lg transition-colors"
+              aria-label="メニューを閉じる"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-
-          {/* Mobile Search - Enhanced with functionality */}
+          {/* Mobile Search */}
           <div ref={mobileSearchRef} className="p-4 border-b border-gray-200 relative">
             <form onSubmit={handleSearch}>
               <div className="relative">
@@ -297,8 +283,8 @@ export default function Header() {
                   type="text"
                   value={searchQuery}
                   onChange={handleSearchInput}
-                  placeholder="Sök rabattkoder..."
-                  className="w-full bg-gray-100 text-gray-900 placeholder-gray-500 px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white border border-gray-200"
+                  placeholder="クーポンを検索..."
+                  className="w-full bg-gray-100 text-gray-900 placeholder-gray-500 px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white border border-gray-200"
                 />
                 <button type="submit" className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <Search className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
@@ -306,13 +292,12 @@ export default function Header() {
               </div>
             </form>
 
-            {/* Mobile Search Results */}
             {showSearchResults && (
               <div className="absolute top-full left-4 right-4 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-60 overflow-y-auto">
                 {isSearching ? (
                   <div className="p-4 text-center text-gray-500">
-                    <div className="animate-spin w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                    <span className="text-sm">Söker...</span>
+                    <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <span className="text-sm">検索中...</span>
                   </div>
                 ) : (
                   <>
@@ -326,17 +311,17 @@ export default function Header() {
                           <div className="flex items-center justify-between">
                             <div>
                               <div className="font-semibold text-gray-900 text-sm">{result.name}</div>
-                              <div className="text-xs text-gray-600">{result.deals} aktiva erbjudanden</div>
+                              <div className="text-xs text-gray-600">{result.deals}件のオファー</div>
                             </div>
-                            <div className="text-green-600 text-xs font-medium">Butik →</div>
+                            <div className="text-red-600 text-xs font-medium">ストア →</div>
                           </div>
                         ) : (
                           <div className="flex items-center justify-between">
                             <div>
                               <div className="font-semibold text-gray-900 text-sm">{result.title}</div>
-                              <div className="text-xs text-gray-600">hos {result.store}</div>
+                              <div className="text-xs text-gray-600">{result.store}</div>
                             </div>
-                            <div className="text-green-600 text-xs font-medium">{result.discount} rabatt</div>
+                            <div className="text-red-600 text-xs font-medium">{result.discount} OFF</div>
                           </div>
                         )}
                       </button>
@@ -344,9 +329,9 @@ export default function Header() {
                     <div className="px-4 py-2 bg-gray-50 text-center">
                       <button
                         onClick={handleSearch}
-                        className="text-green-600 hover:text-green-700 font-medium text-xs"
+                        className="text-red-600 hover:text-red-700 font-medium text-xs"
                       >
-                        Se alla resultat för "{searchQuery}" →
+                        「{searchQuery}」の全結果を見る →
                       </button>
                     </div>
                   </>
@@ -360,19 +345,18 @@ export default function Header() {
             <div className="space-y-1">
               <Link
                 href="/rabattkoder"
-                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-green-600 transition-colors font-medium"
+                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors font-medium"
                 onClick={closeMobileMenu}
               >
-                Rabattkoder
+                クーポンコード
               </Link>
 
-              {/* Mobile Stores Dropdown */}
               <div>
                 <button
                   onClick={() => setIsMobileStoresDropdownOpen(!isMobileStoresDropdownOpen)}
-                  className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-green-600 transition-colors font-medium"
+                  className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors font-medium"
                 >
-                  <span>Butiker</span>
+                  <span>ストア一覧</span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${isMobileStoresDropdownOpen ? "rotate-180" : ""}`}
                   />
@@ -381,13 +365,13 @@ export default function Header() {
                 {isMobileStoresDropdownOpen && (
                   <div className="bg-gray-50 border-t border-b border-gray-200">
                     <div className="px-4 py-2">
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Populära butiker</h4>
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">人気ストア</h4>
                     </div>
                     {stores.map((store, index) => (
                       <Link
                         key={index}
                         href={store.href}
-                        className="flex items-center justify-between px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-green-600 transition-colors"
+                        className="flex items-center justify-between px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-red-600 transition-colors"
                         onClick={closeMobileMenu}
                       >
                         <span>{store.name}</span>
@@ -400,24 +384,21 @@ export default function Header() {
 
               <Link
                 href="/om-oss"
-                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-green-600 transition-colors font-medium"
+                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors font-medium"
                 onClick={closeMobileMenu}
               >
-                Om oss
+                会社概要
               </Link>
               <Link
                 href="/kontakta-oss"
-                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-green-600 transition-colors font-medium"
+                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors font-medium"
                 onClick={closeMobileMenu}
               >
-                Kontakta oss
+                お問い合わせ
               </Link>
             </div>
-
-            {/* Additional Mobile Menu Items */}
           </nav>
 
-          {/* Mobile Menu Footer */}
           <div className="p-4 border-t border-gray-200 bg-gray-50">
             <p className="text-xs text-gray-500 text-center">© 2025 Discount Nation</p>
           </div>

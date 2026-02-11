@@ -97,6 +97,8 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
                   ? "/images/komplett-logo.svg"
                   : storeName === "CDON"
                   ? "/images/cdon-logo.png"
+                  : storeName === "ヤマダデンキ"
+                  ? "/images/yamada-logo.png"
                   : "/images/elgiganten-logo.svg"
               }
               alt={`${storeName} Logo`}
@@ -111,14 +113,17 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
 
         {/* No-code banner */}
         <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 mb-4 text-center">
-          <p className="text-gray-700 font-semibold">Ingen kod behövs</p>
+          <p className="text-gray-700 font-semibold">
+            {storeName === "ヤマダデンキ" ? "コード不要" : "Ingen kod behövs"}
+          </p>
         </div>
 
         {/* Email gate */}
         <div className="border-t pt-5">
           <p className="text-sm text-gray-700 mb-3 text-center">
-            För att låsa upp rabatten, ange din e-postadress nedan. Du skickas
-            sedan vidare till erbjudandet.
+            {storeName === "ヤマダデンキ"
+              ? "クーポンを解除するには、以下にメールアドレスを入力してください。その後、オファーページへ移動します。"
+              : "För att låsa upp rabatten, ange din e-postadress nedan. Du skickas sedan vidare till erbjudandet."}
           </p>
 
           <form onSubmit={handleUnlock} className="space-y-3">
@@ -128,7 +133,7 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Ange din e-postadress"
+              placeholder={storeName === "ヤマダデンキ" ? "メールアドレスを入力" : "Ange din e-postadress"}
               className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               required
             />
@@ -143,17 +148,18 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
               className={`w-full py-3 rounded-lg font-semibold transition-colors text-base flex items-center justify-center space-x-2
                 ${
                   !isValidEmail(email) || sending
-                    ? "bg-blue-300 text-white cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                    ? storeName === "ヤマダデンキ" ? "bg-red-300 text-white cursor-not-allowed" : "bg-blue-300 text-white cursor-not-allowed"
+                    : storeName === "ヤマダデンキ" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
             >
-              <span>Lås upp rabatten</span>
+              <span>{storeName === "ヤマダデンキ" ? "クーポンを解除" : "Lås upp rabatten"}</span>
               <ExternalLink className="w-4 h-4" />
             </button>
 
             <p className="text-[11px] text-gray-500 text-center">
-              Vi kan komma att kontakta dig med fler erbjudanden. Du kan när
-              som helst avsluta prenumerationen.
+              {storeName === "ヤマダデンキ"
+                ? "今後、お得なオファー情報をお送りする場合があります。いつでも配信停止できます。"
+                : "Vi kan komma att kontakta dig med fler erbjudanden. Du kan när som helst avsluta prenumerationen."}
             </p>
           </form>
         </div>
