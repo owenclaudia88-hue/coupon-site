@@ -20,7 +20,7 @@ export default function OfferPage() {
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="text-center">
         <div className="w-20 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-4 border border-gray-200 p-2">
-          <img src="/images/yamada-logo.jpg" alt="ヤマダデンキ" className="w-full h-full object-contain" />
+          <img src="/images/yamada-logo.png" alt="ヤマダデンキ" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">ヤマダデンキ オファー</h1>
         <p className="text-gray-600 mb-4">オファーID: {offerId}</p>

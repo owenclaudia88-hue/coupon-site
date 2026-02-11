@@ -1,5 +1,5 @@
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
+import YamadaHeader from "../../components/YamadaHeader";
+import YamadaFooter from "../../components/YamadaFooter";
 import CaptchaRedirectClientWrapper from "./CaptchaRedirectClientWrapper";
 import Script from "next/script";
 import { headers } from "next/headers";
@@ -53,7 +53,7 @@ export default function VerifyPage({ searchParams }: PageProps) {
         </Script>
       )}
 
-      <Header />
+      <YamadaHeader />
       <main className="flex flex-col items-center justify-center min-h-screen py-8 px-4">
         <div className="max-w-md w-full bg-white rounded-xl shadow-md p-6">
           <h1 className="text-xl font-semibold text-center mb-4">
@@ -70,7 +70,7 @@ export default function VerifyPage({ searchParams }: PageProps) {
           />
         </div>
       </main>
-      <Footer />
+      <YamadaFooter />
     </>
   );
 }

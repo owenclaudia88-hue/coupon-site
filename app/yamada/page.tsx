@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Header from "../components/Header";
-import Breadcrumb from "../components/Breadcrumb";
+import YamadaHeader from "../components/YamadaHeader";
+import YamadaBreadcrumb from "../components/YamadaBreadcrumb";
 import YamadaHeroSection from "../components/YamadaHeroSection";
-import CouponCard from "../components/CouponCard";
+import YamadaCouponCard from "../components/YamadaCouponCard";
 import YamadaSidebar from "../components/YamadaSidebar";
-import Footer from "../components/Footer";
+import YamadaFooter from "../components/YamadaFooter";
 import CouponModal from "../components/CouponModal";
-import EmailSubscription from "../components/EmailSubscription";
+import YamadaEmailSubscription from "../components/YamadaEmailSubscription";
 import YamadaMoreInformation from "../components/YamadaMoreInformation";
 import YamadaFAQ from "../components/YamadaFAQ";
 import YamadaSelectedProducts from "../components/YamadaSelectedProducts";
 import SliderPuzzleModal from "../../components/SliderPuzzleModal";
 import OfferPopup from "../components/OfferPopup";
+import GoogleTranslate from "../components/GoogleTranslate";
 
 interface Coupon {
   id: string;
@@ -338,10 +339,11 @@ export default function YamadaPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <YamadaHeader />
+      <GoogleTranslate autoTranslateTo="ja" />
       <main className="container mx-auto px-4 py-4 md:py-6">
         <div className="hidden md:block">
-          <Breadcrumb storeName="ヤマダデンキ" />
+          <YamadaBreadcrumb storeName="ヤマダデンキ" />
         </div>
         <div className="flex flex-col xl:flex-row gap-6 xl:gap-8 mt-4 md:mt-6">
           <div className="flex-1 min-w-0">
@@ -403,7 +405,7 @@ export default function YamadaPage() {
               </div>
               <div className="flex flex-col gap-3 md:gap-4">
                 {topPromoCoupons.map((coupon) => (
-                  <CouponCard
+                  <YamadaCouponCard
                     key={coupon.id}
                     coupon={coupon}
                     onSelectCoupon={() => handleCouponSelect(coupon)}
@@ -413,7 +415,7 @@ export default function YamadaPage() {
             </section>
 
             {/* Email Subscription */}
-            <EmailSubscription />
+            <YamadaEmailSubscription />
 
             {/* Current Coupon Codes Table */}
             <section className="mt-8 md:mt-12">
@@ -485,7 +487,7 @@ export default function YamadaPage() {
               </h2>
               <div className="flex flex-col gap-3 md:gap-4">
                 {expiredCoupons.map((coupon) => (
-                  <CouponCard
+                  <YamadaCouponCard
                     key={coupon.id}
                     coupon={coupon}
                     onSelectCoupon={() => handleCouponSelect(coupon)}
@@ -510,7 +512,7 @@ export default function YamadaPage() {
           </div>
         </div>
       </main>
-      <Footer />
+      <YamadaFooter />
       {selectedCoupon && (
         <CouponModal
           coupon={selectedCoupon}

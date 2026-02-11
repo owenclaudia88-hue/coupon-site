@@ -112,7 +112,7 @@ export default function OfferPopup({ isOpen, onClose, storeName, offer }: OfferP
                   : storeName === "CDON"
                   ? "/images/cdon-logo.png"
                   : storeName === "ヤマダデンキ"
-                  ? "/images/yamada-logo.jpg"
+                  ? "/images/yamada-logo.png"
                   : "/images/elgiganten-logo.svg"
               }
               alt={`${storeName} Logo`}

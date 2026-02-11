@@ -1,0 +1,409 @@
+"use client"
+
+import type React from "react"
+import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { Search, Menu, X, ChevronDown } from "lucide-react"
+
+const searchableStores = [
+  { name: "Elgiganten", href: "/elgiganten", deals: 13 },
+  { name: "Power", href: "/power", deals: 12 },
+  { name: "NetOnNet", href: "/netonnet", deals: 12 },
+  { name: "Webhallen", href: "/webhallen", deals: 12 },
+  { name: "Komplett", href: "/komplett", deals: 9 },
+  { name: "CDON", href: "/cdon", deals: 15 },
+  { name: "ヤマダデンキ", href: "/yamada", deals: 13 },
+]
+
+const searchableDiscounts = [
+  { title: "iPhone", store: "Elgiganten", href: "/elgiganten", discount: "70%" },
+  { title: "Samsung TV", store: "Power", href: "/power", discount: "25%" },
+  { title: "MacBook", store: "NetOnNet", href: "/netonnet", discount: "25%" },
+  { title: "ゲーミングPC", store: "Webhallen", href: "/webhallen", discount: "30%" },
+  { title: "ノートパソコン", store: "Komplett", href: "/komplett", discount: "45%" },
+  { title: "iPhone", store: "ヤマダデンキ", href: "/yamada", discount: "70%" },
+  { title: "テレビ", store: "ヤマダデンキ", href: "/yamada", discount: "40%" },
+  { title: "冷蔵庫", store: "ヤマダデンキ", href: "/yamada", discount: "25%" },
+]
+
+export default function YamadaHeader() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isStoresDropdownOpen, setIsStoresDropdownOpen] = useState(false)
+  const [isMobileStoresDropdownOpen, setIsMobileStoresDropdownOpen] = useState(false)
+
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const mobileSearchRef = useRef<HTMLDivElement>(null)
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false)
+    setIsMobileStoresDropdownOpen(false)
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+    const query = searchQuery.toLowerCase().trim()
+    const storeMatch = searchableStores.find((store) => store.name.toLowerCase().includes(query))
+    if (storeMatch) {
+      window.location.href = storeMatch.href
+      setSearchQuery("")
+      setShowSearchResults(false)
+      return
+    }
+    const discountMatches = searchableDiscounts.filter(
+      (discount) => discount.title.toLowerCase().includes(query) || discount.store.toLowerCase().includes(query),
+    )
+    if (discountMatches.length > 0) {
+      window.location.href = discountMatches[0].href
+      setSearchQuery("")
+      setShowSearchResults(false)
+      return
+    }
+    window.location.href = "/rabattkoder"
+    setSearchQuery("")
+    setShowSearchResults(false)
+  }
+
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchQuery(value)
+    if (value.length > 1) {
+      setIsSearching(true)
+      const query = value.toLowerCase()
+      const storeResults = searchableStores
+        .filter((store) => store.name.toLowerCase().includes(query))
+        .map((store) => ({ ...store, type: "store" }))
+      const discountResults = searchableDiscounts
+        .filter(
+          (discount) => discount.title.toLowerCase().includes(query) || discount.store.toLowerCase().includes(query),
+        )
+        .map((discount) => ({ ...discount, type: "discount" }))
+      const allResults = [...storeResults, ...discountResults].slice(0, 6)
+      setSearchResults(allResults)
+      setShowSearchResults(allResults.length > 0)
+      setIsSearching(false)
+    } else {
+      setShowSearchResults(false)
+      setSearchResults([])
+    }
+  }
+
+  const handleResultClick = (result: any) => {
+    setSearchQuery("")
+    setShowSearchResults(false)
+    window.location.href = result.href
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node) &&
+        mobileSearchRef.current &&
+        !mobileSearchRef.current.contains(event.target as Node)
+      ) {
+        setShowSearchResults(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const stores = [
+    { name: "Elgiganten", href: "/elgiganten", deals: "13件" },
+    { name: "Power", href: "/power", deals: "12件" },
+    { name: "NetOnNet", href: "/netonnet", deals: "12件" },
+    { name: "Webhallen", href: "/webhallen", deals: "12件" },
+    { name: "Komplett", href: "/komplett", deals: "9件" },
+    { name: "CDON", href: "/cdon", deals: "15件" },
+    { name: "ヤマダデンキ", href: "/yamada", deals: "13件" },
+  ]
+
+  return (
+    <>
+      <header className="bg-[#003478] text-white relative z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-14 md:h-12">
+            {/* Logo Section */}
+            <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-all duration-200">
+              <Image src="/images/logo.png" alt="Discount Nation ロゴ" width={140} height={40} priority />
+            </Link>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-6 text-sm">
+              <Link href="/rabattkoder" className="hover:text-red-300 transition-colors">
+                クーポンコード
+              </Link>
+
+              {/* Stores Dropdown */}
+              <div className="relative group">
+                <button className="flex items-center hover:text-red-300 transition-colors cursor-pointer">
+                  ストア一覧
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <h3 className="text-sm font-semibold text-gray-900">人気ストア</h3>
+                  </div>
+                  {stores.map((store, index) => (
+                    <Link
+                      key={index}
+                      href={store.href}
+                      className="flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors cursor-pointer"
+                    >
+                      <span className="font-medium">{store.name}</span>
+                      <span className="text-xs text-gray-500">{store.deals}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <Link href="/om-oss" className="hover:text-red-300 transition-colors">
+                会社概要
+              </Link>
+              <Link href="/kontakta-oss" className="hover:text-red-300 transition-colors">
+                お問い合わせ
+              </Link>
+            </nav>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="lg:hidden p-2 hover:bg-[#002a60] rounded-lg transition-colors"
+              onClick={toggleMobileMenu}
+              aria-label="メニューを開く"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
+            {/* Desktop Search */}
+            <div ref={searchRef} className="relative hidden md:block">
+              <form onSubmit={handleSearch}>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearchInput}
+                    placeholder="クーポンを検索..."
+                    className="bg-[#002a60] text-white placeholder-gray-300 px-3 py-1 pr-8 rounded text-sm w-32 lg:w-48 focus:outline-none focus:ring-2 focus:ring-red-500 focus:w-56 transition-all duration-200"
+                  />
+                  <button type="submit" className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <Search className="w-4 h-4 text-gray-300 hover:text-white transition-colors" />
+                  </button>
+                </div>
+              </form>
+
+              {showSearchResults && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-80 overflow-y-auto min-w-80">
+                  {isSearching ? (
+                    <div className="p-4 text-center text-gray-500">
+                      <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <span className="text-sm">検索中...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {searchResults.map((result, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleResultClick(result)}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        >
+                          {result.type === "store" ? (
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-semibold text-gray-900 text-sm">{result.name}</div>
+                                <div className="text-xs text-gray-600">{result.deals}件のオファー</div>
+                              </div>
+                              <div className="text-red-600 text-xs font-medium">ストア →</div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-semibold text-gray-900 text-sm">{result.title}</div>
+                                <div className="text-xs text-gray-600">{result.store}</div>
+                              </div>
+                              <div className="text-red-600 text-xs font-medium">{result.discount} OFF</div>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                      <div className="px-4 py-2 bg-gray-50 text-center">
+                        <button
+                          onClick={handleSearch}
+                          className="text-red-600 hover:text-red-700 font-medium text-xs"
+                        >
+                          「{searchQuery}」の全結果を見る →
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onClick={closeMobileMenu} />
+      )}
+
+      {/* Mobile Menu Slide-out */}
+      <div
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 lg:hidden ${
+          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#003478] text-white">
+            <Link href="/" className="flex items-center space-x-2 hover:opacity-90 transition-all duration-200 group">
+              <Image src="/images/logo.png" alt="Discount Nation" width={120} height={40} priority />
+            </Link>
+            <button
+              onClick={closeMobileMenu}
+              className="p-2 hover:bg-[#002a60] rounded-lg transition-colors"
+              aria-label="メニューを閉じる"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Mobile Search */}
+          <div ref={mobileSearchRef} className="p-4 border-b border-gray-200 relative">
+            <form onSubmit={handleSearch}>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchInput}
+                  placeholder="クーポンを検索..."
+                  className="w-full bg-gray-100 text-gray-900 placeholder-gray-500 px-4 py-3 pr-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white border border-gray-200"
+                />
+                <button type="submit" className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <Search className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                </button>
+              </div>
+            </form>
+
+            {showSearchResults && (
+              <div className="absolute top-full left-4 right-4 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-60 overflow-y-auto">
+                {isSearching ? (
+                  <div className="p-4 text-center text-gray-500">
+                    <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <span className="text-sm">検索中...</span>
+                  </div>
+                ) : (
+                  <>
+                    {searchResults.map((result, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleResultClick(result)}
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        {result.type === "store" ? (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-semibold text-gray-900 text-sm">{result.name}</div>
+                              <div className="text-xs text-gray-600">{result.deals}件のオファー</div>
+                            </div>
+                            <div className="text-red-600 text-xs font-medium">ストア →</div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-semibold text-gray-900 text-sm">{result.title}</div>
+                              <div className="text-xs text-gray-600">{result.store}</div>
+                            </div>
+                            <div className="text-red-600 text-xs font-medium">{result.discount} OFF</div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                    <div className="px-4 py-2 bg-gray-50 text-center">
+                      <button
+                        onClick={handleSearch}
+                        className="text-red-600 hover:text-red-700 font-medium text-xs"
+                      >
+                        「{searchQuery}」の全結果を見る →
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Navigation Links */}
+          <nav className="flex-1 py-4">
+            <div className="space-y-1">
+              <Link
+                href="/rabattkoder"
+                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors font-medium"
+                onClick={closeMobileMenu}
+              >
+                クーポンコード
+              </Link>
+
+              <div>
+                <button
+                  onClick={() => setIsMobileStoresDropdownOpen(!isMobileStoresDropdownOpen)}
+                  className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors font-medium"
+                >
+                  <span>ストア一覧</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${isMobileStoresDropdownOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {isMobileStoresDropdownOpen && (
+                  <div className="bg-gray-50 border-t border-b border-gray-200">
+                    <div className="px-4 py-2">
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">人気ストア</h4>
+                    </div>
+                    {stores.map((store, index) => (
+                      <Link
+                        key={index}
+                        href={store.href}
+                        className="flex items-center justify-between px-6 py-2 text-gray-600 hover:bg-gray-100 hover:text-red-600 transition-colors"
+                        onClick={closeMobileMenu}
+                      >
+                        <span>{store.name}</span>
+                        <span className="text-xs text-gray-400">{store.deals}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Link
+                href="/om-oss"
+                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors font-medium"
+                onClick={closeMobileMenu}
+              >
+                会社概要
+              </Link>
+              <Link
+                href="/kontakta-oss"
+                className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-red-600 transition-colors font-medium"
+                onClick={closeMobileMenu}
+              >
+                お問い合わせ
+              </Link>
+            </div>
+          </nav>
+
+          <div className="p-4 border-t border-gray-200 bg-gray-50">
+            <p className="text-xs text-gray-500 text-center">© 2025 Discount Nation</p>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

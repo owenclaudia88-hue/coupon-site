@@ -98,7 +98,7 @@ export default function CouponModal({ coupon, onClose, storeName }: CouponModalP
                   : storeName === "CDON"
                   ? "/images/cdon-logo.png"
                   : storeName === "ヤマダデンキ"
-                  ? "/images/yamada-logo.jpg"
+                  ? "/images/yamada-logo.png"
                   : "/images/elgiganten-logo.svg"
               }
               alt={`${storeName} Logo`}
