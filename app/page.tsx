@@ -76,6 +76,15 @@ const featuredStores = [
     href: "/cdon",
     color: "bg-orange-500",
   },
+  {
+    name: "Yamada Denki",
+    logo: "/images/yamada-logo.png",
+    discount: "Upp till 70%",
+    deals: "13 aktiva erbjudanden",
+    rating: 4.3,
+    href: "/yamada",
+    color: "bg-red-600",
+  },
 ]
 
 // Updated categories with real data from store pages
@@ -145,6 +154,8 @@ const searchableStores = [
   { name: "Webhallen", href: "/webhallen", deals: 12 },
   { name: "Komplett", href: "/komplett", deals: 9 },
   { name: "CDON", href: "/cdon", deals: 15 },
+  { name: "Yamada Denki", href: "/yamada", deals: 13 },
+  { name: "ヤマダデンキ", href: "/yamada", deals: 13 },
 ]
 
 const searchableDiscounts = [
@@ -158,6 +169,8 @@ const searchableDiscounts = [
   { title: "Smartphone", store: "Power", href: "/power", discount: "50%" },
   { title: "Dator", store: "Komplett", href: "/komplett", discount: "45%" },
   { title: "Hörlurar", store: "CDON", href: "/cdon", discount: "40%" },
+  { title: "iPhone", store: "Yamada Denki", href: "/yamada", discount: "70%" },
+  { title: "テレビ", store: "Yamada Denki", href: "/yamada", discount: "40%" },
 ]
 
 // Update the component's state and search functionality
@@ -198,7 +211,7 @@ export default function Homepage() {
 
     // If no matches found, show a message or redirect to a search results page
     alert(
-      `Inga resultat hittades för "${searchQuery}". Försök söka efter butiker som Elgiganten, Power, NetOnNet, Webhallen, Komplett eller CDON.`,
+      `Inga resultat hittades för "${searchQuery}". Försök söka efter butiker som Elgiganten, Power, NetOnNet, Webhallen, Komplett, CDON eller Yamada Denki.`,
     )
   }
 
@@ -268,11 +281,11 @@ export default function Homepage() {
         <div className="container mx-auto px-4 py-12 md:py-20">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              Sveriges bästa rabattkoder och erbjudanden
+              De bästa rabattkoderna och erbjudandena världen över
             </h1>
             <p className="text-lg md:text-xl mb-8 text-green-100 leading-relaxed">
               Spara pengar på dina favoritbutiker med våra verifierade rabattkoder. Upptäck fantastiska erbjudanden från
-              Sveriges mest populära butiker.
+              populära butiker världen över.
             </p>
 
             {/* Enhanced Search Bar */}
@@ -372,7 +385,7 @@ export default function Homepage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Populära butiker</h2>
-            <p className="text-gray-600 text-lg">Upptäck de bästa erbjudandena från våra mest populära partners</p>
+            <p className="text-gray-600 text-lg">Upptäck de bästa erbjudandena från populära butiker världen över</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

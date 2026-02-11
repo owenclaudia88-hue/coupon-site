@@ -15,6 +15,7 @@ const searchableStores = [
   { name: "Komplett", href: "/komplett", deals: 9 },
   { name: "CDON", href: "/cdon", deals: 15 },
   { name: "ヤマダデンキ", href: "/yamada", deals: 13 },
+  { name: "Yamada Denki", href: "/yamada", deals: 13 },
 ]
 
 const searchableDiscounts = [
@@ -127,7 +128,7 @@ export default function Header() {
     { name: "Webhallen", href: "/webhallen", deals: "12 erbjudanden" },
     { name: "Komplett", href: "/komplett", deals: "9 erbjudanden" },
     { name: "CDON", href: "/cdon", deals: "15 erbjudanden" },
-    { name: "ヤマダデンキ", href: "/yamada", deals: "13 erbjudanden" },
+    { name: "Yamada Denki", href: "/yamada", deals: "13 erbjudanden" },
   ]
 
   return (
