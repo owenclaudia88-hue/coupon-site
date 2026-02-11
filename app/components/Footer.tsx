@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="text-center mb-6 md:mb-8">
           <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Discount Nation</h3>
           <p className="text-gray-600 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-            Din bästa källa för rabattkoder och erbjudanden från Sveriges populäraste butiker.
+            Din bästa källa för rabattkoder och erbjudanden från populära butiker världen över.
           </p>
         </div>
 

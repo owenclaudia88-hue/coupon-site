@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import CookieBanner from "./components/CookieBanner"
 import ScrollToTop from "./components/ScrollToTop"
+import GoogleTranslate from "./components/GoogleTranslate"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -36,6 +37,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         {children}
+        <GoogleTranslate />
         <CookieBanner />
         <ScrollToTop />
       </body>

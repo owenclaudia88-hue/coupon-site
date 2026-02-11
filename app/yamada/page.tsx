@@ -14,7 +14,6 @@ import YamadaFAQ from "../components/YamadaFAQ";
 import YamadaSelectedProducts from "../components/YamadaSelectedProducts";
 import SliderPuzzleModal from "../../components/SliderPuzzleModal";
 import OfferPopup from "../components/OfferPopup";
-import GoogleTranslate from "../components/GoogleTranslate";
 
 interface Coupon {
   id: string;
@@ -340,7 +339,6 @@ export default function YamadaPage() {
   return (
     <div className="min-h-screen bg-white">
       <YamadaHeader />
-      <GoogleTranslate autoTranslateTo="ja" />
       <main className="container mx-auto px-4 py-4 md:py-6">
         <div className="hidden md:block">
           <YamadaBreadcrumb storeName="ヤマダデンキ" />

@@ -1,11 +1,8 @@
 "use client"
 
 import { useEffect } from "react"
+import { usePathname } from "next/navigation"
 import Script from "next/script"
-
-interface GoogleTranslateProps {
-  autoTranslateTo?: string
-}
 
 declare global {
   interface Window {
@@ -14,7 +11,25 @@ declare global {
   }
 }
 
-export default function GoogleTranslate({ autoTranslateTo }: GoogleTranslateProps) {
+function getTargetLanguage(pathname: string): string | null {
+  // If on a Yamada page, always translate to Japanese
+  if (pathname.startsWith("/yamada")) return "ja"
+
+  // Otherwise, detect from browser language
+  if (typeof navigator !== "undefined") {
+    const browserLang = navigator.language || (navigator as any).userLanguage || ""
+    const langCode = browserLang.split("-")[0].toLowerCase()
+
+    // If the browser language is Japanese, auto-translate
+    if (langCode === "ja") return "ja"
+  }
+
+  return null
+}
+
+export default function GoogleTranslate() {
+  const pathname = usePathname()
+
   useEffect(() => {
     window.googleTranslateElementInit = () => {
       if (window.google?.translate?.TranslateElement) {
@@ -30,19 +45,19 @@ export default function GoogleTranslate({ autoTranslateTo }: GoogleTranslateProp
       }
     }
 
-    // If autoTranslateTo is set, auto-switch language after widget loads
-    if (autoTranslateTo) {
+    const targetLang = getTargetLanguage(pathname)
+
+    if (targetLang) {
       const attemptAutoTranslate = () => {
         const selectEl = document.querySelector<HTMLSelectElement>(".goog-te-combo")
         if (selectEl) {
-          selectEl.value = autoTranslateTo
+          selectEl.value = targetLang
           selectEl.dispatchEvent(new Event("change"))
           return true
         }
         return false
       }
 
-      // Retry a few times since the widget loads asynchronously
       let attempts = 0
       const interval = setInterval(() => {
         if (attemptAutoTranslate() || attempts > 20) {
@@ -53,7 +68,7 @@ export default function GoogleTranslate({ autoTranslateTo }: GoogleTranslateProp
 
       return () => clearInterval(interval)
     }
-  }, [autoTranslateTo])
+  }, [pathname])
 
   return (
     <>
