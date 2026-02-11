@@ -14,6 +14,7 @@ const searchableStores = [
   { name: "Webhallen", href: "/webhallen", deals: 12 },
   { name: "Komplett", href: "/komplett", deals: 9 },
   { name: "CDON", href: "/cdon", deals: 15 },
+  { name: "ヤマダデンキ", href: "/yamada", deals: 13 },
 ]
 
 const searchableDiscounts = [
@@ -27,6 +28,8 @@ const searchableDiscounts = [
   { title: "Smartphone", store: "Power", href: "/power", discount: "50%" },
   { title: "Dator", store: "Komplett", href: "/komplett", discount: "45%" },
   { title: "Hörlurar", store: "CDON", href: "/cdon", discount: "40%" },
+  { title: "iPhone", store: "ヤマダデンキ", href: "/yamada", discount: "70%" },
+  { title: "テレビ", store: "ヤマダデンキ", href: "/yamada", discount: "40%" },
 ]
 
 export default function Header() {
@@ -124,6 +127,7 @@ export default function Header() {
     { name: "Webhallen", href: "/webhallen", deals: "12 erbjudanden" },
     { name: "Komplett", href: "/komplett", deals: "9 erbjudanden" },
     { name: "CDON", href: "/cdon", deals: "15 erbjudanden" },
+    { name: "ヤマダデンキ", href: "/yamada", deals: "13 erbjudanden" },
   ]
 
   return (
