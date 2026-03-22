@@ -81,7 +81,6 @@ const BAD_NAME_SNIPPETS: string[] = [
   "oxylabs", "smartproxy", "cdn77",
   // ISP extras
   "triple t broadband public company limited", "triple t broadband", "3bb",
-  "rds", "digi",
 ];
 
 /* ======= ENV-driven extensions ======= */
