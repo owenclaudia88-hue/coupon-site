@@ -224,21 +224,21 @@ async function ipinfoLookup(ip: string, token?: string) {
   }
 }
 
-function matchesBadProviderLite(rec: { asn?: string; as_name?: string; as_domain?: string } | null) {
-  if (!rec) return false;
+function matchesBadProviderLite(rec: { asn?: string; as_name?: string; as_domain?: string } | null): { blocked: boolean; type?: string; match?: string } {
+  if (!rec) return { blocked: false };
   const { asn, as_name, as_domain } = rec;
   if (asn && BAD_ASN.has(asn.toUpperCase())) {
     log("Block by ASN:", asn);
-    return true;
+    return { blocked: true, type: "bad_asn", match: asn.toUpperCase() };
   }
   const name = (as_name || "").toLowerCase();
   const domain = (as_domain || "").toLowerCase();
   const hit = BAD_NAME_SNIPPETS.find((n) => name.includes(n) || domain.includes(n));
   if (hit) {
     log(`Block by ISP substring: "${hit}" in name="${name}" domain="${domain}"`);
-    return true;
+    return { blocked: true, type: "bad_name_snippet", match: hit };
   }
-  return false;
+  return { blocked: false };
 }
 
 async function maxmindLookup(req: NextRequest, ip: string) {
@@ -326,11 +326,14 @@ async function runGuard(req: NextRequest, ip: string | null): Promise<GuardResul
   const country = lite?.country || "";
 
   // 5. Provider / ASN
-  const providerBlocked = matchesBadProviderLite(lite);
-  checks["provider"] = providerBlocked ? "BLOCKED" : "pass";
-  if (providerBlocked) {
-    log("Guard: block by provider");
-    return { blocked: true, reason: "provider_asn", checks, asn, isp: ispName, countryCode, country };
+  const providerResult = matchesBadProviderLite(lite);
+  checks["provider"] = providerResult.blocked ? `BLOCKED (${providerResult.type}: ${providerResult.match})` : "pass";
+  if (providerResult.blocked) {
+    const reason = providerResult.type === "bad_asn"
+      ? `bad_asn:${providerResult.match}`
+      : `bad_name_snippet:${providerResult.match}`;
+    log("Guard: block by provider —", reason);
+    return { blocked: true, reason, checks, asn, isp: ispName, countryCode, country };
   }
 
   // 6. Country
