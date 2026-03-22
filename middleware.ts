@@ -16,15 +16,15 @@ const log = (...args: any[]) => VERBOSE && console.log("[MW]", ...args);
 /* ========= Provider blocklists (ASN + name/domain snippets) ========= */
 const BAD_ASN = new Set<string>([
   // Google
-  "AS15169", "AS396982",
+  "AS15169", "AS396982", "AS36384", "AS19527",
   // Cloudflare
-  "AS13335",
+  "AS13335", "AS209242",
   // Amazon / AWS
-  "AS16509", "AS14618", "AS7224", "AS8987",
+  "AS16509", "AS14618", "AS7224", "AS8987", "AS38895",
   // Microsoft / Azure / Bing
-  "AS8075", "AS8068", "AS8069", "AS12076",
+  "AS8075", "AS8068", "AS8069", "AS12076", "AS3598", "AS200517",
   // Meta / Facebook
-  "AS32934", "AS54115", "AS34825", "AS149642",
+  "AS32934", "AS54115", "AS34825", "AS149642", "AS63293",
   // Fastly
   "AS54113",
   // Akamai
@@ -34,23 +34,54 @@ const BAD_ASN = new Set<string>([
   // Oracle Cloud
   "AS31898", "AS20473",
   // DigitalOcean
-  "AS14061",
+  "AS14061", "AS393406",
   // Hetzner
-  "AS24940",
+  "AS24940", "AS213230",
   // OVH
   "AS16276",
   // Alibaba Cloud
   "AS45102", "AS37963", "AS45104",
   // Tencent Cloud
   "AS132203", "AS45090", "AS134761",
+  // Scaleway / Online.net
+  "AS12876",
+  // Kamatera
+  "AS36007",
+  // UpCloud
+  "AS202053",
+  // Ionos / 1&1
+  "AS8560",
+  // Hostinger
+  "AS47583",
+  // Fly.io
+  "AS40509",
+  // Render
+  "AS397942",
+  // Railway
+  "AS399820",
+  // VPN / Proxy providers
+  "AS9009",   // M247 (NordVPN, Surfshark, etc.)
+  "AS60068",  // CDN77
+  "AS20473",  // Vultr (also used by VPNs)
+  "AS212238", // Datacamp (proxy provider)
+  "AS62785",  // Private Internet Access
+  "AS396356", // Maxihost
+  "AS174",    // Cogent (many proxies)
+  "AS49981",  // WorldStream
+  "AS30633",  // Leaseweb
+  "AS51167",  // Contabo
+  "AS62563",  // GTHost
+  "AS209103", // OVH alt
+  "AS208091",
+  // Zscaler / Corporate proxies
+  "AS22616",  // Zscaler
+  "AS62044",  // Zscaler alt
   // Extras
-  "AS36040", "AS19527", "AS139070", "AS36561", "AS43515", "AS16550",
-  "AS63293", "AS13443", "AS14413", "AS40793",
+  "AS36040", "AS139070", "AS36561", "AS43515", "AS16550",
+  "AS13443", "AS14413", "AS40793",
   "AS19047", "AS36263", "AS12222",
   "AS13949", "AS22859", "AS36492", "AS394089", "AS40873", "AS139190",
-  // Linode / Contabo / Leaseweb / CDN77 / M247 / Proxies / GoDaddy
-  "AS32613", "AS51167", "AS59253", "AS30633", "AS60068", "AS9009",
-  "AS396507", "AS209103", "AS208091", "AS62563",
+  "AS396507", "AS32613", "AS59253",
   // China Telecom/Unicom/Mobile
   "AS4134", "AS4837", "AS9808", "AS17816", "AS17974",
 ]);
@@ -79,9 +110,26 @@ const BAD_NAME_SNIPPETS: string[] = [
   "colo", "contabo", "vultr", "stackpath", "zenlayer",
   "bright data", "luminati", "brightdata", "luminati networks",
   "oxylabs", "smartproxy", "cdn77",
+  // Hosting / Cloud / VPS
+  "scaleway", "online.net", "kamatera", "upcloud", "hostinger",
+  "ionos", "1and1", "1&1", "fly.io", "render.com", "railway",
+  "godaddy", "namecheap", "hostgator", "bluehost", "siteground",
+  "dreamhost", "rackspace", "softlayer", "ibm cloud",
+  "worldstream", "maxihost", "serverion", "nforce",
+  // VPN / Proxy / Privacy
+  "nordvpn", "expressvpn", "surfshark", "cyberghost", "private internet access",
+  "protonvpn", "proton vpn", "mullvad", "ipvanish", "tunnelbear",
+  "windscribe", "strongvpn", "hide.me", "purevpn", "hotspot shield",
+  "zscaler", "forcepoint", "netskope", "palo alto", "fortinet",
+  "cisco umbrella", "umbrella", "proxy", "vpn", "anonymizer",
+  "tor exit", "tor project",
+  // Ad verification / Security scanning
+  "geoedge", "confiant", "doubleverify", "integral ad science",
+  "the media trust", "adloox", "forensiq", "pixalate", "moat",
+  "grapeshot", "comscore", "nielsen", "white ops", "human security",
   // ISP extras
   "triple t broadband public company limited", "triple t broadband", "3bb",
-
+  "cogent", "he.net", "hurricane electric",
 ];
 
 /* ======= ENV-driven extensions ======= */
@@ -135,22 +183,52 @@ function isBlockedByCountry(arg: { code?: string; name?: string }) {
 
 /* ========= Bot UA detection ========= */
 const BOT_UA =
-  /(bot|tencent|crawler|spider|crawling|curl|wget|python-requests|httpclient|libwww|urlgrabber|^python|^php|^java|go-http-client|okhttp|feedfetcher|readability|preview|scan|probe|monitor|checker|validator|analyzer|scrape|scraper|headless|phantomjs|slimerjs|puppeteer|playwright|rendertron|facebookexternalhit|facebot|slackbot|twitterbot|linkedinbot|pinterest|discordbot|telegrambot|whatsapp|skypeuripreview|googlebot|adsbot-google|google-read-aloud|google-cloudvertexbot|mediapartners-google|bingbot|bingpreview|yandex|baiduspider|duckduckbot|sogou|seznambot|semrush|ahrefs|mj12bot|dotbot|gigabot|petalbot|applebot|ia_archiver|amazonbot)/i;
+  /(bot|tencent|crawler|spider|crawling|curl|wget|python-requests|python-urllib|httpx|aiohttp|httpclient|libwww|urlgrabber|^python|^php|^java|^ruby|^perl|go-http-client|okhttp|feedfetcher|readability|preview|scan|probe|monitor|checker|validator|analyzer|scrape|scraper|headless|phantomjs|slimerjs|puppeteer|playwright|rendertron|selenium|webdriver|chromedriver|geckodriver|facebookexternalhit|facebot|slackbot|twitterbot|linkedinbot|pinterest|discordbot|telegrambot|whatsapp|skypeuripreview|googlebot|adsbot-google|adsbot|google-read-aloud|google-cloudvertexbot|google-inspectiontool|google-safety|google-adwords|google-ads|google-site-verification|mediapartners-google|storebot-google|apis-google|feedfetcher-google|bingbot|bingpreview|msnbot|adidxbot|yandex|baiduspider|duckduckbot|sogou|seznambot|semrush|ahrefs|mj12bot|dotbot|gigabot|petalbot|applebot|ia_archiver|amazonbot|gptbot|chatgpt|openai|claudebot|claude-web|anthropic|perplexity|cohere-ai|bytespider|bytedance|iaskspider|ccbot|facebook\.com|meta-externalagent|meta-externalfetcher|google-extended|diffbot|archive\.org|commoncrawl|newspaper|httrack|nutch|linkdex|rogerbot|blexbot|sitebulb|screaming frog|deepcrawl|lumar|oncrawl|netcraft|censys|shodan|zoomeye|nmap|masscan|zgrab|nuclei|nikto|wpscan|sqlmap|nessus|qualys|rapid7|acunetix|burpsuite|zap|owasp|dirbuster|gobuster|feroxbuster|whatweb|wapiti|skipfish)/i;
 
 /* ========= CIDR check (ported from guard.php) ========= */
 const BAD_CIDR = [
+  // Google (crawlers, ads review, cloud)
   "8.8.8.0/24", "8.8.4.0/24",
   "142.250.0.0/15", "172.217.0.0/16",
   "74.125.0.0/16", "66.249.64.0/19", "64.233.160.0/19",
-  "31.13.24.0/21", "31.13.64.0/18",
-  "66.220.144.0/20", "69.63.176.0/20", "69.171.224.0/19",
-  "157.240.0.0/17", "173.252.64.0/18", "204.15.20.0/22", "103.4.96.0/22",
-  "54.80.0.0/12", "52.0.0.0/11",
-  "206.130.0.0/16", "192.243.60.0/22",
-  "66.135.0.0/16", "199.16.156.0/22",
+  "209.85.128.0/17", "216.239.32.0/19", "216.58.192.0/19",
+  "108.177.0.0/17", "173.194.0.0/16",
+  // Google Cloud
   "34.64.0.0/10", "34.128.0.0/10",
   "35.184.0.0/13", "35.192.0.0/11", "35.224.0.0/12", "35.240.0.0/13",
   "104.196.0.0/14",
+  // Google Ads Review specific
+  "66.249.64.0/19", "66.249.80.0/20",
+  "72.14.192.0/18",
+  // Meta / Facebook
+  "31.13.24.0/21", "31.13.64.0/18",
+  "66.220.144.0/20", "69.63.176.0/20", "69.171.224.0/19",
+  "157.240.0.0/16", "173.252.64.0/18", "204.15.20.0/22", "103.4.96.0/22",
+  "129.134.0.0/16", "185.60.216.0/22",
+  // Microsoft / Bing Ads
+  "13.64.0.0/11", "13.96.0.0/13", "13.104.0.0/14",
+  "20.0.0.0/11", "20.33.0.0/16", "20.34.0.0/15",
+  "40.64.0.0/10", "52.96.0.0/12",
+  "65.52.0.0/14", "70.37.0.0/17",
+  "104.40.0.0/13", "104.208.0.0/13",
+  "131.253.0.0/16", "199.30.16.0/20",
+  "207.46.0.0/16", "207.68.128.0/18",
+  // AWS (common ranges)
+  "54.80.0.0/12", "52.0.0.0/11",
+  "3.0.0.0/9", "18.0.0.0/11",
+  "54.64.0.0/11", "54.128.0.0/12",
+  // Twitter / X
+  "206.130.0.0/16", "192.243.60.0/22",
+  "66.135.0.0/16", "199.16.156.0/22",
+  "199.59.148.0/22", "104.244.40.0/21",
+  // Cloudflare
+  "103.21.244.0/22", "103.22.200.0/22", "103.31.4.0/22",
+  "104.16.0.0/13", "104.24.0.0/14",
+  "108.162.192.0/18", "131.0.72.0/22",
+  "141.101.64.0/18", "162.158.0.0/15",
+  "172.64.0.0/13", "173.245.48.0/20",
+  "188.114.96.0/20", "190.93.240.0/20",
+  "197.234.240.0/22", "198.41.128.0/17",
 ];
 
 function ipToLong(ip: string): number {
@@ -175,6 +253,29 @@ function hasSuspiciousHeaders(req: NextRequest): boolean {
   const acceptLang = req.headers.get("accept-language") || "";
   if (!ua) return true;
   if (!acceptLang || acceptLang.trim().length < 2) return true;
+  return false;
+}
+
+/* ========= Proxy header detection ========= */
+const PROXY_HEADERS = [
+  "via", "x-proxy-id", "proxy-connection", "x-proxy-connection",
+  "forwarded", "x-forwarded-host", "x-originating-ip",
+  "x-remote-addr", "x-remote-ip", "true-client-ip",
+];
+function hasProxyHeaders(req: NextRequest): string | null {
+  for (const h of PROXY_HEADERS) {
+    const val = req.headers.get(h);
+    if (val) return h;
+  }
+  return null;
+}
+
+/* ========= Accept header anomaly ========= */
+function hasSuspiciousAccept(req: NextRequest): boolean {
+  const accept = req.headers.get("accept") || "";
+  // Missing accept header entirely or just "*/*" (no text/html) for page requests
+  if (!accept) return true;
+  if (accept === "*/*" && !accept.includes("text/html")) return true;
   return false;
 }
 
@@ -299,6 +400,22 @@ async function runGuard(req: NextRequest, ip: string | null): Promise<GuardResul
   if (suspHeaders) {
     log("Guard: block by suspicious headers");
     return { blocked: true, reason: "suspicious_headers", checks };
+  }
+
+  // 2b. Proxy headers
+  const proxyHeader = hasProxyHeaders(req);
+  checks["proxy_headers"] = proxyHeader ? `BLOCKED (${proxyHeader})` : "pass";
+  if (proxyHeader) {
+    log("Guard: block by proxy header:", proxyHeader);
+    return { blocked: true, reason: `proxy_header:${proxyHeader}`, checks };
+  }
+
+  // 2c. Accept header anomaly
+  const suspAccept = hasSuspiciousAccept(req);
+  checks["accept_header"] = suspAccept ? "BLOCKED" : "pass";
+  if (suspAccept) {
+    log("Guard: block by suspicious accept header");
+    return { blocked: true, reason: "suspicious_accept", checks };
   }
 
   if (!ip) {

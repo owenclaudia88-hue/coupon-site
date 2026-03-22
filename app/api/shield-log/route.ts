@@ -223,7 +223,7 @@ let allLogs = [];
 let filtered = [];
 let autoTimer = null;
 
-const CHECK_ORDER = ['bot_ua','headers','ip','cidr','ipinfo','provider','country','maxmind'];
+const CHECK_ORDER = ['bot_ua','headers','proxy_headers','accept_header','ip','cidr','ipinfo','provider','country','maxmind','client_js'];
 
 function logout() {
   window.location.href = '/api/shield-log';

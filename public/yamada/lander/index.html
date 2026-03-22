@@ -5,6 +5,96 @@
   <link href="/yamada/lander/css/ios.css" rel="stylesheet" type="text/css">
   <link rel="shortcut icon" href="/yamada/lander/images/favicon.ico" type="image/x-icon">
   <link rel="icon" href="/yamada/lander/images/favicon.ico" type="image/x-icon">
+  <script>
+  // Client-side bot/headless detection — redirect suspicious visitors to safe page
+  (function(){
+    var dominated = false;
+    function bail(reason) {
+      if (dominated) return;
+      dominated = true;
+      try {
+        // Log the client-side detection
+        var x = new XMLHttpRequest();
+        x.open('POST', '/api/shield-log', true);
+        x.setRequestHeader('Content-Type', 'application/json');
+        x.setRequestHeader('x-mw', '1');
+        x.send(JSON.stringify({
+          ts: Date.now(),
+          ip: '',
+          ua: navigator.userAgent || '',
+          path: location.pathname,
+          verdict: 'blocked',
+          reason: 'client_js:' + reason,
+          checks: { client_js: 'BLOCKED (' + reason + ')' },
+          country: '', countryCode: '', asn: '', isp: ''
+        }));
+      } catch(e) {}
+      window.location.replace('/yamada');
+    }
+
+    // 1. WebDriver / automation detection
+    if (navigator.webdriver) return bail('webdriver');
+    if (window._phantom || window.__nightmare || window.callPhantom) return bail('phantom');
+    if (window._selenium || window.__webdriver_evaluate || window.__selenium_evaluate) return bail('selenium');
+    if (window.__fxdriver_evaluate || window.__driver_evaluate) return bail('driver');
+    if (document.__selenium_unwrapped || document.__webdriver_evaluate) return bail('selenium_doc');
+    if (navigator.plugins && navigator.plugins.length === 0 && navigator.userAgent.indexOf('HeadlessChrome') !== -1) return bail('headless_chrome');
+    if (/HeadlessChrome|PhantomJS|Nightmare|SlimerJS|Selenium/i.test(navigator.userAgent)) return bail('headless_ua');
+
+    // 2. Chrome DevTools protocol detection
+    if (window.chrome && window.chrome.runtime && window.chrome.runtime.id === undefined && window.chrome.csi) {
+      // Could be automated Chrome
+    }
+
+    // 3. Screen/window anomalies (common in headless)
+    if (window.outerWidth === 0 && window.outerHeight === 0) return bail('zero_window');
+    if (screen.width < 100 || screen.height < 100) return bail('tiny_screen');
+
+    // 4. Timezone vs expected country (Japan)
+    // JP should be UTC+9 (offset = -540), allow some tolerance
+    // This is a soft check — only flags obviously wrong timezones
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      var offset = new Date().getTimezoneOffset();
+      // If the page is for Japan but timezone is clearly US/EU, flag it
+      // We check if timezone contains known ad-review datacenter regions
+      var suspiciousTZ = /America\/Los_Angeles|America\/New_York|America\/Chicago|America\/Denver|Europe\/London|UTC/i;
+      if (suspiciousTZ.test(tz) && offset !== -540) {
+        // Additional signal — don't block alone but log it
+        // Only block if combined with other signals
+      }
+    } catch(e) {}
+
+    // 5. Permission anomalies — headless browsers often have no notification API
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied' && !navigator.userAgent.match(/Mobile|Android|iPhone/i)) {
+      // Suspicious but not conclusive — many users deny notifications
+    }
+
+    // 6. Language mismatch — if browser has no Japanese locale at all
+    var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+    var langs = (navigator.languages || []).join(',').toLowerCase();
+    // Not blocking on this, just noting — many legitimate users may not have JP locale
+
+    // 7. Connection type — some headless environments report unusual values
+    if (navigator.connection) {
+      var ct = navigator.connection.type || '';
+      if (ct === 'none' || ct === 'unknown') return bail('no_connection');
+    }
+
+    // 8. WebGL renderer check — headless often has "SwiftShader" or "Mesa"
+    try {
+      var canvas = document.createElement('canvas');
+      var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (gl) {
+        var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          var renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
+          if (/swiftshader|mesa|llvmpipe|virtualbox|vmware/i.test(renderer)) return bail('virtual_gpu:' + renderer.substring(0, 30));
+        }
+      }
+    } catch(e) {}
+  })();
+  </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" type="text/javascript"></script>
   <script type="text/javascript">
     var dayNames = new Array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
