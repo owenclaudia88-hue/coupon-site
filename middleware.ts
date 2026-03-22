@@ -259,8 +259,7 @@ function hasSuspiciousHeaders(req: NextRequest): boolean {
 /* ========= Proxy header detection ========= */
 const PROXY_HEADERS = [
   "via", "x-proxy-id", "proxy-connection", "x-proxy-connection",
-  "forwarded", "x-forwarded-host", "x-originating-ip",
-  "x-remote-addr", "x-remote-ip", "true-client-ip",
+  "x-originating-ip", "x-remote-addr", "x-remote-ip",
 ];
 function hasProxyHeaders(req: NextRequest): string | null {
   for (const h of PROXY_HEADERS) {
