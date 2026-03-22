@@ -36,7 +36,7 @@ export default function VerifyPage({ searchParams }: PageProps) {
   const isBot = BOT_UA.test(ua);
 
   if (isBot) {
-    redirect("https://www.yamada-denki.jp");
+    redirect("/yamada");
   }
 
   return (

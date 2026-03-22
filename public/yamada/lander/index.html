@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=false; initial-scale=1.0; maximum-scale=1.0">
+  <title>ヤマダ電機コンテスト</title>
+  <link href="/yamada/lander/css/ios.css" rel="stylesheet" type="text/css">
+  <link rel="shortcut icon" href="/yamada/lander/images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/yamada/lander/images/favicon.ico" type="image/x-icon">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var dayNames = new Array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
+    var monthNames = new Array("January","February","March","April","May","June","July","August","September","October","November","December");
+    var now = new Date();
+    var today= monthNames[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear();
+
+    function get_date(days){
+      return today = monthNames[now.getMonth()] + " " + (now.getDate() - days) + ", " + now.getFullYear();
+    }
+  </script>
+  <script>
+    $(document).ready(function(){
+      setTimeout(function(){
+        $(".main-content").addClass("loaded");
+      }, 200);
+
+      $(".bq1").click(function(){
+        $(this).addClass("clicked");
+        setTimeout(function(){
+          $("#q1").fadeOut(200);
+          $("#q2").fadeIn(400);
+        }, 150);
+      });
+
+      $(".bq2").click(function(){
+        $(this).addClass("clicked");
+        setTimeout(function(){
+          $("#q2").fadeOut(200);
+          $("#q3").fadeIn(400);
+        }, 150);
+      });
+
+      $(".bq3").click(function(){
+        $(this).addClass("clicked");
+        setTimeout(function(){
+          $("#q3").fadeOut(200);
+          $("#q4").fadeIn(400);
+        }, 150);
+      });
+
+      $(".bq4").click(function(){
+        $(this).addClass("clicked");
+        setTimeout(function(){
+          $("#content1").fadeOut(300);
+          $("#content2").fadeIn(600);
+          startLoadingSequence();
+        }, 200);
+      });
+
+      function startLoadingSequence() {
+        setTimeout(function(){
+          $(".progress-fill").css("width", "20%");
+        }, 500);
+
+        setTimeout(function(){
+          $("#result1").addClass("show");
+          $(".progress-fill").css("width", "40%");
+        }, 3000);
+
+        setTimeout(function(){
+          $("#result2").addClass("show");
+          $(".progress-fill").css("width", "60%");
+        }, 4500);
+
+        setTimeout(function(){
+          $("#result3").addClass("show");
+          $(".progress-fill").css("width", "80%");
+        }, 5500);
+
+        setTimeout(function(){
+          $("#result4").addClass("show");
+          $(".progress-fill").css("width", "100%");
+        }, 6500);
+
+        setTimeout(function(){
+          $("#result5").addClass("show");
+        }, 7500);
+
+        setTimeout(function(){
+          $("#result6").addClass("show");
+          $(".loading-complete").addClass("show");
+        }, 8500);
+
+        setTimeout(function(){
+          $("#content2").fadeOut(400);
+        }, 11500);
+
+        setTimeout(function(){
+          $("#content3").fadeIn(600);
+        }, 11900);
+      }
+    });
+  </script>
+</head>
+<body>
+  <div class="top"></div>
+  <div class="content">
+
+    <div class="main-content" id="content1">
+      <div class="logo">
+        <img src="/yamada/lander/images/logo.png">
+      </div>
+      <div class="topbox">
+        <h2 style=" text-align:center; color:#fff;"><strong>おめでとうございます！
+</strong></h2>
+        <h4 style="color:#fff;">あなたはこの限定オンラインアンケートの参加者に選ばれました！</h4>
+        <p>ヤマダ電機は2025年の日本の家電通販店No.1に選ばれました。</p>
+        <p>これを記念に、Apple iPhone 17 Pro Maxの新品（約194,000円相当）を100台差し上げることにしました！</p>
+        <p>あなたは幸運にも、ランダムな抽選の結果、この信じられないような賞に選出されました！賞品であるiPhoneを受け取るには、次の質問にお答えください。</p>
+        <p>在庫数は非常に限られていますので、お急ぎください！</p>
+      </div>
+
+      <div class="mid_box">
+        <div id="q1">
+          <p class="question"><strong>質問１:</strong>今年はこれまでに何度ヤマダ電機でお買い物をしましたか？</p>
+          <div class="button1 bq1">１～4回</div>
+          <div class="button1 bq1">5～10回</div>
+          <div class="button1 bq1">10回以上</div>
+        </div>
+
+        <div id="q2">
+          <p class="question"><strong>質問２:</strong>ヤマダ電機でお買い物をしたいと思われる最大の理由は何ですか？</p>
+          <div class="button1 bq2">カスタマーサポート</div>
+          <div class="button1 bq2">価格</div>
+          <div class="button1 bq2">品揃え</div>
+          <div class="button1 bq2">上記のいずれでもない</div>
+        </div>
+
+        <div id="q3">
+          <p class="question"><strong>質問３:</strong>当店に対する総合評価を以下からお選びください。</p>
+          <div class="button1 bq3">1/5</div>
+          <div class="button1 bq3">2/5</div>
+          <div class="button1 bq3">3/5</div>
+          <div class="button1 bq3">4/5</div>
+          <div class="button1 bq3">5/5</div>
+        </div>
+
+        <div id="q4">
+          <p class="question"><strong>質問４:</strong>一番好きなスマホメーカーはどれですか？</p>
+          <div class="button1 bq4">Apple（アップル）</div>
+          <div class="button1 bq4">Huawei（ファーウェイ）</div>
+          <div class="button1 bq4">LG</div>
+          <div class="button1 bq4">Samsung（サムスン）</div>
+          <div class="button1 bq4">Xiaomi（シャオミ）</div>
+          <div class="button1 bq4">上記のいずれでもない</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content" id="content2">
+      <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+      </div>
+
+      <h1 style="text-align:center;">必要なチェックを行っておりますので少しお待ちください...</h1>
+
+      <div class="loading">
+        <div class="loading-spinner"></div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-fill"></div>
+      </div>
+
+      <div class="loading-text">
+        <p style="color: #fff; font-size: 16px; text-align: center; margin: 20px 0; line-height: 1.5;">
+          この限定キャンペーンへの参加資格と在庫状況を確認しています。
+        </p>
+        <p style="color: #db1e26; font-size: 14px; text-align: center; margin: 10px 0; font-weight: bold;">
+          数秒かかる場合があります...
+        </p>
+      </div>
+
+      <div class="results-container">
+        <div class="result" id="result1">1/4...完了</div>
+        <div class="result" id="result2">2/4...完了</div>
+        <div class="result" id="result3">3/4...完了</div>
+        <div class="result" id="result4">4/4...完了</div>
+        <div class="result" id="result5">二重登録はされていません</div>
+        <div class="result" id="result6">まだ iPhonesの在庫があります</div>
+      </div>
+
+      <div class="loading-complete">
+        <p style="color: #db1e26; font-weight: bold; font-size: 18px;">確認完了!</p>
+        <p style="color: #fff; font-size: 16px; margin-top: 15px; font-weight: bold;">
+          iPhoneの在庫がまだあります!
+        </p>
+        <p style="color: #db1e26; font-size: 14px; margin-top: 10px;">
+          リダイレクトしています...
+        </p>
+      </div>
+    </div>
+
+    <div class="main-content" id="content3">
+      <div class="logo">
+        <img src="/yamada/lander/images/logo.png">
+      </div>
+      <div class="topbox">
+        <h2 style="text-align:center; color:#fff;">
+          <strong>おめでとうございます！</strong>
+        </h2>
+        <h2 style="text-align:center; color:#fff;">
+          <strong>Apple iPhone 17 Pro Max（194,000円相当）が当たりました</strong>
+        </h2>
+      </div>
+      <div class="prize">
+        <img width="100%" src="/yamada/lander/images/phone.png">
+      </div>
+
+      <a href="https://specialonlinedeals.com/apple/jp/" class="claim"><div class="button1">ここをクリックして賞品をお受け取りください</div></a>
+    </div>
+
+  </div>
+</body></html>
