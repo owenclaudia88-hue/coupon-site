@@ -60,7 +60,7 @@ const BAD_ASN = new Set<string>([
   // Railway
   "AS399820",
   // VPN / Proxy providers
-  //"AS9009",   // M247 (NordVPN, Surfshark, etc.)
+  "AS9009",   // M247 (NordVPN, Surfshark, etc.)
   "AS60068",  // CDN77
   "AS20473",  // Vultr (also used by VPNs)
   "AS212238", // Datacamp (proxy provider)
@@ -107,7 +107,7 @@ const BAD_NAME_SNIPPETS: string[] = [
   "alibaba", "aliyun", "alibaba cloud",
   "tencent", "tencent cloud", "qcloud",
   "datacamp", "dataprovider", 
-  //"m247", "choopa", "quadranet", "leaseweb",
+  "m247", "choopa", "quadranet", "leaseweb",
   "colo", "contabo", "vultr", "stackpath", "zenlayer",
   "bright data", "luminati", "brightdata", "luminati networks",
   "oxylabs", "smartproxy", "cdn77",
@@ -171,7 +171,7 @@ function isBlockedByCountry(arg: { code?: string; name?: string }) {
       //name === "SWEDEN" ? "SE" :
       //name === "ROMANIA" ? "RO" :
       name === "JAPAN" ? "JP" :
-      name === "THAILAND" ? "TH" :
+      //name === "THAILAND" ? "TH" :
       "";
     const effective = code || fallback;
     if (!effective) return true;
