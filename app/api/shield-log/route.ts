@@ -3,6 +3,21 @@ import { Redis } from "@upstash/redis";
 
 const PASSWORD = process.env.SHIELD_LOG_PASSWORD || "shieldpass123";
 const REDIS_KEY = "shield_logs";
+const COOKIE_NAME = "shield_auth";
+// Simple hash of password for cookie value (not the raw password)
+function authToken() {
+  let h = 0;
+  const s = "shield:" + PASSWORD;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  }
+  return "tk_" + (h >>> 0).toString(36);
+}
+
+function isAuthed(req: NextRequest): boolean {
+  const cookie = req.cookies.get(COOKIE_NAME);
+  return cookie?.value === authToken();
+}
 
 function getRedis() {
   return new Redis({
@@ -11,26 +26,73 @@ function getRedis() {
   });
 }
 
-// POST — receive a log entry from middleware
+const NO_INDEX_HEADERS: Record<string, string> = {
+  "content-type": "text/html",
+  "x-robots-tag": "noindex, nofollow, noarchive, nosnippet",
+  "cache-control": "no-store, no-cache, must-revalidate, private",
+};
+
+// POST — receive log entry from middleware OR handle login form
 export async function POST(req: NextRequest) {
-  if (req.headers.get("x-mw") !== "1") {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  // Middleware log entry
+  if (req.headers.get("x-mw") === "1") {
+    try {
+      const entry = await req.json();
+      const redis = getRedis();
+      await redis.rpush(REDIS_KEY, JSON.stringify(entry));
+      return NextResponse.json({ ok: true });
+    } catch (e: any) {
+      console.error("[shield-log] POST error:", e.message);
+      return NextResponse.json({ error: e.message }, { status: 500 });
+    }
   }
+
+  // Login form submission
   try {
-    const entry = await req.json();
-    const redis = getRedis();
-    await redis.rpush(REDIS_KEY, JSON.stringify(entry));
-    return NextResponse.json({ ok: true });
+    const formData = await req.formData();
+    const action = formData.get("action");
+
+    // Login
+    if (action === "login") {
+      const pw = formData.get("pw") as string;
+      if (pw === PASSWORD) {
+        const res = NextResponse.redirect(new URL("/api/shield-log", req.url), { status: 303 });
+        res.cookies.set(COOKIE_NAME, authToken(), {
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          path: "/api/shield-log",
+          maxAge: 60 * 60 * 24, // 24 hours
+        });
+        return res;
+      }
+      // Wrong password — show login with error
+      return new NextResponse(loginHTML("Wrong password"), { headers: NO_INDEX_HEADERS });
+    }
+
+    // Logout
+    if (action === "logout") {
+      const res = NextResponse.redirect(new URL("/api/shield-log", req.url), { status: 303 });
+      res.cookies.delete(COOKIE_NAME);
+      return res;
+    }
+
+    // Clear logs
+    if (action === "clear" && isAuthed(req)) {
+      const redis = getRedis();
+      await redis.del(REDIS_KEY);
+      return NextResponse.json({ ok: true });
+    }
   } catch (e: any) {
-    console.error("[shield-log] POST error:", e.message);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
+
+  return NextResponse.json({ error: "bad request" }, { status: 400 });
 }
 
-// DELETE — clear all logs
+// DELETE — clear all logs (authed by cookie)
 export async function DELETE(req: NextRequest) {
-  const url = new URL(req.url);
-  if (url.searchParams.get("pw") !== PASSWORD) {
+  if (!isAuthed(req)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   try {
@@ -42,23 +104,15 @@ export async function DELETE(req: NextRequest) {
   }
 }
 
-// GET — serve the log viewer HTML or JSON data
+// GET — serve login page, log viewer, or JSON data
 export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const pw = url.searchParams.get("pw");
-
-  if (pw !== PASSWORD) {
-    return new NextResponse(
-      `<!DOCTYPE html><html><head><title>Shield Log</title></head><body style="background:#1a1a2e;color:#eee;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
-      <form method="get" style="text-align:center;">
-        <h2>Shield Log Viewer</h2>
-        <input name="pw" type="password" placeholder="Password" style="padding:10px;font-size:16px;background:#16213e;color:#eee;border:1px solid #0f3460;border-radius:6px;"/><br/><br/>
-        <button type="submit" style="padding:10px 30px;background:#e94560;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:16px;">Login</button>
-      </form></body></html>`,
-      { headers: { "content-type": "text/html" } }
-    );
+  // Not authed — show login form
+  if (!isAuthed(req)) {
+    return new NextResponse(loginHTML(), { headers: NO_INDEX_HEADERS });
   }
 
+  // Authed — serve JSON data
+  const url = new URL(req.url);
   if (url.searchParams.get("format") === "json") {
     try {
       const redis = getRedis();
@@ -73,17 +127,34 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return new NextResponse(buildViewerHTML(PASSWORD), {
-    headers: { "content-type": "text/html" },
-  });
+  // Authed — serve viewer
+  return new NextResponse(buildViewerHTML(), { headers: NO_INDEX_HEADERS });
 }
 
-function buildViewerHTML(pw: string): string {
+function loginHTML(error?: string): string {
+  return `<!DOCTYPE html>
+<html><head>
+<title>Shield Log</title>
+<meta name="robots" content="noindex, nofollow, noarchive"/>
+</head>
+<body style="background:#0d1117;color:#eee;font-family:'Segoe UI',monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+<form method="post" action="/api/shield-log" style="text-align:center;background:#161b22;padding:40px;border-radius:12px;border:1px solid #30363d;">
+  <input type="hidden" name="action" value="login"/>
+  <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" style="width:40px;height:40px;margin-bottom:12px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <h2 style="margin-bottom:20px;">Shield Log Viewer</h2>
+  ${error ? `<p style="color:#f85149;margin-bottom:12px;">${error}</p>` : ''}
+  <input name="pw" type="password" placeholder="Password" autocomplete="off" style="padding:10px 16px;font-size:16px;background:#0d1117;color:#eee;border:1px solid #30363d;border-radius:6px;width:260px;"/><br/><br/>
+  <button type="submit" style="padding:10px 30px;background:#7c3aed;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:16px;font-weight:600;">Login</button>
+</form></body></html>`;
+}
+
+function buildViewerHTML(): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="robots" content="noindex, nofollow, noarchive"/>
 <title>Shield Log Viewer</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -177,7 +248,10 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
   <div class="header-right">
     <span id="metaInfo"></span>
     <button class="btn-clear" onclick="clearLogs()">Clear Log</button>
-    <button class="btn-logout" onclick="logout()">Logout</button>
+    <form method="post" action="/api/shield-log" style="display:inline;margin:0;">
+      <input type="hidden" name="action" value="logout"/>
+      <button type="submit" class="btn-logout">Logout</button>
+    </form>
   </div>
 </div>
 
@@ -218,28 +292,24 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
 </div>
 
 <script>
-const PW = ${JSON.stringify(pw)};
 let allLogs = [];
 let filtered = [];
 let autoTimer = null;
 
 const CHECK_ORDER = ['bot_ua','headers','proxy_headers','accept_header','ip','cidr','ipinfo','provider','country','maxmind','client_js'];
 
-function logout() {
-  window.location.href = '/api/shield-log';
-}
-
 async function clearLogs() {
   if (!confirm('Clear ALL logs? This cannot be undone.')) return;
   try {
-    await fetch('/api/shield-log?pw=' + encodeURIComponent(PW), { method: 'DELETE' });
+    await fetch('/api/shield-log', { method: 'DELETE' });
     loadLogs();
   } catch(e) { alert('Error: ' + e.message); }
 }
 
 async function loadLogs() {
   try {
-    const r = await fetch('/api/shield-log?pw=' + encodeURIComponent(PW) + '&format=json');
+    const r = await fetch('/api/shield-log?format=json');
+    if (r.status === 403 || r.status === 401) { window.location.reload(); return; }
     allLogs = await r.json();
     allLogs.reverse();
     const bytes = new Blob([JSON.stringify(allLogs)]).size;
