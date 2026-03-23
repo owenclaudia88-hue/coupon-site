@@ -60,7 +60,7 @@ const BAD_ASN = new Set<string>([
   // Railway
   "AS399820",
   // VPN / Proxy providers
-  "AS9009",   // M247 (NordVPN, Surfshark, etc.)
+  //"AS9009",   // M247 (NordVPN, Surfshark, etc.)
   "AS60068",  // CDN77
   "AS20473",  // Vultr (also used by VPNs)
   "AS212238", // Datacamp (proxy provider)
