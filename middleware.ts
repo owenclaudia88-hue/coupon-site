@@ -170,7 +170,7 @@ function isBlockedByCountry(arg: { code?: string; name?: string }) {
     const fallback =
       //name === "SWEDEN" ? "SE" :
       //name === "ROMANIA" ? "RO" :
-      name === "JAPAN" ? "JP" :
+      //name === "JAPAN" ? "JP" :
       //name === "THAILAND" ? "TH" :
       "";
     const effective = code || fallback;
