@@ -350,6 +350,16 @@ body { background: #0d1117; color: #e0e0e0; font-family: 'Segoe UI', -apple-syst
 .btn-refresh:hover { background: #2ea043; }
 .auto-label { font-size: 12px; color: #8b949e; display: flex; align-items: center; gap: 4px; }
 
+/* Pagination */
+.pagination { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.pagination button { background: #30363d; color: #c9d1d9; border: 1px solid #484f58; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+.pagination button:hover:not(:disabled) { background: #484f58; }
+.pagination button:disabled { opacity: 0.4; cursor: default; }
+.pagination button.active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+.pagination .page-info { color: #8b949e; font-size: 13px; }
+.page-size-label { color: #8b949e; font-size: 13px; }
+.page-size-select { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; padding: 5px 8px; border-radius: 5px; font-size: 13px; }
+
 /* Table */
 .table-wrap { overflow-x: auto; border: 1px solid #30363d; border-radius: 10px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -459,7 +469,16 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
   <div class="refresh-bar">
     <button class="btn-refresh" onclick="loadLogs()">Refresh</button>
     <label class="auto-label"><input type="checkbox" id="autoRefresh" checked /> Auto-refresh (10s)</label>
+    <span class="page-size-label">Rows per page:</span>
+    <select class="page-size-select" id="pageSize" onchange="onPageSizeChange()">
+      <option value="25">25</option>
+      <option value="50" selected>50</option>
+      <option value="100">100</option>
+      <option value="250">250</option>
+    </select>
   </div>
+
+  <div class="pagination" id="paginationTop"></div>
 
   <div class="table-wrap">
   <table>
@@ -469,12 +488,16 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
   <tbody id="tbody"></tbody>
   </table>
   </div>
+
+  <div class="pagination" id="paginationBottom"></div>
 </div>
 
 <script>
 let allLogs = [];
 let filtered = [];
 let autoTimer = null;
+let currentPage = 1;
+let pageSize = 50;
 
 const CHECK_ORDER = ['bot_ua','headers','proxy_headers','accept_header','ip','cidr','dynamic','ipinfo','provider','country','maxmind','client_js'];
 
@@ -509,6 +532,7 @@ function applyFilters() {
     if (r && !(l.reason || '').toLowerCase().includes(r)) return false;
     return true;
   });
+  currentPage = 1;
   renderStats();
   renderPanels();
   renderTable();
@@ -589,14 +613,57 @@ function esc(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function onPageSizeChange() {
+  pageSize = parseInt(document.getElementById('pageSize').value);
+  currentPage = 1;
+  renderTable();
+}
+
+function goToPage(p) {
+  currentPage = p;
+  renderTable();
+  document.getElementById('paginationTop').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderPagination(totalPages) {
+  if (totalPages <= 1) return '';
+  let html = '';
+  html += '<button onclick="goToPage('+Math.max(1,currentPage-1)+')" '+(currentPage===1?'disabled':'')+'>&#8592; Prev</button>';
+  const delta = 2;
+  let pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+      pages.push(i);
+    }
+  }
+  let prev = null;
+  for (const p of pages) {
+    if (prev !== null && p - prev > 1) html += '<span class="page-info">…</span>';
+    html += '<button class="'+(p===currentPage?'active':'')+'" onclick="goToPage('+p+')">'+p+'</button>';
+    prev = p;
+  }
+  html += '<button onclick="goToPage('+Math.min(totalPages,currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+'>Next &#8594;</button>';
+  html += '<span class="page-info">Page '+currentPage+' of '+totalPages+' ('+filtered.length+' rows)</span>';
+  return html;
+}
+
 function renderTable() {
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * pageSize;
+  const page = filtered.slice(start, start + pageSize);
+
+  const paginHtml = renderPagination(totalPages);
+  document.getElementById('paginationTop').innerHTML = paginHtml;
+  document.getElementById('paginationBottom').innerHTML = paginHtml;
+
   const tbody = document.getElementById('tbody');
   let html = '';
-  filtered.forEach((l, i) => {
+  page.forEach((l, i) => {
     const vc = l.verdict === 'allowed' ? 'v-allow' : 'v-block';
     const vLabel = l.verdict === 'allowed' ? 'allow' : 'block';
     html += '<tr>'
-      + '<td>'+(i+1)+'</td>'
+      + '<td>'+(start+i+1)+'</td>'
       + '<td>'+fmtTime(l.ts)+'</td>'
       + '<td>'+(l.ip||'\\u2014')+'</td>'
       + '<td class="'+vc+'">'+vLabel+'</td>'
