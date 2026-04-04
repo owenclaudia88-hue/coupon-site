@@ -159,10 +159,10 @@ export async function GET(req: NextRequest) {
         redis.smembers("shield_dynamic_snippets"),
         redis.lrange("shield_dynamic_audit", -100, -1),
       ]);
-      const audit = (auditRaw as string[]).map((r) => {
+      const audit = ((auditRaw || []) as string[]).map((r) => {
         try { return typeof r === "string" ? JSON.parse(r) : r; } catch { return r; }
       }).reverse();
-      return NextResponse.json({ ips, asns, snippets, audit });
+      return NextResponse.json({ ips: ips || [], asns: asns || [], snippets: snippets || [], audit });
     } catch (e: any) {
       return NextResponse.json({ error: e.message }, { status: 500 });
     }
@@ -513,13 +513,21 @@ async function loadLogs() {
   try {
     const r = await fetch('/api/shield-log?format=json');
     if (r.status === 403 || r.status === 401) { window.location.reload(); return; }
-    allLogs = await r.json();
+    const data = await r.json();
+    if (!Array.isArray(data)) {
+      document.getElementById('metaInfo').textContent = '\\u26a0 Load error: ' + (data.error || JSON.stringify(data));
+      return;
+    }
+    allLogs = data;
     allLogs.reverse();
     const bytes = new Blob([JSON.stringify(allLogs)]).size;
     const kb = (bytes / 1024).toFixed(1);
-    document.getElementById('metaInfo').textContent = kb + ' KB \\u00b7 ' + allLogs.length + ' entries shown';
+    document.getElementById('metaInfo').textContent = kb + ' KB \\u00b7 ' + allLogs.length + ' entries';
     applyFilters();
-  } catch(e) { console.error(e); }
+  } catch(e) {
+    document.getElementById('metaInfo').textContent = '\\u26a0 Fetch error: ' + e.message;
+    console.error(e);
+  }
 }
 
 function applyFilters() {
@@ -755,10 +763,27 @@ function renderDynamic(data) {
   cols.innerHTML = sections.map(s => {
     const items = (data[s.key] || []).sort();
     const list = items.map(v =>
-      '<li><span>'+esc(v)+'</span><button class="btn-dyn-remove" onclick="dynRemove(\''+s.type+'\',\''+esc(v)+'\')" title="Remove">&times;</button></li>'
+      '<li><span>'+esc(v)+'</span><button class="btn-dyn-remove" data-type="'+s.type+'" data-value="'+esc(v)+'" title="Remove">&times;</button></li>'
     ).join('') || '<li style="color:#8b949e;font-family:sans-serif">Empty</li>';
-    return '<div class="dyn-col"><h4>'+s.label+' <span style="color:#58a6ff">('+items.length+')</span> <button class="btn-dyn-clear" onclick="dynClear(\''+s.type+'\')" title="Clear all">Clear</button></h4><ul class="dyn-list">'+list+'</ul><div class="dyn-add"><input id="dynInput_'+s.type+'" placeholder="'+s.placeholder+'"/><button class="btn-dyn-add" onclick="dynAdd(\''+s.type+'\')">Add</button></div></div>';
+    return '<div class="dyn-col">'
+      + '<h4>'+s.label+' <span style="color:#58a6ff">('+items.length+')</span> <button class="btn-dyn-clear" data-type="'+s.type+'">Clear</button></h4>'
+      + '<ul class="dyn-list">'+list+'</ul>'
+      + '<div class="dyn-add"><input id="dynInput_'+s.type+'" placeholder="'+s.placeholder+'"/><button class="btn-dyn-add" data-type="'+s.type+'">Add</button></div>'
+      + '</div>';
   }).join('');
+
+  // Attach events via delegation to avoid quote issues
+  cols.onclick = function(e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.classList.contains('btn-dyn-remove')) {
+      dynRemove(btn.dataset.type, btn.dataset.value);
+    } else if (btn.classList.contains('btn-dyn-add')) {
+      dynAdd(btn.dataset.type);
+    } else if (btn.classList.contains('btn-dyn-clear')) {
+      dynClear(btn.dataset.type);
+    }
+  };
 
   const audit = data.audit || [];
   const auditHtml = audit.map(a => {
