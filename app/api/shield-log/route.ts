@@ -165,6 +165,8 @@ body { background: #0d1117; color: #e0e0e0; font-family: 'Segoe UI', -apple-syst
 .header-left { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; }
 .header-left svg { width: 22px; height: 22px; }
 .header-right { display: flex; align-items: center; gap: 12px; font-size: 13px; color: #8b949e; }
+.btn-export { background: #1a7f37; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.btn-export:hover { background: #2ea043; }
 .btn-clear { background: #da3633; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
 .btn-clear:hover { background: #f85149; }
 .btn-logout { background: #30363d; color: #c9d1d9; border: 1px solid #484f58; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
@@ -247,6 +249,7 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
   </div>
   <div class="header-right">
     <span id="metaInfo"></span>
+    <button class="btn-export" onclick="exportExcel()">Export Excel</button>
     <button class="btn-clear" onclick="clearLogs()">Clear Log</button>
     <form method="post" action="/api/shield-log" style="display:inline;margin:0;">
       <input type="hidden" name="action" value="logout"/>
@@ -429,6 +432,60 @@ function renderTable() {
       + '</tr>';
   });
   tbody.innerHTML = html;
+}
+
+function exportExcel() {
+  if (!filtered.length) { alert('No data to export.'); return; }
+  const cols = ['#','Time','IP','Verdict','Block Reason','Country','ASN','ISP','bot_ua','headers','proxy_headers','accept_header','ip_check','cidr','ipinfo','provider','country_check','maxmind','client_js','User Agent'];
+  const rows = filtered.map((l, i) => {
+    const c = l.checks || {};
+    const checkVal = k => {
+      const v = c[k];
+      if (v === undefined) return 'skip';
+      if (v === 'pass' || v === 'present' || v === 'fetched') return 'pass';
+      if (typeof v === 'string' && v.startsWith('BLOCKED')) return 'BLOCKED: ' + v.replace(/^BLOCKED[_\\s]*/i,'');
+      return v;
+    };
+    return [
+      i+1,
+      fmtTime(l.ts),
+      l.ip || '',
+      l.verdict || '',
+      l.reason || '',
+      l.countryCode || '',
+      l.asn || '',
+      l.isp || '',
+      checkVal('bot_ua'),
+      checkVal('headers'),
+      checkVal('proxy_headers'),
+      checkVal('accept_header'),
+      checkVal('ip'),
+      checkVal('cidr'),
+      checkVal('ipinfo'),
+      checkVal('provider'),
+      checkVal('country'),
+      checkVal('maxmind'),
+      checkVal('client_js'),
+      l.ua || ''
+    ];
+  });
+
+  // Build CSV (Excel-compatible)
+  const escape = v => {
+    const s = String(v);
+    if (s.includes(',') || s.includes('"') || s.includes('\\n')) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  };
+  const csv = [cols, ...rows].map(r => r.map(escape).join(',')).join('\\r\\n');
+  const bom = '\\uFEFF'; // UTF-8 BOM so Excel reads special chars correctly
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = 'shield-log-' + date + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function startAutoRefresh() { stopAutoRefresh(); autoTimer = setInterval(loadLogs, 10000); }
