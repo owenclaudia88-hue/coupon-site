@@ -504,8 +504,20 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
       </div>
     </h3>
     <div class="dyn-cols" id="dynCols">Loading...</div>
-    <h3 style="margin-top:8px;margin-bottom:12px;">Auto-add Audit Log</h3>
+    <h3 style="margin-top:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+      Auto-add Audit Log
+      <span style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:400;">
+        Rows per page:
+        <select class="page-size-select" id="auditPageSize" onchange="auditPage=1;renderAudit()" style="padding:3px 6px;font-size:12px;">
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </span>
+    </h3>
+    <div class="pagination" id="auditPagTop"></div>
     <div style="overflow-x:auto;border:1px solid #30363d;border-radius:8px;"><table class="audit-table"><thead><tr><th>Time</th><th>Action</th><th>Type</th><th>Value</th><th>Trigger Reason</th><th>Trigger IP</th></tr></thead><tbody id="dynAudit"></tbody></table></div>
+    <div class="pagination" id="auditPagBottom"></div>
   </div>
 
   <div class="filters">
@@ -557,6 +569,8 @@ let filtered = [];
 let autoTimer = null;
 let currentPage = 1;
 let pageSize = 50;
+let auditData = [];
+let auditPage = 1;
 
 const CHECK_ORDER = ['bot_ua','headers','proxy_headers','accept_header','ip','cidr','dynamic','ipinfo','provider','country','maxmind','client_js'];
 
@@ -692,25 +706,23 @@ function goToPage(p) {
   document.getElementById('paginationTop').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function renderPagination(totalPages) {
+function renderPagination(totalPages, page, total, onPage) {
   if (totalPages <= 1) return '';
   let html = '';
-  html += '<button onclick="goToPage('+Math.max(1,currentPage-1)+')" '+(currentPage===1?'disabled':'')+'>&#8592; Prev</button>';
+  html += '<button '+(page===1?'disabled':'')+' onclick="('+onPage.toString()+')('+Math.max(1,page-1)+')">&#8592; Prev</button>';
   const delta = 2;
   let pages = [];
   for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
-      pages.push(i);
-    }
+    if (i === 1 || i === totalPages || (i >= page - delta && i <= page + delta)) pages.push(i);
   }
   let prev = null;
   for (const p of pages) {
     if (prev !== null && p - prev > 1) html += '<span class="page-info">…</span>';
-    html += '<button class="'+(p===currentPage?'active':'')+'" onclick="goToPage('+p+')">'+p+'</button>';
+    html += '<button class="'+(p===page?'active':'')+'" onclick="('+onPage.toString()+')('+p+')">'+p+'</button>';
     prev = p;
   }
-  html += '<button onclick="goToPage('+Math.min(totalPages,currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+'>Next &#8594;</button>';
-  html += '<span class="page-info">Page '+currentPage+' of '+totalPages+' ('+filtered.length+' rows)</span>';
+  html += '<button '+(page===totalPages?'disabled':'')+' onclick="('+onPage.toString()+')('+Math.min(totalPages,page+1)+')">Next &#8594;</button>';
+  html += '<span class="page-info">Page '+page+' of '+totalPages+' ('+total+' rows)</span>';
   return html;
 }
 
@@ -720,7 +732,7 @@ function renderTable() {
   const start = (currentPage - 1) * pageSize;
   const page = filtered.slice(start, start + pageSize);
 
-  const paginHtml = renderPagination(totalPages);
+  const paginHtml = renderPagination(totalPages, currentPage, filtered.length, goToPage);
   document.getElementById('paginationTop').innerHTML = paginHtml;
   document.getElementById('paginationBottom').innerHTML = paginHtml;
 
@@ -844,8 +856,23 @@ function renderDynamic(data) {
     }
   };
 
-  const audit = data.audit || [];
-  const auditHtml = audit.map(a => {
+  auditData = data.audit || [];
+  auditPage = 1;
+  renderAudit();
+}
+
+function renderAudit() {
+  const ps = parseInt(document.getElementById('auditPageSize').value) || 25;
+  const totalPages = Math.max(1, Math.ceil(auditData.length / ps));
+  if (auditPage > totalPages) auditPage = totalPages;
+  const start = (auditPage - 1) * ps;
+  const page = auditData.slice(start, start + ps);
+
+  const paginHtml = auditData.length > ps ? renderPagination(totalPages, auditPage, auditData.length, function(p){ auditPage=p; renderAudit(); }) : '';
+  document.getElementById('auditPagTop').innerHTML = paginHtml;
+  document.getElementById('auditPagBottom').innerHTML = paginHtml;
+
+  const auditHtml = page.map(a => {
     const badge = a.action === 'auto-add' ? '<span class="badge-auto">auto</span>'
       : a.action === 'manual-add' ? '<span class="badge-manual-add">+manual</span>'
       : '<span class="badge-manual-remove">&minus;manual</span>';
