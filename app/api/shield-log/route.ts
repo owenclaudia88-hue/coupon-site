@@ -219,6 +219,20 @@ function isSafeSnippet(name: string): boolean {
   return true;
 }
 
+// Known platform signatures in UA — if present, we're confident it's a bot from that org
+const PLATFORM_UA_SIGNATURES = /fban|fb4a|fbios|fbav|fbbv|fblc|fb_iab|instagram|googlebot|adsbot|google-read-aloud|google-inspectiontool|bingbot|bingpreview|msnbot|adidxbot|bytespider|bytedance|tiktok|pinterestbot|linkedinbot|twitterbot|applebot|meta-externalagent|meta-externalfetcher|amazonbot|yandex|baiduspider|semrush|ahrefs/i;
+
+// Returns true only when we're confident enough to block the whole ASN
+function isHighConfidenceBot(reason: string, ua: string): boolean {
+  // ISP/ASN already confirmed bad — always high confidence
+  if (reason.startsWith("bad_name_snippet:") || reason.startsWith("bad_asn:") || reason.startsWith("maxmind:")) return true;
+  // bot_ua + UA contains a known platform signature → high confidence
+  if (reason === "bot_ua" && PLATFORM_UA_SIGNATURES.test(ua)) return true;
+  // cidr + UA contains known platform signature → high confidence
+  if (reason === "cidr" && PLATFORM_UA_SIGNATURES.test(ua)) return true;
+  return false;
+}
+
 async function ipinfoForDynamic(ip: string): Promise<{ asn: string; isp: string }> {
   const token = process.env.IPINFO_TOKEN;
   if (!token || !ip) return { asn: "", isp: "" };
@@ -257,11 +271,14 @@ async function autoDynamicBlock(entry: Record<string, any>, redis: ReturnType<ty
       isp = info.isp;
     }
 
+    const ua: string = (entry.ua || "").toLowerCase();
+    const highConfidence = isHighConfidenceBot(reason, ua);
     const toAdd: Array<{ key: string; value: string; type: string }> = [];
 
     if (reason === "bot_ua") {
       if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
-      if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
+      // Only add ASN if UA confirms a known platform (not just any generic bot pattern)
+      if (asn && highConfidence) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
     } else if (reason.startsWith("bad_name_snippet:")) {
       if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
       if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
@@ -270,7 +287,8 @@ async function autoDynamicBlock(entry: Record<string, any>, redis: ReturnType<ty
       if (isp && isSafeSnippet(isp)) toAdd.push({ key: "shield_dynamic_snippets", value: isp, type: "snippet" });
     } else if (reason === "cidr") {
       if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
-      if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
+      // Only add ASN if UA also confirms a known platform (CIDR alone may cover legit IP ranges)
+      if (asn && highConfidence) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
     } else if (reason.startsWith("maxmind:")) {
       if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
       if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
