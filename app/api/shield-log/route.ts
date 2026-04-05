@@ -118,6 +118,36 @@ export async function POST(req: NextRequest) {
         await redis.del(keyMap[type]);
         return NextResponse.json({ ok: true });
       }
+
+      if (action === "dynamic-enrich-asns") {
+        const ips = (await redis.smembers("shield_dynamic_ips")) as string[];
+        const existingAsns = new Set((await redis.smembers("shield_dynamic_asns")) as string[]);
+        const token = process.env.IPINFO_TOKEN;
+        if (!token) return NextResponse.json({ error: "No IPINFO_TOKEN" }, { status: 500 });
+
+        let added = 0;
+        // Process in batches of 10 to avoid timeout
+        const BATCH = 10;
+        for (let i = 0; i < ips.length; i += BATCH) {
+          const batch = ips.slice(i, i + BATCH);
+          const results = await Promise.all(batch.map(ip => ipinfoForDynamic(ip)));
+          const pipeline = redis.pipeline();
+          for (let j = 0; j < batch.length; j++) {
+            const { asn } = results[j];
+            if (asn && !existingAsns.has(asn)) {
+              pipeline.sadd("shield_dynamic_asns", asn);
+              pipeline.rpush("shield_dynamic_audit", JSON.stringify({
+                ts: Date.now(), action: "auto-add", type: "asn", value: asn,
+                trigger_reason: "enrich-backfill", trigger_ip: batch[j], trigger_asn: asn, trigger_isp: results[j].isp,
+              }));
+              existingAsns.add(asn);
+              added++;
+            }
+          }
+          await pipeline.exec();
+        }
+        return NextResponse.json({ ok: true, added });
+      }
     }
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
@@ -467,7 +497,11 @@ tbody td { padding: 8px 12px; vertical-align: middle; white-space: nowrap; }
 
   <div class="dyn-panel" id="dynPanel">
     <h3>Dynamic Blocklists
-      <button class="btn-refresh" onclick="loadDynamic()" style="font-size:12px;padding:4px 12px;">Refresh</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-refresh" onclick="loadDynamic()" style="font-size:12px;padding:4px 12px;">Refresh</button>
+        <button class="btn-dyn-add" id="enrichBtn" onclick="enrichAsns()" style="font-size:12px;padding:4px 12px;">Enrich ASNs from IPs</button>
+        <span id="enrichStatus" style="font-size:12px;color:#8b949e;"></span>
+      </div>
     </h3>
     <div class="dyn-cols" id="dynCols">Loading...</div>
     <h3 style="margin-top:8px;margin-bottom:12px;">Auto-add Audit Log</h3>
@@ -835,6 +869,28 @@ async function dynAdd(type) {
   await fetch('/api/shield-log', { method:'POST', body:fd });
   input.value = '';
   loadDynamic();
+}
+
+async function enrichAsns() {
+  const btn = document.getElementById('enrichBtn');
+  const status = document.getElementById('enrichStatus');
+  btn.disabled = true;
+  status.textContent = 'Looking up ASNs...';
+  try {
+    const fd = new FormData();
+    fd.append('action', 'dynamic-enrich-asns');
+    const r = await fetch('/api/shield-log', { method: 'POST', body: fd });
+    const data = await r.json();
+    if (data.ok) {
+      status.textContent = data.added + ' new ASNs added.';
+      loadDynamic();
+    } else {
+      status.textContent = 'Error: ' + (data.error || 'unknown');
+    }
+  } catch(e) {
+    status.textContent = 'Error: ' + e.message;
+  }
+  btn.disabled = false;
 }
 
 async function dynClear(type) {
