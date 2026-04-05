@@ -210,6 +210,8 @@ const SKIP_SNIPPETS_CONTAINS = [
 function isSafeSnippet(name: string): boolean {
   const s = name.toLowerCase().trim();
   if (s.length < 5) return false;
+  if (s.includes(",")) return false; // "amazon.com, inc." style — too broad
+  if (s.includes(".")) return false; // domain names — too specific/fragile
   if (SKIP_SNIPPETS_EXACT.has(s)) return false;
   for (const forbidden of SKIP_SNIPPETS_CONTAINS) {
     if (s.includes(forbidden)) return false;
