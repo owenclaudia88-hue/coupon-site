@@ -239,16 +239,83 @@ const SKIP_SNIPPETS_CONTAINS = [
   "communications", "hosting", "cloud", "provider", "service",
 ];
 
-function isSafeSnippet(name: string): boolean {
-  const s = name.toLowerCase().trim();
-  if (s.length < 5) return false;
-  if (s.includes(",")) return false; // "amazon.com, inc." style — too broad
-  if (s.includes(".")) return false; // domain names — too specific/fragile
-  if (SKIP_SNIPPETS_EXACT.has(s)) return false;
-  for (const forbidden of SKIP_SNIPPETS_CONTAINS) {
-    if (s.includes(forbidden)) return false;
+// Legal/corporate suffixes to strip from ISP names before using as snippets
+const STRIP_SUFFIXES = [
+  ", inc.", ", inc", " inc.", " inc", ", llc.", ", llc", " llc.", " llc",
+  ", ltd.", ", ltd", " ltd.", " ltd", ", corp.", ", corp", " corp.", " corp",
+  ", co.", ", co", " co.", ", plc", " plc", ", gmbh", " gmbh",
+  ", bv", " bv", ", ab", " ab", ", sa", " sa", ", srl", " srl",
+  ", sas", " sas", ", oy", " oy", ", ag", " ag", ", nv", " nv",
+  " corporation", " company", " limited", " holding", " holdings",
+];
+
+// Static ISP snippets already hardcoded in middleware — skip adding duplicates
+const STATIC_SNIPPETS = new Set([
+  "google", "google llc", "google cloud", "google ireland limited", "googleusercontent.com",
+  "1e100.net", "gvt1.com", "google.com", "youtube", "ggc", "googlebot",
+  "meta", "meta platforms", "facebook", "facebook inc", "fb.com", "instagram", "whatsapp",
+  "oculus", "threads", "facebook.com", "instagram.com", "meta.com",
+  "microsoft", "microsoft corporation", "azure", "windows.net", "bing", "msn",
+  "linkedin", "linkedin corporation", "microsoft.com", "azure.com", "linkedin.com",
+  "amazon", "amazon technologies", "amazon web services", "aws", "amazonaws.com", "cloudfront.net",
+  "cloudflare", "cloudflare, inc", "cloudflare.com",
+  "akamai", "akamai technologies", "akamai international", "akamaiedge.net",
+  "akamaitechnologies.com", "akamai.com", "prolexic",
+  "fastly", "fastly, inc", "fastly.com", "fastly.net",
+  "linode", "linode, llc", "linode.com",
+  "tiktok", "bytedance", "bytecdn", "byteoversea",
+  "digitalocean", "do-user", "digital ocean",
+  "hetzner", "hetzner online", "ovh", "ovh sas", "ovhcloud",
+  "oracle", "oracle cloud", "oracle corporation",
+  "alibaba", "aliyun", "alibaba cloud", "tencent", "tencent cloud", "qcloud",
+  "datacamp", "dataprovider", "m247", "choopa", "quadranet", "leaseweb",
+  "colo", "contabo", "vultr", "stackpath", "zenlayer",
+  "bright data", "luminati", "brightdata", "luminati networks",
+  "oxylabs", "smartproxy", "cdn77", "scaleway", "online.net", "kamatera",
+  "upcloud", "hostinger", "ionos", "1and1", "1&1", "fly.io", "render.com", "railway",
+  "godaddy", "namecheap", "hostgator", "bluehost", "siteground",
+  "dreamhost", "rackspace", "softlayer", "ibm cloud",
+  "worldstream", "maxihost", "serverion", "nforce",
+  "nordvpn", "expressvpn", "surfshark", "cyberghost", "private internet access",
+  "protonvpn", "proton vpn", "mullvad", "ipvanish", "tunnelbear",
+  "windscribe", "strongvpn", "hide.me", "purevpn", "hotspot shield",
+  "zscaler", "forcepoint", "netskope", "palo alto", "fortinet",
+  "cisco umbrella", "umbrella", "proxy", "vpn", "anonymizer",
+  "tor exit", "tor project",
+  "geoedge", "confiant", "doubleverify", "integral ad science",
+  "the media trust", "adloox", "forensiq", "pixalate", "moat",
+  "grapeshot", "comscore", "nielsen", "white ops", "human security",
+  "triple t broadband public company limited", "triple t broadband", "3bb",
+  "cogent", "he.net", "hurricane electric",
+]);
+
+function cleanSnippet(name: string): string {
+  let s = name.toLowerCase().trim();
+  // Strip trailing punctuation
+  s = s.replace(/[.,;:!?]+$/, "").trim();
+  // Strip legal suffixes (longest first to avoid partial matches)
+  for (const suffix of STRIP_SUFFIXES) {
+    if (s.endsWith(suffix)) {
+      s = s.slice(0, s.length - suffix.length).trim();
+      break;
+    }
   }
-  return true;
+  // Strip trailing punctuation again after suffix removal
+  s = s.replace(/[.,;:!?]+$/, "").trim();
+  return s;
+}
+
+function isSafeSnippet(name: string): string | null {
+  const cleaned = cleanSnippet(name);
+  if (cleaned.length < 5) return null;
+  if (cleaned.includes(".")) return null; // still a domain after cleaning
+  if (SKIP_SNIPPETS_EXACT.has(cleaned)) return null;
+  for (const forbidden of SKIP_SNIPPETS_CONTAINS) {
+    if (cleaned.includes(forbidden)) return null;
+  }
+  // Skip if already in static list
+  if (STATIC_SNIPPETS.has(cleaned)) return null;
+  return cleaned; // return the cleaned value to use
 }
 
 
@@ -298,12 +365,9 @@ async function autoDynamicBlock(entry: Record<string, any>, redis: ReturnType<ty
     // For all block types: add ASN if available
     if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
 
-    if (reason.startsWith("bad_asn:")) {
-      // ASN match — also add ISP snippet to catch related ASNs in future
-      if (isp && isSafeSnippet(isp)) toAdd.push({ key: "shield_dynamic_snippets", value: isp, type: "snippet" });
-    } else if (reason === "bot_ua" || reason === "cidr") {
-      // If ISP name looks like a new bad provider not already in our static list, add as snippet
-      if (isp && isSafeSnippet(isp)) toAdd.push({ key: "shield_dynamic_snippets", value: isp, type: "snippet" });
+    if (reason.startsWith("bad_asn:") || reason === "bot_ua" || reason === "cidr") {
+      const safeSnippet = isp ? isSafeSnippet(isp) : null;
+      if (safeSnippet) toAdd.push({ key: "shield_dynamic_snippets", value: safeSnippet, type: "snippet" });
     }
 
     if (toAdd.length === 0) return;
