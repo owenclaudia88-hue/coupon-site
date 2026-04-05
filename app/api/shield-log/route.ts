@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
           const batch = ips.slice(i, i + BATCH);
           const results = await Promise.all(batch.map(ip => ipinfoForDynamic(ip)));
           const pipeline = redis.pipeline();
+          let batchHasWork = false;
           for (let j = 0; j < batch.length; j++) {
             const { asn } = results[j];
             if (asn && !existingAsns.has(asn)) {
@@ -142,9 +143,10 @@ export async function POST(req: NextRequest) {
               }));
               existingAsns.add(asn);
               added++;
+              batchHasWork = true;
             }
           }
-          await pipeline.exec();
+          if (batchHasWork) await pipeline.exec();
         }
         return NextResponse.json({ ok: true, added });
       }
