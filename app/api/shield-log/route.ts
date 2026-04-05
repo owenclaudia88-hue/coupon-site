@@ -217,12 +217,28 @@ function isSafeSnippet(name: string): boolean {
   return true;
 }
 
+async function ipinfoForDynamic(ip: string): Promise<{ asn: string; isp: string }> {
+  const token = process.env.IPINFO_TOKEN;
+  if (!token || !ip) return { asn: "", isp: "" };
+  try {
+    const res = await fetch(
+      `https://api.ipinfo.io/lite/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`,
+      { signal: AbortSignal.timeout(1500), cache: "no-store" }
+    );
+    if (!res.ok) return { asn: "", isp: "" };
+    const j = await res.json();
+    return { asn: (j.asn || "").toUpperCase(), isp: (j.as_name || "").toLowerCase() };
+  } catch {
+    return { asn: "", isp: "" };
+  }
+}
+
 async function autoDynamicBlock(entry: Record<string, any>, redis: ReturnType<typeof getRedis>) {
   try {
     const reason: string = entry.reason || "";
     const ip: string = (entry.ip || "").trim();
-    const asn: string = (entry.asn || "").toUpperCase().trim();
-    const isp: string = (entry.isp || "").toLowerCase().trim();
+    let asn: string = (entry.asn || "").toUpperCase().trim();
+    let isp: string = (entry.isp || "").toLowerCase().trim();
 
     // Never cascade on these
     if (!reason || reason === "allowed") return;
@@ -230,6 +246,14 @@ async function autoDynamicBlock(entry: Record<string, any>, redis: ReturnType<ty
     if (reason.startsWith("dynamic_")) return;
     if (reason === "no_ip") return;
     if (reason.startsWith("suspicious_") || reason.startsWith("proxy_header") || reason === "suspicious_accept") return;
+
+    // For early blocks (bot_ua, cidr) IPinfo hasn't run yet — look it up now to get ASN
+    const needsLookup = (reason === "bot_ua" || reason === "cidr") && !asn && ip;
+    if (needsLookup) {
+      const info = await ipinfoForDynamic(ip);
+      asn = info.asn;
+      isp = info.isp;
+    }
 
     const toAdd: Array<{ key: string; value: string; type: string }> = [];
 
@@ -244,6 +268,7 @@ async function autoDynamicBlock(entry: Record<string, any>, redis: ReturnType<ty
       if (isp && isSafeSnippet(isp)) toAdd.push({ key: "shield_dynamic_snippets", value: isp, type: "snippet" });
     } else if (reason === "cidr") {
       if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
+      if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
     } else if (reason.startsWith("maxmind:")) {
       if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
       if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
