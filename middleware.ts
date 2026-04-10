@@ -3,7 +3,10 @@ import { NextResponse, NextRequest } from "next/server";
 import { Redis } from "@upstash/redis";
 
 export const config = {
-  matcher: ["/elgiganten/verify/:path*", "/yamada", "/yamada/verify/:path*", "/yamada/lander/:path*"],
+  matcher: [
+    "/elgiganten", "/elgiganten/lander/:path*", "/elgiganten/verify/:path*",
+    "/yamada", "/yamada/verify/:path*", "/yamada/lander/:path*",
+  ],
 };
 
 /* ========= Dynamic blocklist cache ========= */
@@ -555,6 +558,62 @@ export async function middleware(req: NextRequest) {
   const ua = req.headers.get("user-agent") || "";
   const ip = getClientIp(req);
   log("— MW START —", { path: pathname, ip, ua });
+
+  // ──────────────────────────────────────────────────────────────────────
+  // /elgiganten (exact) — CLOAKING: guard decides which page to show
+  //   blocked (bot/reviewer) → NextResponse.next() → page.tsx (safe coupon page)
+  //   real user              → rewrite to /elgiganten/lander/ → index.html (prelander)
+  //   URL always stays discountnation.website/elgiganten
+  // ──────────────────────────────────────────────────────────────────────
+  if (pathname === "/elgiganten" || pathname === "/elgiganten/") {
+    const guard = await runGuard(req, ip);
+    const verdict = guard.blocked ? "blocked" : "allowed";
+    sendShieldLog(req, {
+      ts: Date.now(),
+      ip,
+      ua,
+      path: pathname,
+      verdict,
+      reason: guard.reason,
+      checks: guard.checks,
+      country: guard.country || "",
+      countryCode: guard.countryCode || "",
+      asn: guard.asn || "",
+      isp: guard.isp || "",
+    });
+    if (guard.blocked) {
+      log("Guard → show safe page (page.tsx)");
+      return NextResponse.next();
+    }
+    log("Guard → show prelander (rewrite to /elgiganten/lander/)");
+    return NextResponse.rewrite(new URL("/elgiganten/lander/", req.url));
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // /elgiganten/lander/* — block bots, let real users through
+  // ──────────────────────────────────────────────────────────────────────
+  if (pathname.startsWith("/elgiganten/lander")) {
+    const guard = await runGuard(req, ip);
+    sendShieldLog(req, {
+      ts: Date.now(),
+      ip,
+      ua,
+      path: pathname,
+      verdict: guard.blocked ? "blocked" : "allowed",
+      reason: guard.reason,
+      checks: guard.checks,
+      country: guard.country || "",
+      countryCode: guard.countryCode || "",
+      asn: guard.asn || "",
+      isp: guard.isp || "",
+    });
+    if (guard.blocked) {
+      log("Block on lander sub-route → /elgiganten");
+      return NextResponse.redirect(new URL("/elgiganten", req.url), { status: 302 });
+    }
+    log("Allow through lander sub-route");
+    return NextResponse.next();
+  }
 
   // ──────────────────────────────────────────────────────────────────────
   // /yamada (exact) — CLOAKING: guard decides which page to show

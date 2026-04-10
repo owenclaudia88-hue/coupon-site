@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Primary Colors */
+  --color-primary: #000000; /* black - Premium brand anchor + sophisticated trust */
+  --color-secondary: #007AFF; /* blue-500 - iPhone blue for brand association + quiz CTAs */
+  --color-accent: #FF3B30; /* red-500 - Discount highlights + urgency elements only */
+  
+  /* Background Colors */
+  --color-background: #FFFFFF; /* white - Clean canvas maximizing content focus */
+  --color-surface: #F2F2F7; /* gray-50 - Subtle section separation without borders */
+  
+  /* Text Colors */
+  --color-text-primary: #1D1D1F; /* gray-900 - High contrast for effortless scanning */
+  --color-text-secondary: #86868B; /* gray-500 - Supporting details without distraction */
+  
+  /* Status Colors */
+  --color-success: #34C759; /* green-500 - Quiz completion + qualification confirmation */
+  --color-warning: #FF9500; /* orange-500 - Limited availability notifications */
+  --color-error: #FF3B30; /* red-500 - Form validation feedback only */
+  
+  /* Border Colors */
+  --color-border: #E5E5EA; /* gray-200 - Minimal borders for form fields */
+  --color-border-active: #007AFF; /* blue-500 - Active states only */
+  
+  /* Elgiganten Brand Colors - Updated to match official website */
+  --elgiganten-blue: #1e3a8a; /* Dark navy/royal blue - primary brand background from website */
+  --elgiganten-dark-blue: #1e40af; /* Deeper blue for hover states and emphasis */
+  --elgiganten-green: #84cc16; /* Bright lime green - for buttons and accents as seen on website */
+  --elgiganten-bright-green: #65a30d; /* Darker lime green for hover states */
+  --elgiganten-red: #dc2626; /* Red for urgent notifications and warnings */
+  --elgiganten-yellow: #fbbf24; /* Yellow for highlights and attention */
+  --elgiganten-white: #ffffff; /* Pure white for text on dark backgrounds */
+  --elgiganten-light-gray: #f8fafc; /* Very light background for sections */
+  --elgiganten-medium-gray: #e2e8f0; /* Medium background for cards */
+  --elgiganten-dark-gray: #334155; /* Dark gray for secondary text */
+  
+  /* Shadow Colors - Updated for new brand colors */
+  --shadow-cta: 0 4px 14px 0 rgba(132, 204, 22, 0.25);
+  --shadow-card: 0 2px 10px 0 rgba(0, 0, 0, 0.1);
+  --shadow-elgiganten: 0 4px 20px 0 rgba(30, 58, 138, 0.25);
+  --shadow-elgiganten-green: 0 4px 16px 0 rgba(132, 204, 22, 0.3);
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--color-text-primary);
+    background-color: var(--color-background);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+  }
+  
+  .font-sf-pro {
+    font-family: 'SF Pro Display', sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-secondary text-white font-semibold py-3 px-6 rounded-lg transition-all duration-250 ease-in-out;
+    box-shadow: var(--shadow-cta);
+  }
+  
+  .btn-primary:hover {
+    @apply bg-blue-600 transform -translate-y-0.5;
+  }
+  
+  .card-quiz {
+    @apply bg-white rounded-lg p-6 border border-gray-200;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .countdown-timer {
+    @apply bg-accent text-white font-bold px-4 py-2 rounded-md;
+  }
+  
+  .progress-bar {
+    @apply bg-secondary h-2 rounded-full transition-all duration-250 ease-in-out;
+  }
+  
+  /* Elgiganten Brand Components - Updated with authentic website colors */
+  .elgiganten-primary {
+    background-color: var(--elgiganten-green);
+    color: white;
+    box-shadow: var(--shadow-elgiganten-green);
+  }
+  
+  .elgiganten-primary:hover {
+    background-color: var(--elgiganten-bright-green);
+    transform: translateY(-2px);
+  }
+  
+  .elgiganten-secondary {
+    background-color: var(--elgiganten-blue);
+    color: white;
+  }
+  
+  .elgiganten-secondary:hover {
+    background-color: var(--elgiganten-dark-blue);
+  }
+  
+  .elgiganten-accent {
+    background-color: var(--elgiganten-green);
+    color: white;
+  }
+  
+  .elgiganten-accent:hover {
+    background-color: var(--elgiganten-bright-green);
+  }
+  
+  .elgiganten-warning {
+    background-color: var(--elgiganten-yellow);
+    color: #000000;
+  }
+  
+  .elgiganten-light {
+    background-color: var(--elgiganten-light-gray);
+  }
+  
+  .elgiganten-text-primary {
+    color: var(--elgiganten-blue);
+  }
+  
+  .elgiganten-text-accent {
+    color: var(--elgiganten-green);
+  }
+  
+  .elgiganten-text-blue {
+    color: var(--elgiganten-blue);
+  }
+  
+  .elgiganten-text-white {
+    color: var(--elgiganten-white);
+  }
+  
+  .elgiganten-bg-blue {
+    background-color: var(--elgiganten-blue);
+  }
+  
+  .elgiganten-bg-dark-blue {
+    background-color: var(--elgiganten-dark-blue);
+  }
+  
+  .elgiganten-bg-green {
+    background-color: var(--elgiganten-green);
+  }
+  
+  .elgiganten-logo {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--elgiganten-white);
+  }
+  
+  /* Facebook Comment Styles */
+  .facebook-comment {
+    @apply bg-gray-50 rounded-lg p-3 mb-2;
+  }
+  
+  .facebook-reactions {
+    @apply flex items-center space-x-4 text-xs text-gray-500 mt-2;
+  }
+  
+  .facebook-reaction {
+    @apply hover:text-blue-600 cursor-pointer transition-colors;
+  }
+
+  /* Updated button styles for Elgiganten branding */
+  .btn-elgiganten {
+    background-color: var(--elgiganten-green);
+    color: white;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transition: all 250ms ease-in-out;
+    box-shadow: var(--shadow-elgiganten-green);
+  }
+  
+  .btn-elgiganten:hover {
+    background-color: var(--elgiganten-bright-green);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px 0 rgba(132, 204, 22, 0.4);
+  }
+}
+
+@layer utilities {
+  .text-discount {
+    color: var(--color-accent);
+  }
+  
+  .text-success {
+    color: var(--color-success);
+  }
+  
+  .text-warning {
+    color: var(--color-warning);
+  }
+  
+  .bg-surface {
+    background-color: var(--color-surface);
+  }
+  
+  .border-active {
+    border-color: var(--color-border-active);
+    border-width: 2px;
+  }
+  
+  .shadow-cta {
+    box-shadow: var(--shadow-cta);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-elgiganten {
+    box-shadow: var(--shadow-elgiganten);
+  }
+  
+  .shadow-elgiganten-green {
+    box-shadow: var(--shadow-elgiganten-green);
+  }
+  
+  .transition-smooth {
+    transition: all 250ms ease-in-out;
+  }
+
+  /* Gradient backgrounds matching Elgiganten website */
+  .bg-elgiganten-gradient {
+    background: linear-gradient(135deg, var(--elgiganten-blue) 0%, var(--elgiganten-dark-blue) 100%);
+  }
+
+  .bg-elgiganten-gradient-green {
+    background: linear-gradient(135deg, var(--elgiganten-green) 0%, var(--elgiganten-bright-green) 100%);
+  }
+}
