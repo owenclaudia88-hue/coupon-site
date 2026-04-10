@@ -40,6 +40,8 @@ export async function POST(req: NextRequest) {
       const entry = await req.json();
       const redis = getRedis();
       await redis.rpush(REDIS_KEY, JSON.stringify(entry));
+      // Keep only the last 5000 entries to avoid hitting Upstash's 10MB request size limit
+      await redis.ltrim(REDIS_KEY, -5000, -1);
       if (entry.verdict === "blocked") {
         await autoDynamicBlock(entry, redis);
       }
@@ -203,7 +205,8 @@ export async function GET(req: NextRequest) {
   if (url.searchParams.get("format") === "json") {
     try {
       const redis = getRedis();
-      const raw: string[] = await redis.lrange(REDIS_KEY, 0, -1);
+      // Fetch only the last 5000 entries to stay well under Upstash's 10MB request limit
+      const raw: string[] = await redis.lrange(REDIS_KEY, -5000, -1);
       const logs = raw.map((r) => {
         try { return typeof r === "string" ? JSON.parse(r) : r; }
         catch { return r; }
