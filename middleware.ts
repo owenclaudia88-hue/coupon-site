@@ -591,8 +591,14 @@ export async function middleware(req: NextRequest) {
 
   // ──────────────────────────────────────────────────────────────────────
   // /elgiganten/lander/* — block bots, let real users through
+  // Static assets (css, images, js, fonts) bypass the guard — they are
+  // only loadable by someone who already passed the main /elgiganten guard.
+  // .html files remain guarded to block direct URL access.
   // ──────────────────────────────────────────────────────────────────────
   if (pathname.startsWith("/elgiganten/lander")) {
+    if (/\.(css|js|png|jpg|jpeg|gif|svg|ico|webp|avif|woff2?|ttf|eot)$/i.test(pathname)) {
+      return NextResponse.next();
+    }
     const guard = await runGuard(req, ip);
     sendShieldLog(req, {
       ts: Date.now(),
@@ -649,6 +655,10 @@ export async function middleware(req: NextRequest) {
   // /yamada/verify/* and /yamada/lander/* — block bots, let real users through
   // ──────────────────────────────────────────────────────────────────────
   if (pathname.startsWith("/yamada/verify") || pathname.startsWith("/yamada/lander")) {
+    // Static assets bypass the guard (same logic as elgiganten/lander)
+    if (/\.(css|js|png|jpg|jpeg|gif|svg|ico|webp|avif|woff2?|ttf|eot)$/i.test(pathname)) {
+      return NextResponse.next();
+    }
     const REDIRECT_URL = "/yamada";
     const guard = await runGuard(req, ip);
     sendShieldLog(req, {
