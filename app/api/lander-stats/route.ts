@@ -100,15 +100,35 @@ export async function GET(req: NextRequest) {
   if (url.searchParams.get("format") === "json") {
     try {
       const redis = getRedis();
-      const [views, checkouts, eventsRaw] = await Promise.all([
+      const perPage = Math.min(parseInt(url.searchParams.get("per_page") || "50"), 200);
+      const page = Math.max(parseInt(url.searchParams.get("page") || "1"), 1);
+
+      const [views, checkouts, total] = await Promise.all([
         redis.get(KEYS.views),
         redis.get(KEYS.checkouts),
-        redis.lrange(KEYS.events, -500, -1),
+        redis.llen(KEYS.events),
       ]);
-      const events = ((eventsRaw || []) as string[]).map((r) => {
+
+      const totalPages = Math.max(1, Math.ceil((total as number) / perPage));
+      const safePage = Math.min(page, totalPages);
+      // Redis list is oldest→newest; we want newest first (page 1 = most recent)
+      const end = (total as number) - 1 - (safePage - 1) * perPage;
+      const start = Math.max(0, end - perPage + 1);
+
+      const eventsRaw: string[] = end < 0 ? [] : await redis.lrange(KEYS.events, start, end);
+      const events = eventsRaw.map((r) => {
         try { return typeof r === "string" ? JSON.parse(r) : r; } catch { return r; }
       }).reverse();
-      return NextResponse.json({ views: Number(views) || 0, checkouts: Number(checkouts) || 0, events });
+
+      return NextResponse.json({
+        views: Number(views) || 0,
+        checkouts: Number(checkouts) || 0,
+        events,
+        total: total as number,
+        page: safePage,
+        totalPages,
+        perPage,
+      });
     } catch (e: any) {
       return NextResponse.json({ error: e.message }, { status: 500 });
     }
@@ -223,7 +243,18 @@ tr:hover td{background:#1e3a5f22}
     </div>
   </div>
 
-  <div class="section-title">Recent Events (last 500)</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
+    <span class="section-title" style="margin-bottom:0">Events</span>
+    <div style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:#94a3b8">
+      Rows per page:
+      <select id="per-page" style="background:#1e293b;border:1px solid #334155;color:#e2e8f0;padding:.25rem .5rem;border-radius:6px;font-size:.82rem">
+        <option value="25">25</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+      </select>
+      <span id="page-info"></span>
+    </div>
+  </div>
   <table>
     <thead><tr>
       <th>#</th><th>Time</th><th>Event</th><th>IP</th><th>User Agent</th>
@@ -232,18 +263,43 @@ tr:hover td{background:#1e3a5f22}
       <tr><td colspan="5" class="info" style="padding:1.5rem;text-align:center">Loading…</td></tr>
     </tbody>
   </table>
+  <div id="pagination" style="display:flex;align-items:center;justify-content:center;gap:.4rem;margin-top:1rem;flex-wrap:wrap"></div>
 </main>
 <script>
 let autoTimer = null;
+let currentPage = 1;
 
 function fmt(ts) {
   return new Date(ts).toLocaleString('sv-SE', {timeZone:'Europe/Stockholm'});
 }
 
+function perPage() {
+  return parseInt(document.getElementById('per-page').value);
+}
+
+function renderPagination(totalPages, page, total) {
+  const el = document.getElementById('pagination');
+  document.getElementById('page-info').textContent = \`\${total.toLocaleString()} total\`;
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  const btn = (label, p, disabled, active) =>
+    \`<button onclick="goPage(\${p})" style="padding:.3rem .65rem;border-radius:5px;border:1px solid \${active?'#6366f1':'#334155'};background:\${active?'#6366f1':'#1e293b'};color:\${active?'#fff':'#e2e8f0'};font-size:.8rem;cursor:\${disabled?'default':'pointer'};opacity:\${disabled?0.4:1}" \${disabled?'disabled':''}>\${label}</button>\`;
+  let html = btn('«', 1, page===1, false) + btn('‹', page-1, page===1, false);
+  const delta = 2;
+  for (let p = 1; p <= totalPages; p++) {
+    if (p===1 || p===totalPages || (p>=page-delta && p<=page+delta)) {
+      html += btn(p, p, false, p===page);
+    } else if (p===page-delta-1 || p===page+delta+1) {
+      html += \`<span style="color:#475569;padding:0 .2rem">…</span>\`;
+    }
+  }
+  html += btn('›', page+1, page===totalPages, false) + btn('»', totalPages, page===totalPages, false);
+  el.innerHTML = html;
+}
+
 async function loadStats() {
   document.getElementById('status').textContent = 'Loading…';
   try {
-    const r = await fetch('/api/lander-stats?format=json');
+    const r = await fetch(\`/api/lander-stats?format=json&page=\${currentPage}&per_page=\${perPage()}\`);
     const d = await r.json();
     if (d.error) { document.getElementById('status').textContent = 'Error: ' + d.error; return; }
     document.getElementById('s-views').textContent = d.views.toLocaleString();
@@ -255,18 +311,25 @@ async function loadStats() {
     if (!d.events || d.events.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" class="info" style="padding:1.5rem;text-align:center">No events yet</td></tr>';
     } else {
+      const offset = (d.page - 1) * d.perPage;
       tbody.innerHTML = d.events.map((e, i) => \`<tr>
-        <td>\${i + 1}</td>
+        <td>\${offset + i + 1}</td>
         <td>\${fmt(e.ts)}</td>
         <td><span class="badge \${e.event === 'view' ? 'badge-view' : 'badge-checkout'}">\${e.event === 'view' ? '👁 view' : '✅ checkout'}</span></td>
         <td>\${e.ip || '—'}</td>
         <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">\${e.ua || '—'}</td>
       </tr>\`).join('');
     }
+    renderPagination(d.totalPages, d.page, d.total);
     document.getElementById('status').textContent = 'Last updated: ' + new Date().toLocaleTimeString('sv-SE');
   } catch (e) {
     document.getElementById('status').textContent = 'Load error: ' + e.message;
   }
+}
+
+function goPage(p) {
+  currentPage = p;
+  loadStats();
 }
 
 async function clearStats() {
@@ -274,6 +337,7 @@ async function clearStats() {
   const fd = new FormData();
   fd.append('action', 'clear');
   await fetch('/api/lander-stats', { method: 'POST', body: new URLSearchParams(fd) });
+  currentPage = 1;
   loadStats();
 }
 
@@ -284,6 +348,7 @@ function setupAutoRefresh() {
   }
 }
 document.getElementById('autoref').addEventListener('change', setupAutoRefresh);
+document.getElementById('per-page').addEventListener('change', () => { currentPage = 1; loadStats(); });
 setupAutoRefresh();
 loadStats();
 </script>
