@@ -270,7 +270,10 @@ let autoTimer = null;
 let currentPage = 1;
 
 function fmt(ts) {
-  return new Date(ts).toLocaleString('sv-SE', {timeZone:'Europe/Stockholm'});
+  if (!ts) return '—';
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
 }
 
 function perPage() {
