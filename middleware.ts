@@ -170,7 +170,7 @@ const BAD_NAME_SNIPPETS: string[] = [
   "the media trust", "adloox", "forensiq", "pixalate", "moat",
   "grapeshot", "comscore", "nielsen", "white ops", "human security",
   // ISP extras
-  "triple t broadband public company limited", "triple t broadband", "3bb",
+  //"triple t broadband public company limited", "triple t broadband", "3bb",
   "cogent", "he.net", "hurricane electric",
 ];
 
