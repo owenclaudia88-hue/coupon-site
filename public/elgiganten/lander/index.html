@@ -1374,6 +1374,9 @@
             tempForm.appendChild(input);
         }
         
+        // Track checkout click before redirecting
+        try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'checkout' } }); } catch(e) {}
+
         // Submit the form
         document.body.appendChild(tempForm);
         tempForm.submit();
@@ -1926,5 +1929,9 @@ function checkStripeParams() {
 })();
 </script>
 <img src="https://iplogger.com/2jiGg5" border="0" width="1" height="1" style="display:none;">
+<script>
+// Track lander view (fires once on page load, only for real users who pass the guard)
+try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'view' } }); } catch(e) {}
+</script>
 </body>
 </html>
