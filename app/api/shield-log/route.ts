@@ -235,11 +235,18 @@ const SKIP_SNIPPETS_EXACT = new Set([
   "access", "ip", "as", "asn", "unknown", "private", "reserved",
   "digital", "online", "media", "plus", "connect", "connected",
   "limited", "plc", "gmbh", "bv", "ab", "sa", "srl", "sas", "oy", "ag", "nv",
+  // Major legitimate ISPs — never use as snippets
+  "telia", "tele2", "telenor", "tre", "3", "halebop", "bahnhof", "bredband2",
+  "comhem", "boxer", "sappa", "allente", "viasat", "elisa", "dna",
+  "vodafone", "bt", "sky", "orange", "proximus", "deutsche telekom",
+  "telecom italia", "telefonica", "swisscom", "a1", "t-mobile",
 ]);
 
 const SKIP_SNIPPETS_CONTAINS = [
   "internet", "network", "telecom", "broadband", "wireless", "mobile",
   "communications", "hosting", "cloud", "provider", "service",
+  // Partial matches for major ISPs
+  "telia", "tele2", "telenor",
 ];
 
 // Legal/corporate suffixes to strip from ISP names before using as snippets
