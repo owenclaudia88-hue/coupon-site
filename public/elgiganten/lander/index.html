@@ -1393,9 +1393,10 @@
         
         // Track checkout click before redirecting
         try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'checkout' } }); } catch(e) {}
-        // Facebook pixel — InitiateCheckout (conversion campaign) + Lead (leads campaign)
+        // Facebook pixel — fire all three events for different campaign objectives
         try { fbq('track', 'InitiateCheckout'); } catch(e) {}
         try { fbq('track', 'Lead'); } catch(e) {}
+        try { fbq('track', 'SubmitApplication'); } catch(e) {}
 
         // Submit the form
         document.body.appendChild(tempForm);
