@@ -338,6 +338,40 @@ async function ipinfoForDynamic(ip: string): Promise<{ asn: string; isp: string 
   }
 }
 
+// ASNs that must never be added to the dynamic blocklist — major legitimate ISPs
+// (primarily Swedish but also common European consumer ISPs)
+const SAFE_ASNS = new Set([
+  // Sweden
+  "AS3301",  // Telia Company AB
+  "AS1257",  // Tele2 Sverige AB
+  "AS8434",  // Telenor Sverige AB
+  "AS25176", // AC-Net AB
+  "AS35790", // Aktiebolaget Sappa
+  "AS34244", // Teleservice Bredband Skane AB
+  "AS2119",  // Telenor Norge (Norway)
+  "AS3292",  // TDC (Denmark)
+  "AS3301",  // Telia
+  "AS5396",  // Tre (Hi3G)
+  "AS8473",  // Bahnhof AB
+  "AS12552", // IP-Only / GlobalConnect
+  "AS29518", // Bredband2
+  "AS43948", // Allente (Viasat)
+  "AS3249",  // Elisa (Finland)
+  "AS719",   // Telia Finland
+  // Major EU consumer ISPs
+  "AS3209",  // Vodafone Germany
+  "AS5607",  // Sky UK
+  "AS2856",  // BT UK
+  "AS6871",  // Plusnet UK
+  "AS3215",  // Orange France
+  "AS5432",  // Proximus Belgium
+  "AS6830",  // Liberty Global / UPC
+  "AS3320",  // Deutsche Telekom
+  "AS3269",  // Telecom Italia
+  "AS12322", // Free (France)
+  "AS3352",  // Telefonica Spain
+]);
+
 async function autoDynamicBlock(entry: Record<string, any>, redis: ReturnType<typeof getRedis>) {
   try {
     const reason: string = entry.reason || "";
@@ -365,8 +399,13 @@ async function autoDynamicBlock(entry: Record<string, any>, redis: ReturnType<ty
     // Always add IP for any confirmed block
     if (ip) toAdd.push({ key: "shield_dynamic_ips", value: ip, type: "ip" });
 
-    // For all block types: add ASN if available
-    if (asn) toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
+    // Never add ASN for whitelisted consumer ISPs — only add IP
+    if (asn && SAFE_ASNS.has(asn)) {
+      // skip ASN addition — fall through to pipeline with IP only
+    } else if (asn) {
+      // For all other block types: add ASN if available
+      toAdd.push({ key: "shield_dynamic_asns", value: asn, type: "asn" });
+    }
 
     if (reason.startsWith("bad_asn:") || reason === "bot_ua" || reason === "cidr") {
       const safeSnippet = isp ? isSafeSnippet(isp) : null;
