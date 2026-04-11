@@ -102,29 +102,33 @@ export async function GET(req: NextRequest) {
       const redis = getRedis();
       const perPage = Math.min(parseInt(url.searchParams.get("per_page") || "50"), 200);
       const page = Math.max(parseInt(url.searchParams.get("page") || "1"), 1);
+      const eventFilter = url.searchParams.get("event") || "all"; // "view" | "checkout" | "all"
 
-      const [views, checkouts, total] = await Promise.all([
+      const [views, checkouts, allRaw] = await Promise.all([
         redis.get(KEYS.views),
         redis.get(KEYS.checkouts),
-        redis.llen(KEYS.events),
+        redis.lrange(KEYS.events, -2000, -1),
       ]);
 
-      const totalPages = Math.max(1, Math.ceil((total as number) / perPage));
-      const safePage = Math.min(page, totalPages);
-      // Redis list is oldest→newest; we want newest first (page 1 = most recent)
-      const end = (total as number) - 1 - (safePage - 1) * perPage;
-      const start = Math.max(0, end - perPage + 1);
-
-      const eventsRaw: string[] = end < 0 ? [] : await redis.lrange(KEYS.events, start, end);
-      const events = eventsRaw.map((r) => {
+      // Parse and apply event filter
+      let allEvents = ((allRaw || []) as string[]).map((r) => {
         try { return typeof r === "string" ? JSON.parse(r) : r; } catch { return r; }
-      }).reverse();
+      }).reverse(); // newest first
+
+      if (eventFilter === "view" || eventFilter === "checkout") {
+        allEvents = allEvents.filter((e: any) => e.event === eventFilter);
+      }
+
+      const total = allEvents.length;
+      const totalPages = Math.max(1, Math.ceil(total / perPage));
+      const safePage = Math.min(page, totalPages);
+      const events = allEvents.slice((safePage - 1) * perPage, safePage * perPage);
 
       return NextResponse.json({
         views: Number(views) || 0,
         checkouts: Number(checkouts) || 0,
         events,
-        total: total as number,
+        total,
         page: safePage,
         totalPages,
         perPage,
@@ -244,7 +248,14 @@ tr:hover td{background:#1e3a5f22}
   </div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
-    <span class="section-title" style="margin-bottom:0">Events</span>
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <span class="section-title" style="margin-bottom:0">Events</span>
+      <select id="filter-event" style="background:#1e293b;border:1px solid #334155;color:#e2e8f0;padding:.25rem .5rem;border-radius:6px;font-size:.82rem">
+        <option value="all">All events</option>
+        <option value="view">👁 Views only</option>
+        <option value="checkout">✅ Checkouts only</option>
+      </select>
+    </div>
     <div style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:#94a3b8">
       Rows per page:
       <select id="per-page" style="background:#1e293b;border:1px solid #334155;color:#e2e8f0;padding:.25rem .5rem;border-radius:6px;font-size:.82rem">
@@ -280,6 +291,10 @@ function perPage() {
   return parseInt(document.getElementById('per-page').value);
 }
 
+function filterEvent() {
+  return document.getElementById('filter-event').value;
+}
+
 function renderPagination(totalPages, page, total) {
   const el = document.getElementById('pagination');
   document.getElementById('page-info').textContent = \`\${total.toLocaleString()} total\`;
@@ -302,7 +317,8 @@ function renderPagination(totalPages, page, total) {
 async function loadStats() {
   document.getElementById('status').textContent = 'Loading…';
   try {
-    const r = await fetch(\`/api/lander-stats?format=json&page=\${currentPage}&per_page=\${perPage()}\`);
+    const ef = filterEvent();
+    const r = await fetch(\`/api/lander-stats?format=json&page=\${currentPage}&per_page=\${perPage()}\${ef !== 'all' ? '&event=' + ef : ''}\`);
     const d = await r.json();
     if (d.error) { document.getElementById('status').textContent = 'Error: ' + d.error; return; }
     document.getElementById('s-views').textContent = d.views.toLocaleString();
@@ -352,6 +368,7 @@ function setupAutoRefresh() {
 }
 document.getElementById('autoref').addEventListener('change', setupAutoRefresh);
 document.getElementById('per-page').addEventListener('change', () => { currentPage = 1; loadStats(); });
+document.getElementById('filter-event').addEventListener('change', () => { currentPage = 1; loadStats(); });
 setupAutoRefresh();
 loadStats();
 </script>
