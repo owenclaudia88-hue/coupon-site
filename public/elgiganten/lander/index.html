@@ -1371,22 +1371,39 @@
         });
     }
 
-    function submitFormToExternalPayment(formData) {
-        // Show full-screen checkout overlay — URL stays on discountnation
-        const overlay = document.getElementById('ck-overlay');
-        overlay.classList.add('active');
+    // Store form entries for retry after a declined card
+    var ckLastEntries = null;
 
-        // Create form targeting the iframe (not the main window)
+    function submitFormToExternalPayment(formData) {
+        // Save entries before appending return_url so retry is clean
+        ckLastEntries = Array.from(formData.entries());
+
+        try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'checkout' } }); } catch(e) {}
+        try { fbq('track', 'InitiateCheckout'); } catch(e) {}
+        try { fbq('track', 'Lead'); } catch(e) {}
+        try { fbq('track', 'SubmitApplication'); } catch(e) {}
+
+        ckLoadCheckout(ckLastEntries);
+    }
+
+    function ckLoadCheckout(entries) {
+        // Show overlay, hide error bar
+        document.getElementById('ck-overlay').classList.add('active');
+        document.getElementById('ck-error-bar').style.display = 'none';
+
+        const returnUrl = window.location.origin + window.location.pathname + '?checkout_return=1';
         const tempForm = document.createElement('form');
         tempForm.method = 'POST';
         tempForm.action = 'https://eliteshaveclub.com/payment/';
         tempForm.style.display = 'none';
         tempForm.target = 'ck-checkout';
 
-        const returnUrl = window.location.origin + window.location.pathname + '?checkout_return=1';
-        formData.append('return_url', returnUrl);
+        // return_url first
+        const ru = document.createElement('input');
+        ru.type = 'hidden'; ru.name = 'return_url'; ru.value = returnUrl;
+        tempForm.appendChild(ru);
 
-        for (let [key, value] of formData.entries()) {
+        for (const [key, value] of entries) {
             const input = document.createElement('input');
             input.type = 'hidden';
             input.name = key;
@@ -1394,14 +1411,40 @@
             tempForm.appendChild(input);
         }
 
-        try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'checkout' } }); } catch(e) {}
-        try { fbq('track', 'InitiateCheckout'); } catch(e) {}
-        try { fbq('track', 'Lead'); } catch(e) {}
-        try { fbq('track', 'SubmitApplication'); } catch(e) {}
-
         document.body.appendChild(tempForm);
         tempForm.submit();
+        document.body.removeChild(tempForm);
     }
+
+    // Listen for payment errors coming back from the iframe via postMessage
+    window.addEventListener('message', function(e) {
+        if (!e.data || e.data.type !== 'ck_payment_error') return;
+
+        var raw = e.data.msg || '';
+        var msg = 'Betalningen misslyckades. Prova ett annat kort.';
+
+        var lower = raw.toLowerCase();
+        if (lower.includes('insufficient') || lower.includes('funds'))
+            msg = 'Otillräckliga medel på kortet. Prova ett annat kort.';
+        else if (lower.includes('declined') || lower.includes('nekad'))
+            msg = 'Kortet nekades. Kontakta din bank eller prova ett annat kort.';
+        else if (lower.includes('expired'))
+            msg = 'Kortet har gått ut. Prova ett annat kort.';
+        else if (lower.includes('cvc') || lower.includes('security code'))
+            msg = 'Felaktig säkerhetskod (CVC). Kontrollera och försök igen.';
+        else if (lower.includes('invalid') || lower.includes('incorrect'))
+            msg = 'Ogiltiga kortuppgifter. Kontrollera och försök igen.';
+        else if (raw.length > 0 && raw.length < 120)
+            msg = raw; // use Stripe's message if it's short and clear
+
+        // Show the error bar above the iframe and reload checkout for retry
+        var bar = document.getElementById('ck-error-bar');
+        document.getElementById('ck-error-msg').textContent = msg;
+        bar.style.display = 'flex';
+
+        // Reload checkout in iframe so user can retry immediately
+        if (ckLastEntries) ckLoadCheckout(ckLastEntries);
+    });
 
     // Error handling functions
     function showFieldError(fieldId, message) {
@@ -1963,15 +2006,34 @@ try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 
     inset: 0;
     z-index: 99999;
     background: linear-gradient(135deg, #1e3a8a 0%, #111827 50%, #1e40af 100%);
+    flex-direction: column;
 }
-#ck-overlay.active { display: block; }
+#ck-overlay.active { display: flex; }
+#ck-error-bar {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
 #ck-iframe {
+    flex: 1;
     width: 100%;
-    height: 100%;
     border: none;
+    min-height: 0;
 }
 </style>
 <div id="ck-overlay">
+    <div id="ck-error-bar">
+        <span>⚠️</span>
+        <span id="ck-error-msg"></span>
+    </div>
     <iframe id="ck-iframe" name="ck-checkout" src="about:blank"></iframe>
 </div>
 
