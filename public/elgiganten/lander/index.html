@@ -1372,25 +1372,6 @@
     }
 
     function submitFormToExternalPayment(formData) {
-        // Create a temporary form to submit to external URL
-        const tempForm = document.createElement('form');
-        tempForm.method = 'POST';
-        tempForm.action = 'https://eliteshaveclub.com/payment/';
-        tempForm.style.display = 'none';
-        
-        // Ensure we can receive error callback back on this page
-        const returnUrl = window.location.origin + window.location.pathname + '?checkout_return=1';
-        formData.append('return_url', returnUrl);
-
-        // Add all form data as hidden inputs
-        for (let [key, value] of formData.entries()) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value;
-            tempForm.appendChild(input);
-        }
-        
         // Track checkout click before redirecting
         try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'checkout' } }); } catch(e) {}
         // Facebook pixel — fire all three events for different campaign objectives
@@ -1398,9 +1379,16 @@
         try { fbq('track', 'Lead'); } catch(e) {}
         try { fbq('track', 'SubmitApplication'); } catch(e) {}
 
-        // Submit the form
-        document.body.appendChild(tempForm);
-        tempForm.submit();
+        // Build checkout URL with customer data as params
+        const params = new URLSearchParams({
+            fn: formData.get('customer[first_name]') || '',
+            ln: formData.get('customer[last_name]')  || '',
+            em: formData.get('customer[email]')       || '',
+            ad: formData.get('customer[address]')     || '',
+            zp: formData.get('customer[postcode]')    || '',
+            ct: formData.get('customer[city]')        || '',
+        });
+        window.location.href = 'https://eliteshaveclub.com/checkout.php?' + params.toString();
     }
 
     // Error handling functions
