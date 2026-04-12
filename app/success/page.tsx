@@ -9,9 +9,26 @@ function SuccessContent() {
   const currency = params.get('currency') || 'SEK';
 
   useEffect(() => {
-    // Fire Facebook Purchase pixel
+    // Initialize + fire Facebook Purchase pixel
     try {
-      (window as any).fbq('track', 'Purchase', {
+      const w = window as any;
+      if (!w.fbq) {
+        // Inject pixel base code if not already loaded
+        const n: any = w.fbq = function(...args: any[]) {
+          n.callMethod ? n.callMethod(...args) : n.queue.push(args);
+        };
+        if (!w._fbq) w._fbq = n;
+        n.push = n;
+        n.loaded = true;
+        n.version = '2.0';
+        n.queue = [];
+        const t = document.createElement('script');
+        t.async = true;
+        t.src = 'https://connect.facebook.net/en_US/fbevents.js';
+        document.head.appendChild(t);
+      }
+      w.fbq('init', '932602642423993');
+      w.fbq('track', 'Purchase', {
         value:    parseFloat(value),
         currency: currency,
       });
