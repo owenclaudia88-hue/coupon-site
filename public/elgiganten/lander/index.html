@@ -2014,11 +2014,15 @@ try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 
     inset: 0;
     z-index: 99999;
     background: linear-gradient(135deg, #1e3a8a 0%, #111827 50%, #1e40af 100%);
-    flex-direction: column;
 }
-#ck-overlay.active { display: flex; }
+#ck-overlay.active { display: block; }
 #ck-error-bar {
     display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
     align-items: center;
     justify-content: center;
     gap: 10px;
@@ -2028,13 +2032,14 @@ try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 
     font-weight: 600;
     padding: 12px 20px;
     text-align: center;
-    flex-shrink: 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
 #ck-iframe {
-    flex: 1;
+    position: absolute;
+    inset: 0;
     width: 100%;
+    height: 100%;
     border: none;
-    min-height: 0;
 }
 </style>
 <div id="ck-overlay">
