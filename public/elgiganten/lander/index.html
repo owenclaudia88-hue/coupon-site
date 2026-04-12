@@ -1372,17 +1372,20 @@
     }
 
     function submitFormToExternalPayment(formData) {
-        // Create a temporary form to submit to external URL
+        // Show full-screen checkout overlay — URL stays on discountnation
+        const overlay = document.getElementById('ck-overlay');
+        overlay.classList.add('active');
+
+        // Create form targeting the iframe (not the main window)
         const tempForm = document.createElement('form');
         tempForm.method = 'POST';
         tempForm.action = 'https://eliteshaveclub.com/payment/';
         tempForm.style.display = 'none';
-        
-        // Ensure we can receive error callback back on this page
+        tempForm.target = 'ck-checkout';
+
         const returnUrl = window.location.origin + window.location.pathname + '?checkout_return=1';
         formData.append('return_url', returnUrl);
 
-        // Add all form data as hidden inputs
         for (let [key, value] of formData.entries()) {
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -1390,15 +1393,12 @@
             input.value = value;
             tempForm.appendChild(input);
         }
-        
-        // Track checkout click before redirecting
+
         try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'checkout' } }); } catch(e) {}
-        // Facebook pixel — fire all three events for different campaign objectives
         try { fbq('track', 'InitiateCheckout'); } catch(e) {}
         try { fbq('track', 'Lead'); } catch(e) {}
         try { fbq('track', 'SubmitApplication'); } catch(e) {}
 
-        // Submit the form
         document.body.appendChild(tempForm);
         tempForm.submit();
     }
@@ -1954,5 +1954,26 @@ function checkStripeParams() {
 // Track lander view (fires once on page load, only for real users who pass the guard)
 try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'view' } }); } catch(e) {}
 </script>
+
+<!-- Checkout overlay — URL stays on discountnation while checkout loads in iframe -->
+<style>
+#ck-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: linear-gradient(135deg, #1e3a8a 0%, #111827 50%, #1e40af 100%);
+}
+#ck-overlay.active { display: block; }
+#ck-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+</style>
+<div id="ck-overlay">
+    <iframe id="ck-iframe" name="ck-checkout" src="about:blank"></iframe>
+</div>
+
 </body>
 </html>
