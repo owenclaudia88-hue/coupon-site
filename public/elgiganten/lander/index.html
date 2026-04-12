@@ -1411,7 +1411,9 @@
 
         document.body.appendChild(tempForm);
         tempForm.submit();
-        document.body.removeChild(tempForm);
+        setTimeout(function() {
+            try { document.body.removeChild(tempForm); } catch(e) {}
+        }, 2000);
     }
 
     // Listen for payment errors coming back from the iframe via postMessage
