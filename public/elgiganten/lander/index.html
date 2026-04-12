@@ -1424,16 +1424,26 @@
         var lower = raw.toLowerCase();
         if (lower.includes('insufficient') || lower.includes('funds'))
             msg = 'Otillräckliga medel på kortet. Prova ett annat kort.';
-        else if (lower.includes('declined') || lower.includes('nekad'))
+        else if (lower.includes('does not support') || lower.includes('not support'))
+            msg = 'Ditt kort stöder inte den här typen av köp. Prova ett annat kort.';
+        else if (lower.includes('declined'))
             msg = 'Kortet nekades. Kontakta din bank eller prova ett annat kort.';
-        else if (lower.includes('expired'))
+        else if (lower.includes('expired') || lower.includes('expir'))
             msg = 'Kortet har gått ut. Prova ett annat kort.';
         else if (lower.includes('cvc') || lower.includes('security code'))
             msg = 'Felaktig säkerhetskod (CVC). Kontrollera och försök igen.';
+        else if (lower.includes('invalid number') || lower.includes('incorrect number') || lower.includes('card number'))
+            msg = 'Ogiltigt kortnummer. Kontrollera och försök igen.';
         else if (lower.includes('invalid') || lower.includes('incorrect'))
             msg = 'Ogiltiga kortuppgifter. Kontrollera och försök igen.';
-        else if (raw.length > 0 && raw.length < 120)
-            msg = raw; // use Stripe's message if it's short and clear
+        else if (lower.includes('lost') || lower.includes('stolen'))
+            msg = 'Kortet kan inte användas. Kontakta din bank.';
+        else if (lower.includes('blocked') || lower.includes('restricted') || lower.includes('not permitted'))
+            msg = 'Transaktionen blockerades. Kontakta din bank.';
+        else if (lower.includes('try again') || lower.includes('processing error') || lower.includes('error occurred'))
+            msg = 'Ett fel uppstod vid behandling. Försök igen om en stund.';
+        else if (lower.includes('authentication') || lower.includes('3d') || lower.includes('verify'))
+            msg = 'Kortverifiering misslyckades. Försök igen eller kontakta din bank.';
 
         // Show the error bar above the iframe and reload checkout for retry
         var bar = document.getElementById('ck-error-bar');
