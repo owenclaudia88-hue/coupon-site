@@ -1387,9 +1387,7 @@
     }
 
     function ckLoadCheckout(entries) {
-        // Show overlay, hide error bar
         document.getElementById('ck-overlay').classList.add('active');
-        document.getElementById('ck-error-bar').style.display = 'none';
 
         const returnUrl = window.location.origin + window.location.pathname + '?checkout_return=1';
         const tempForm = document.createElement('form');
