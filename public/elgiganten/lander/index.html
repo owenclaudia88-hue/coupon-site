@@ -1392,6 +1392,13 @@
             tempForm.appendChild(input);
         }
 
+        // Pass current domain so eliteshave knows where to redirect on success
+        const su = document.createElement('input');
+        su.type = 'hidden';
+        su.name = 'success_url';
+        su.value = window.location.origin + '/success?value=20&currency=SEK';
+        tempForm.appendChild(su);
+
         document.body.appendChild(tempForm);
         tempForm.submit();
     }
