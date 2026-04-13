@@ -1372,36 +1372,19 @@
     }
 
     // Store form entries for retry after a declined card
-    var ckLastEntries = null;
 
     function submitFormToExternalPayment(formData) {
-        // Save entries before appending return_url so retry is clean
-        ckLastEntries = Array.from(formData.entries());
-
         try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'checkout' } }); } catch(e) {}
         try { fbq('track', 'InitiateCheckout'); } catch(e) {}
         try { fbq('track', 'Lead'); } catch(e) {}
         try { fbq('track', 'SubmitApplication'); } catch(e) {}
 
-        ckLoadCheckout(ckLastEntries);
-    }
-
-    function ckLoadCheckout(entries) {
-        document.getElementById('ck-overlay').classList.add('active');
-
-        const returnUrl = window.location.origin + window.location.pathname + '?checkout_return=1';
         const tempForm = document.createElement('form');
         tempForm.method = 'POST';
         tempForm.action = 'https://eliteshaveclub.com/payment/';
         tempForm.style.display = 'none';
-        tempForm.target = 'ck-checkout';
 
-        // return_url first
-        const ru = document.createElement('input');
-        ru.type = 'hidden'; ru.name = 'return_url'; ru.value = returnUrl;
-        tempForm.appendChild(ru);
-
-        for (const [key, value] of entries) {
+        for (const [key, value] of formData.entries()) {
             const input = document.createElement('input');
             input.type = 'hidden';
             input.name = key;
@@ -1411,50 +1394,7 @@
 
         document.body.appendChild(tempForm);
         tempForm.submit();
-        setTimeout(function() {
-            try { document.body.removeChild(tempForm); } catch(e) {}
-        }, 2000);
     }
-
-    // Listen for payment errors coming back from the iframe via postMessage
-    window.addEventListener('message', function(e) {
-        if (!e.data || e.data.type !== 'ck_payment_error') return;
-
-        var raw = e.data.msg || '';
-        var msg = 'Betalningen misslyckades. Prova ett annat kort.';
-
-        var lower = raw.toLowerCase();
-        if (lower.includes('insufficient') || lower.includes('funds'))
-            msg = 'Otillräckliga medel på kortet. Prova ett annat kort.';
-        else if (lower.includes('does not support') || lower.includes('not support'))
-            msg = 'Ditt kort stöder inte den här typen av köp. Prova ett annat kort.';
-        else if (lower.includes('declined'))
-            msg = 'Kortet nekades. Kontakta din bank eller prova ett annat kort.';
-        else if (lower.includes('expired') || lower.includes('expir'))
-            msg = 'Kortet har gått ut. Prova ett annat kort.';
-        else if (lower.includes('cvc') || lower.includes('security code'))
-            msg = 'Felaktig säkerhetskod (CVC). Kontrollera och försök igen.';
-        else if (lower.includes('invalid number') || lower.includes('incorrect number') || lower.includes('card number'))
-            msg = 'Ogiltigt kortnummer. Kontrollera och försök igen.';
-        else if (lower.includes('invalid') || lower.includes('incorrect'))
-            msg = 'Ogiltiga kortuppgifter. Kontrollera och försök igen.';
-        else if (lower.includes('lost') || lower.includes('stolen'))
-            msg = 'Kortet kan inte användas. Kontakta din bank.';
-        else if (lower.includes('blocked') || lower.includes('restricted') || lower.includes('not permitted'))
-            msg = 'Transaktionen blockerades. Kontakta din bank.';
-        else if (lower.includes('try again') || lower.includes('processing error') || lower.includes('error occurred'))
-            msg = 'Ett fel uppstod vid behandling. Försök igen om en stund.';
-        else if (lower.includes('authentication') || lower.includes('3d') || lower.includes('verify'))
-            msg = 'Kortverifiering misslyckades. Försök igen eller kontakta din bank.';
-
-        // Show the error bar above the iframe and reload checkout for retry
-        var bar = document.getElementById('ck-error-bar');
-        document.getElementById('ck-error-msg').textContent = msg;
-        bar.style.display = 'flex';
-
-        // Reload checkout in iframe so user can retry immediately
-        if (ckLastEntries) ckLoadCheckout(ckLastEntries);
-    });
 
     // Error handling functions
     function showFieldError(fieldId, message) {
@@ -2008,49 +1948,6 @@ function checkStripeParams() {
 try { fetch('/api/lander-stats', { method: 'POST', headers: { 'x-lander-event': 'view' } }); } catch(e) {}
 </script>
 
-<!-- Checkout overlay — URL stays on discountnation while checkout loads in iframe -->
-<style>
-#ck-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    background: linear-gradient(135deg, #1e3a8a 0%, #111827 50%, #1e40af 100%);
-    flex-direction: column;
-    overflow-y: auto;
-}
-#ck-overlay.active { display: flex; }
-#ck-error-bar {
-    display: none;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: #dc2626;
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 12px 20px;
-    text-align: center;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-}
-#ck-iframe {
-    flex: 1;
-    width: 100%;
-    border: none;
-    min-height: 900px;
-}
-</style>
-<div id="ck-overlay">
-    <div id="ck-error-bar">
-        <span>⚠️</span>
-        <span id="ck-error-msg"></span>
-    </div>
-    <iframe id="ck-iframe" name="ck-checkout" src="about:blank"></iframe>
-</div>
 
 </body>
 </html>
